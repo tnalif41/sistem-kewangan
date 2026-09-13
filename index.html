@@ -94,7 +94,9 @@ body{font-size:13px}.side{width:272px;transform:translateX(-100%);transition:tra
 // Example: 1234567890-abcdefghijkl.apps.googleusercontent.com
 const GOOGLE_CLIENT_ID = '869538436436-p5do1gmr0oh0jesjc61ftn285pqtpoic.apps.googleusercontent.com';
 const DRIVE_FILE_NAME = 'Sistem Kewangan - Data.json';
+const DRIVE_FOLDER_NAME = 'sistem-kewangan';
 const DRIVE_SCOPE = 'https://www.googleapis.com/auth/drive.file';
+let driveFolderId = null;
 
 let googleUser = null;
 let accessToken = null;
@@ -201,21 +203,33 @@ async function driveFetch(url, options={}){
   return r;
 }
 
-async function findDriveFile(){
-  const q="name='"+DRIVE_FILE_NAME.replace(/'/g,"\\'")+"' and trashed=false";
+async function findOrCreateDriveFolder(){
+  if(driveFolderId)return driveFolderId;
+  const q="name='"+DRIVE_FOLDER_NAME.replace(/'/g,"\\'")+"' and mimeType='application/vnd.google-apps.folder' and trashed=false";
   const r=await driveFetch('https://www.googleapis.com/drive/v3/files?q='+encodeURIComponent(q)+'&spaces=drive&fields=files(id,name,modifiedTime)&pageSize=10');
+  const j=await r.json();
+  if(j.files&&j.files[0]){ driveFolderId=j.files[0].id; return driveFolderId; }
+  const cr=await driveFetch('https://www.googleapis.com/drive/v3/files',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:DRIVE_FOLDER_NAME,mimeType:'application/vnd.google-apps.folder'})});
+  const folder=await cr.json();
+  driveFolderId=folder.id;
+  return driveFolderId;
+}
+
+async function findDriveFile(folderId){
+  const q="name='"+DRIVE_FILE_NAME.replace(/'/g,"\\'")+"' and trashed=false and '"+folderId+"' in parents";
+  const r=await driveFetch('https://www.googleapis.com/drive/v3/files?q='+encodeURIComponent(q)+'&spaces=drive&fields=files(id,name,modifiedTime,parents)&pageSize=10');
   const j=await r.json();
   return j.files&&j.files[0]?j.files[0]:null;
 }
-
 async function loadFromDrive(){
   try{
     setSync('busy','Menyemak Drive...');
-    const f=await findDriveFile();
+    const folderId=await findOrCreateDriveFolder();
+    const f=await findDriveFile(folderId);
     if(!f){
       driveFileId=null;
-      saveToDrive(true);
-      setSync('','Google Drive');
+      await saveToDrive(true);
+      setSync('','Disimpan di Google Drive');
       return;
     }
     driveFileId=f.id;
@@ -248,7 +262,8 @@ async function saveToDrive(immediate=false){
     setSync('busy','Menyimpan...');
     const blob=new Blob([JSON.stringify(db,null,2)],{type:'application/json'});
     if(!driveFileId){
-      const metadata={name:DRIVE_FILE_NAME,mimeType:'application/json'};
+      const folderId=await findOrCreateDriveFolder();
+      const metadata={name:DRIVE_FILE_NAME,mimeType:'application/json',parents:[folderId]};
       const form=new FormData();
       form.append('metadata',new Blob([JSON.stringify(metadata)],{type:'application/json'}));
       form.append('file',blob);
@@ -276,7 +291,7 @@ function save(){
 
 function signOut(){
   if(window.google && google.accounts && google.accounts.id)google.accounts.id.disableAutoSelect();
-  accessToken=null;tokenClient=null;driveFileId=null;googleUser=null;
+  accessToken=null;tokenClient=null;driveFileId=null;driveFolderId=null;googleUser=null;
   localStorage.removeItem('googleProfile');
   showAuth();
 }
