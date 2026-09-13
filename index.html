@@ -414,14 +414,12 @@ function dashboard(){
  let cats=db.categories.map(c=>[c,db.expenses.filter(x=>x.date.startsWith(m)&&x.category===c).reduce((a,x)=>a+ +x.amount,0)]).filter(x=>x[1]>0).sort((a,b)=>b[1]-a[1]);
  let recent=db.expenses.slice().sort((a,b)=>b.date.localeCompare(a.date)).slice(0,6);
 
- // Last 6 months usage chart
+ // Last 6 months spending bar chart
  let months=[...new Set([...db.expenses.map(x=>x.date.slice(0,7)),m])].sort().slice(-6);
- let vals=months.map(x=>totals(x).exp), max=Math.max(...vals,monthlyBudget,1), W=760,H=250,L=48,R=20,T=18,B=38;
- let points=vals.map((v,i)=>{let x=L+(months.length===1?0:(W-L-R)*i/(months.length-1));let y=T+(H-T-B)*(1-v/max);return [x,y,v]});
- let line=points.map((p,i)=>(i?'L':'M')+' '+p[0].toFixed(1)+' '+p[1].toFixed(1)).join(' ');
- let area='M '+points[0][0].toFixed(1)+' '+(H-B)+' '+points.map(p=>'L '+p[0].toFixed(1)+' '+p[1].toFixed(1)).join(' ')+' L '+points.at(-1)[0].toFixed(1)+' '+(H-B)+' Z';
- let grid=[0,1,2,3].map(i=>{let y=T+(H-T-B)*i/3;let val=max*(1-i/3);return `<line class="chart-grid" x1="${L}" y1="${y}" x2="${W-R}" y2="${y}"/><text class="chart-label" x="2" y="${y+4}">${db.settings.currency} ${money(val)}</text>`}).join('');
- let dots=points.map((p,i)=>`<circle class="chart-dot" cx="${p[0]}" cy="${p[1]}" r="4"/><text class="chart-value" text-anchor="middle" x="${p[0]}" y="${p[1]-10}">${db.settings.currency} ${money(p[2])}</text><text class="chart-label" text-anchor="middle" x="${p[0]}" y="${H-10}">${months[i].slice(5)}</text>`).join('');
+ let vals=months.map(x=>totals(x).exp), max=Math.max(...vals,1), W=760,H=250,L=48,R=20,T=18,B=42;
+ let grid=[0,1,2,3,4].map(i=>{let y=T+(H-T-B)*i/4;let val=max*(1-i/4);return `<line class="chart-grid" x1="${L}" y1="${y}" x2="${W-R}" y2="${y}"/><text class="chart-label" x="2" y="${y+4}">${db.settings.currency} ${money(val)}</text>`}).join('');
+ let slot=(W-L-R)/Math.max(months.length,1), barW=Math.min(68,slot*.58);
+ let bars=vals.map((v,i)=>{let x=L+i*slot+(slot-barW)/2;let bh=(H-T-B)*(v/max);let y=H-B-bh;return `<rect class="chart-bar" x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${barW.toFixed(1)}" height="${Math.max(0,bh).toFixed(1)}" rx="5"/><text class="chart-value" text-anchor="middle" x="${(x+barW/2).toFixed(1)}" y="${Math.max(T+12,y-7).toFixed(1)}">${db.settings.currency} ${money(v)}</text><text class="chart-label" text-anchor="middle" x="${(x+barW/2).toFixed(1)}" y="${H-10}">${months[i].slice(5)}</text>`}).join('');
 
  content.innerHTML=`<div class="cards">
  <div class="card"><div class="label">Pendapatan Bulan Ini</div><div class="value green">${db.settings.currency} ${money(t.inc)}</div></div>
@@ -444,7 +442,7 @@ function dashboard(){
 
  <div class="grid">
    <div class="panel"><div class="toolbar" style="justify-content:space-between;align-items:center"><h3 style="margin:0">Monthly Spending</h3><span style="font-size:12px;color:#94a3b8">6 bulan terakhir</span></div>
-     <div class="chart-wrap"><svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">${grid}<path class="chart-area" d="${area}"/><path class="chart-line" d="${line}"/>${dots}</svg></div>
+     <div class="chart-wrap"><svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">${grid}${bars}</svg></div>
    </div>
    <div class="panel"><h3>Belanja Mengikut Kategori</h3>${cats.length?cats.slice(0,8).map(c=>{let pct=t.exp?c[1]/t.exp*100:0;return `<div class="bar"><div class="barhead"><span>${esc(c[0])}</span><b>${db.settings.currency} ${money(c[1])}</b></div><div class="track"><div class="fill" style="width:${pct}%"></div></div></div>`}).join(''):'<div class="empty">Belum ada belanja bulan ini.</div>'}</div>
  </div>
@@ -455,23 +453,27 @@ function saveDashboardBudget(){
  db.monthlyBudgets[month()]=Math.max(0,+document.getElementById('dashBudget').value||0);
  save();dashboard();
 }
-function add(){
- content.innerHTML=`<div class="panel"><div class="notice">Setiap transaksi disimpan dalam browser dan terus mempengaruhi Dashboard, Budget, Analisis dan Laporan.</div>
+let editingExpenseId=null;
+function add(id=null){
+ editingExpenseId=id;
+ const x=id?db.expenses.find(v=>v.id==id):null;
+ const title=x?'Edit Belanja':'Tambah Belanja', button=x?'Kemaskini Belanja':'Simpan Belanja';
+ content.innerHTML=`<div class="panel"><div class="notice">${x?'Kemaskini maklumat transaksi. Perubahan akan disimpan dan diselaraskan ke Google Drive.':'Setiap transaksi disimpan dan terus mempengaruhi Dashboard, Budget, Analisis dan Laporan.'}</div>
  <form onsubmit="addExpense(event)"><div class="formgrid">
- <div class="field"><label>Tarikh</label><input id="eDate" type="date" value="${new Date().toISOString().slice(0,10)}" required></div>
- <div class="field"><label>Kategori</label><select id="eCat">${db.categories.map(c=>`<option>${esc(c)}</option>`).join('')}</select></div>
- <div class="field"><label>Perkara</label><input id="eItem" placeholder="Contoh: Makan tengah hari" required></div>
- <div class="field"><label>Jumlah (${db.settings.currency})</label><input id="eAmt" type="number" step="0.01" min="0" required></div>
- <div class="field"><label>Kaedah Bayaran</label><select id="ePay"><option>Cash</option><option>Debit Card</option><option>Credit Card</option><option>Online Banking</option><option>E-Wallet</option><option>Lain-lain</option></select></div>
- <div class="field"><label>Nota</label><input id="eNote" placeholder="Pilihan"></div></div><div class="actions"><button type="reset" class="btn secondary">Reset</button><button class="btn primary">Simpan Belanja</button></div></form></div>`;
+ <div class="field"><label>Tarikh</label><input id="eDate" type="date" value="${x?esc(x.date):new Date().toISOString().slice(0,10)}" required></div>
+ <div class="field"><label>Kategori</label><select id="eCat">${db.categories.map(c=>`<option ${x&&x.category===c?'selected':''}>${esc(c)}</option>`).join('')}</select></div>
+ <div class="field"><label>Perkara</label><input id="eItem" value="${x?esc(x.item):''}" placeholder="Contoh: Makan tengah hari" required></div>
+ <div class="field"><label>Jumlah (${db.settings.currency})</label><input id="eAmt" type="number" step="0.01" min="0" value="${x?Number(x.amount):''}" required></div>
+ <div class="field"><label>Kaedah Bayaran</label><select id="ePay">${['Cash','Debit Card','Credit Card','Online Banking','E-Wallet','Lain-lain'].map(v=>`<option ${x&&x.pay===v?'selected':''}>${v}</option>`).join('')}</select></div>
+ <div class="field"><label>Nota</label><input id="eNote" value="${x?esc(x.note||''):''}" placeholder="Pilihan"></div></div><div class="actions"><button type="button" class="btn secondary" onclick="go('expenses')">Batal</button><button class="btn primary">${button}</button></div></form></div>`;
 }
-function addExpense(e){e.preventDefault();db.expenses.push({id:Date.now(),date:eDate.value,category:eCat.value,item:eItem.value,amount:+eAmt.value,pay:ePay.value,note:eNote.value});save();alert('Belanja berjaya disimpan.');go('expenses')}
+function addExpense(e){e.preventDefault();const data={date:eDate.value,category:eCat.value,item:eItem.value,amount:+eAmt.value,pay:ePay.value,note:eNote.value};if(editingExpenseId){const i=db.expenses.findIndex(x=>x.id==editingExpenseId);if(i>=0)db.expenses[i]=Object.assign(db.expenses[i],data)}else{db.expenses.push(Object.assign({id:Date.now()},data))}save();alert(editingExpenseId?'Belanja berjaya dikemaskini.':'Belanja berjaya disimpan.');editingExpenseId=null;go('expenses')}
 function expenses(){
  let rows=db.expenses.slice().sort((a,b)=>b.date.localeCompare(a.date));
  content.innerHTML=`<div class="panel"><div class="toolbar"><input id="search" placeholder="Cari transaksi..." oninput="filterExpenses()"><select id="fcat" onchange="filterExpenses()"><option value="">Semua kategori</option>${db.categories.map(c=>`<option>${esc(c)}</option>`).join('')}</select><button class="btn primary" onclick="go('add')">＋ Tambah</button></div><div id="expenseTable"></div></div>`;renderExpenses(rows)
 }
 function filterExpenses(){let q=search.value.toLowerCase(),c=fcat.value;renderExpenses(db.expenses.filter(x=>(!q||(x.item+' '+x.category+' '+x.note).toLowerCase().includes(q))&&(!c||x.category===c)).sort((a,b)=>b.date.localeCompare(a.date)))}
-function renderExpenses(rows){let total=rows.reduce((a,x)=>a+ +x.amount,0);expenseTable.innerHTML=rows.length?`<div class="table-scroll"><table><thead><tr><th>Tarikh</th><th>Kategori</th><th>Perkara</th><th>Bayaran</th><th class="amount">Jumlah</th><th></th></tr></thead><tbody>${rows.map(x=>`<tr><td>${x.date}</td><td>${esc(x.category)}</td><td>${esc(x.item)}</td><td>${esc(x.pay)}</td><td class="amount">${db.settings.currency} ${money(x.amount)}</td><td><button class="btn danger" onclick="delExpense(${x.id})">Padam</button></td></tr>`).join('')}</tbody><tfoot><tr><th colspan="4">Jumlah</th><th class="amount">${db.settings.currency} ${money(total)}</th><th></th></tr></tfoot></table>`:'<div class="empty">Tiada transaksi dijumpai.</div>'}
+function renderExpenses(rows){let total=rows.reduce((a,x)=>a+ +x.amount,0);expenseTable.innerHTML=rows.length?`<div class="table-scroll"><table><thead><tr><th>Tarikh</th><th>Kategori</th><th>Perkara</th><th>Bayaran</th><th class="amount">Jumlah</th><th>Tindakan</th></tr></thead><tbody>${rows.map(x=>`<tr><td>${x.date}</td><td>${esc(x.category)}</td><td>${esc(x.item)}</td><td>${esc(x.pay)}</td><td class="amount">${db.settings.currency} ${money(x.amount)}</td><td><button class="btn secondary" onclick="add(${x.id})">Edit</button> <button class="btn danger" onclick="delExpense(${x.id})">Padam</button></td></tr>`).join('')}</tbody><tfoot><tr><th colspan="4">Jumlah</th><th class="amount">${db.settings.currency} ${money(total)}</th><th></th></tr></tfoot></table>`:'<div class="empty">Tiada transaksi dijumpai.</div>'}
 function delExpense(id){if(confirm('Padam transaksi ini?')){db.expenses=db.expenses.filter(x=>x.id!==id);save();expenses()}}
 function income(){
  content.innerHTML=`<div class="panel"><form onsubmit="addIncome(event)"><div class="formgrid"><div class="field"><label>Tarikh</label><input id="iDate" type="date" value="${new Date().toISOString().slice(0,10)}" required></div><div class="field"><label>Sumber</label><input id="iSource" placeholder="Gaji / Freelance / Bisnes" required></div><div class="field"><label>Jumlah (${db.settings.currency})</label><input id="iAmt" type="number" step=".01" min="0" required></div></div><div class="actions"><button class="btn primary">Simpan Pendapatan</button></div></form></div><div class="panel" style="margin-top:18px"><h3>Rekod Pendapatan</h3><div class="table-scroll"><table><thead><tr><th>Tarikh</th><th>Sumber</th><th class="amount">Jumlah</th><th></th></tr></thead><tbody>${db.incomes.slice().sort((a,b)=>b.date.localeCompare(a.date)).map(x=>`<tr><td>${x.date}</td><td>${esc(x.source)}</td><td class="amount">${db.settings.currency} ${money(x.amount)}</td><td><button class="btn danger" onclick="delIncome(${x.id})">Padam</button></td></tr>`).join('')||'<tr><td colspan="4" class="empty">Belum ada rekod.</td></tr>'}</tbody></table></div></div>`
