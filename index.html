@@ -53,7 +53,86 @@ body{font-size:13px}.side{width:272px;transform:translateX(-100%);transition:tra
 .chart-bar{fill:#4f46e5}.chart-bar:hover{fill:#3730a3}.action-icon{width:32px;height:32px;padding:0!important;display:inline-flex!important;align-items:center;justify-content:center;border-radius:7px!important}.action-icon{width:34px;height:34px;padding:0;display:inline-flex!important;align-items:center;justify-content:center;border-radius:8px!important}.action-icon svg{width:16px;height:16px;stroke-width:1.8}.chart-value{font-size:11px;font-weight:700;fill:#334155}.chart-month{font-size:11px;fill:#64748b}
 .saving-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:14px}.saving-card{border:1px solid var(--line);border-radius:9px;padding:14px;background:#fff}.saving-card span{display:block;font-size:11px;color:#94a3b8;margin-bottom:5px}.saving-card b{font-size:19px}.setting-help{font-size:11px;color:#94a3b8;margin-top:5px}
 @media(max-width:720px){.saving-summary{grid-template-columns:1fr}}
-.auth-form{display:flex;flex-direction:column;gap:13px;text-align:left;max-width:340px;margin:0 auto}.auth-form .field label{font-size:12px;font-weight:700;color:#475569}.auth-form .field input{width:100%;padding:11px 12px;border:1px solid #d5dbe5;border-radius:7px;background:#fff;outline:none}.auth-form .field input:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(22,119,255,.09)}.remember-row{display:flex;align-items:center;gap:7px;font-size:11px;color:#64748b}.remember-row input{accent-color:var(--primary)}.auth-main-btn{width:100%;margin-top:2px}.google-auth-btn{width:100%;max-width:340px;margin:0 auto;display:block}.auth-link,.text-btn{border:0;background:none;color:var(--primary);cursor:pointer;font-size:11px;padding:7px 2px}.auth-small{font-size:11px;color:#64748b;margin:14px 0}.text-btn{font-weight:700;padding:0}.auth-message{display:none;margin:12px auto 0;max-width:340px;padding:10px 12px;border-radius:7px;font-size:11px;line-height:1.5;text-align:left}.auth-message.show{display:block;background:#f0f7ff;border:1px solid #dbeafe;color:#2563eb}.auth-message.error{background:#fff1f2;border-color:#fecdd3;color:#dc2626}.auth-message.success{background:#f0fdf4;border-color:#bbf7d0;color:#15803d}.security-note{max-width:340px;margin:12px auto 0;padding:10px 12px;border-radius:7px;background:#f8fafc;border:1px solid #e5e7eb;color:#64748b;font-size:10px;line-height:1.55;text-align:left}.modal-backdrop{display:none;position:fixed;inset:0;background:rgba(15,23,42,.42);z-index:100;align-items:center;justify-content:center;padding:20px}.modal-backdrop.show{display:flex}.modal-card{width:min(430px,94vw);background:#fff;border:1px solid var(--line);border-radius:14px;padding:25px;box-shadow:0 24px 70px rgba(15,23,42,.2)}.modal-icon{width:44px;height:44px;border-radius:11px;background:#eff6ff;color:var(--primary);display:flex;align-items:center;justify-content:center;margin-bottom:13px}.modal-icon svg{width:22px;height:22px}.modal-card h3{margin:0 0 7px;font-size:19px;color:#172033}.modal-card p{margin:0;color:#64748b;font-size:12px;line-height:1.65}.modal-actions{display:flex;gap:9px;margin-top:20px}.modal-actions .btn{flex:1}</style>
+.auth-form{display:flex;flex-direction:column;gap:13px;text-align:left;max-width:340px;margin:0 auto}.auth-form .field label{font-size:12px;font-weight:700;color:#475569}.auth-form .field input{width:100%;padding:11px 12px;border:1px solid #d5dbe5;border-radius:7px;background:#fff;outline:none}.auth-form .field input:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(22,119,255,.09)}.remember-row{display:flex;align-items:center;gap:7px;font-size:11px;color:#64748b}.remember-row input{accent-color:var(--primary)}.auth-main-btn{width:100%;margin-top:2px}.google-auth-btn{width:100%;max-width:340px;margin:0 auto;display:block}.auth-link,.text-btn{border:0;background:none;color:var(--primary);cursor:pointer;font-size:11px;padding:7px 2px}.auth-small{font-size:11px;color:#64748b;margin:14px 0}.text-btn{font-weight:700;padding:0}.auth-message{display:none;margin:12px auto 0;max-width:340px;padding:10px 12px;border-radius:7px;font-size:11px;line-height:1.5;text-align:left}.auth-message.show{display:block;background:#f0f7ff;border:1px solid #dbeafe;color:#2563eb}.auth-message.error{background:#fff1f2;border-color:#fecdd3;color:#dc2626}.auth-message.success{background:#f0fdf4;border-color:#bbf7d0;color:#15803d}.security-note{max-width:340px;margin:12px auto 0;padding:10px 12px;border-radius:7px;background:#f8fafc;border:1px solid #e5e7eb;color:#64748b;font-size:10px;line-height:1.55;text-align:left}.modal-backdrop{display:none;position:fixed;inset:0;background:rgba(15,23,42,.42);z-index:100;align-items:center;justify-content:center;padding:20px}.modal-backdrop.show{display:flex}.modal-card{width:min(430px,94vw);background:#fff;border:1px solid var(--line);border-radius:14px;padding:25px;box-shadow:0 24px 70px rgba(15,23,42,.2)}.modal-icon{width:44px;height:44px;border-radius:11px;background:#eff6ff;color:var(--primary);display:flex;align-items:center;justify-content:center;margin-bottom:13px}.modal-icon svg{width:22px;height:22px}.modal-card h3{margin:0 0 7px;font-size:19px;color:#172033}.modal-card p{margin:0;color:#64748b;font-size:12px;line-height:1.65}.modal-actions{display:flex;gap:9px;margin-top:20px}.modal-actions .btn{flex:1}
+
+/* Mobile-first polish */
+html{overflow-x:hidden}
+body{overflow-x:hidden}
+.mobile-bottom-nav{display:none}
+@media(max-width:720px){
+  :root{--mobile-nav-h:66px}
+  .app{min-height:100dvh}
+  .side{z-index:30;width:min(290px,86vw);padding-bottom:calc(12px + env(safe-area-inset-bottom))}
+  .mobile-topbar{z-index:25;height:58px;padding:0 14px;box-shadow:0 1px 8px rgba(15,23,42,.04)}
+  .mobile-menu{width:40px;height:40px;border-radius:9px}
+  .mobile-user img{width:32px;height:32px}
+  .mobile-user span{max-width:150px}
+  .main{padding:74px 12px calc(var(--mobile-nav-h) + 18px);min-width:0}
+  .top{gap:12px;min-width:0}
+  .top>div:first-child{min-width:0;flex:1}
+  .top h1{font-size:21px;letter-spacing:-.2px;white-space:normal;overflow-wrap:anywhere}
+  .top p{line-height:1.45}
+  .top>div:last-child{display:flex!important;align-items:center;gap:6px!important;flex-shrink:0}
+  .top .sync-badge,.top #desktopUser{display:none!important}
+  .top .btn{font-size:0;padding:0;width:40px;height:40px;min-height:40px;border-radius:10px;display:inline-flex;align-items:center;justify-content:center}
+  .top .btn:before{content:'+';font-size:22px;font-weight:400;line-height:1}
+  .cards{gap:10px}
+  .card{padding:14px;border-radius:10px;min-width:0}
+  .value{font-size:21px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .grid{gap:10px;margin-top:10px}
+  .panel{padding:14px;border-radius:10px;min-width:0;overflow:hidden}
+  .panel h3{font-size:15px;line-height:1.35}
+  .formgrid{gap:12px}
+  .field input,.field select,.field textarea{min-height:44px;font-size:16px}
+  .actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .actions .btn{width:100%;min-width:0;min-height:44px}
+  .toolbar{display:grid;grid-template-columns:1fr;gap:8px}
+  .toolbar>*{width:100%!important;min-width:0}
+  .notice{font-size:12px;line-height:1.55}
+  .table-scroll{width:100%;overflow-x:auto;overflow-y:hidden;border:1px solid #eef0f3;border-radius:8px}
+  .table-scroll table{min-width:620px;margin:0}
+  th,td{padding:11px 9px}
+  .chart-wrap{height:230px;margin-left:-2px;margin-right:-2px;width:calc(100% + 4px)}
+  .chart-wrap svg{overflow:visible}
+  .budget-hero{border-radius:10px}
+  .saving-card{padding:13px;border-radius:10px}
+  .modal-backdrop{padding:12px;align-items:flex-end}
+  .modal-card{width:100%;max-width:none;border-radius:16px 16px 12px 12px;padding:22px 18px calc(20px + env(safe-area-inset-bottom));max-height:88dvh;overflow:auto}
+  .modal-actions{display:grid;grid-template-columns:1fr 1fr}
+  .modal-actions .btn{min-height:44px}
+  .auth-screen{padding:14px;align-items:center}
+  .auth-card{width:100%;max-width:430px;padding:26px 18px 22px;border-radius:16px}
+  .auth-title{font-size:22px}
+  .auth-form{max-width:none}
+  .auth-form .field input{min-height:46px;font-size:16px}
+  .google-auth-btn,.auth-main-btn{min-height:46px}
+  .mobile-bottom-nav{
+    display:grid;grid-template-columns:repeat(5,1fr);position:fixed;left:0;right:0;bottom:0;
+    height:var(--mobile-nav-h);padding:5px 6px calc(5px + env(safe-area-inset-bottom));
+    background:rgba(255,255,255,.98);border-top:1px solid var(--line);
+    box-shadow:0 -6px 20px rgba(15,23,42,.07);z-index:25;backdrop-filter:blur(10px)
+  }
+  .mobile-bottom-nav button{
+    border:0;background:transparent;color:#7b8494;display:flex;flex-direction:column;
+    align-items:center;justify-content:center;gap:3px;border-radius:9px;min-width:0;cursor:pointer;padding:4px 2px
+  }
+  .mobile-bottom-nav button svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+  .mobile-bottom-nav button small{font-size:9px;line-height:12px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .mobile-bottom-nav button.active{color:var(--primary);background:var(--primary-soft);font-weight:700}
+  .overlay{z-index:20}
+}
+@media(max-width:380px){
+  .main{padding-left:10px;padding-right:10px}
+  .mobile-user span{display:none}
+  .top h1{font-size:19px}
+  .top .btn{width:38px;height:38px}
+  .card{padding:12px}
+  .label{font-size:11px}
+  .value{font-size:19px}
+  .mobile-bottom-nav button small{font-size:8px}
+}
+
+</style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
@@ -129,6 +208,7 @@ body{font-size:13px}.side{width:272px;transform:translateX(-100%);transition:tra
     </button>
     <div class="mobile-user" id="mobileUser"></div>
   </div>
+  <nav class="mobile-bottom-nav" id="mobileBottomNav" aria-label="Navigasi mudah alih"></nav>
   <div class="top">
     <div><h1 id="title">Dashboard</h1><p id="subtitle">Pantau kewangan anda dengan mudah.</p></div>
     <div style="display:flex;align-items:center;gap:8px">
@@ -439,14 +519,26 @@ db.settings.language ||= 'ms';
 function money(n){return new Intl.NumberFormat('ms-MY',{minimumFractionDigits:2,maximumFractionDigits:2}).format(Number(n)||0)}
 function esc(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
 function month(){return new Date().toISOString().slice(0,7)}
-function icon(name){const p={dashboard:'<path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/><path d="M9 21v-6h6v6"/>',add:'<circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/>',expenses:'<path d="M4 6h16M4 12h16M4 18h10"/><path d="M18 16v5M15.5 18.5H20.5"/>',income:'<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M7 12h10M12 9v6"/>',budget:'<path d="M4 5h16v14H4z"/><path d="M8 9h8M8 13h5M8 17h3"/>',monthly:'<rect x="3" y="4" width="18" height="17" rx="2"/><path d="M7 2v4M17 2v4M3 9h18"/>',category:'<path d="M4 19V9M10 19V5M16 19v-7M22 19H2"/>',trend:'<path d="M3 18 9 12l4 4 8-9"/><path d="M17 7h4v4"/>',report:'<path d="M5 3h10l4 4v14H5z"/><path d="M15 3v5h5M8 12h8M8 16h6"/>',export:'<path d="M12 3v12M8 11l4 4 4-4"/><path d="M5 19h14"/>',categories:'<path d="M4 5h16v4H4zM4 11h16v4H4zM4 17h10v4H4z"/>',saving:'<path d="M12 3v18M17 7.5c0-1.7-2.2-3-5-3S7 5.8 7 7.5s2.2 3 5 3 5 1.3 5 3-2.2 3-5 3-5-1.3-5-3"/>',settings:'<circle cx="12" cy="12" r="3"/><path d="M19 15l2 1-2 3-2-1a8 8 0 0 1-2 1v2h-4v-2a8 8 0 0 1-2-1l-2 1-2-3 2-1a8 8 0 0 1 0-3l-2-1 2-3 2 1a8 8 0 0 1 2-1V5h4v2a8 8 0 0 1 2 1l2-1 2 3-2 1a8 8 0 0 1 0 4z"/>'};return '<svg viewBox="0 0 24 24" aria-hidden="true">'+(p[name]||'')+'</svg>'}
+function icon(name){const p={dashboard:'<path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/><path d="M9 21v-6h6v6"/>',add:'<circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/>',expenses:'<path d="M4 6h16M4 12h16M4 18h10"/><path d="M18 16v5M15.5 18.5H20.5"/>',income:'<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M7 12h10M12 9v6"/>',budget:'<path d="M4 5h16v14H4z"/><path d="M8 9h8M8 13h5M8 17h3"/>',monthly:'<rect x="3" y="4" width="18" height="17" rx="2"/><path d="M7 2v4M17 2v4M3 9h18"/>',category:'<path d="M4 19V9M10 19V5M16 19v-7M22 19H2"/>',trend:'<path d="M3 18 9 12l4 4 8-9"/><path d="M17 7h4v4"/>',report:'<path d="M5 3h10l4 4v14H5z"/><path d="M15 3v5h5M8 12h8M8 16h6"/>',export:'<path d="M12 3v12M8 11l4 4 4-4"/><path d="M5 19h14"/>',categories:'<path d="M4 5h16v4H4zM4 11h16v4H4zM4 17h10v4H4z"/>',saving:'<path d="M12 3v18M17 7.5c0-1.7-2.2-3-5-3S7 5.8 7 7.5s2.2 3 5 3 5 1.3 5 3-2.2 3-5 3-5-1.3-5-3"/>',more:'<circle cx="5" cy="12" r="1.2"/><circle cx="12" cy="12" r="1.2"/><circle cx="19" cy="12" r="1.2"/>',settings:'<circle cx="12" cy="12" r="3"/><path d="M19 15l2 1-2 3-2-1a8 8 0 0 1-2 1v2h-4v-2a8 8 0 0 1-2-1l-2 1-2-3 2-1a8 8 0 0 1 0-3l-2-1 2-3 2 1a8 8 0 0 1 2-1V5h4v2a8 8 0 0 1 2 1l2-1 2 3-2 1a8 8 0 0 1 0 4z"/>'};return '<svg viewBox="0 0 24 24" aria-hidden="true">'+(p[name]||'')+'</svg>'}
 const LANG={
 ms:{nav:{dashboard:'Dashboard',add:'Tambah Belanja',expenses:'Senarai Belanja',income:'Pendapatan',saving:'Simpanan',budget:'Budget',monthly:'Ringkasan Bulanan',category:'Analisis Kategori',trend:'Trend Belanja',report:'Laporan',export:'Export Data',categories:'Kategori',settings:'Tetapan'},meta:{dashboard:['Dashboard','Ringkasan kewangan semasa'],add:['Tambah Belanja','Masukkan transaksi baru'],expenses:['Senarai Belanja','Semak dan urus semua transaksi'],income:['Pendapatan','Rekod sumber pendapatan'],saving:['Simpanan','Rekod dan pantau simpanan'],budget:['Budget','Tetapkan had belanja mengikut kategori'],monthly:['Ringkasan Bulanan','Lihat prestasi kewangan setiap bulan'],category:['Analisis Kategori','Kenal pasti ke mana wang dibelanjakan'],trend:['Trend Belanja','Bandingkan perbelanjaan dari bulan ke bulan'],report:['Laporan','Ringkasan kewangan untuk rujukan'],export:['Export Data','Simpan data transaksi ke fail CSV'],categories:['Kategori','Urus kategori belanja'],settings:['Tetapan','Tetapan asas sistem']}},
 en:{nav:{dashboard:'Dashboard',add:'Add Expense',expenses:'Expense List',income:'Income',saving:'Savings',budget:'Budget',monthly:'Monthly Summary',category:'Category Analysis',trend:'Spending Trend',report:'Reports',export:'Export Data',categories:'Categories',settings:'Settings'},meta:{dashboard:['Dashboard','Monitor your finances at a glance'],add:['Add Expense','Enter a new transaction'],expenses:['Expense List','Review and manage all transactions'],income:['Income','Record your income sources'],saving:['Savings','Record and track your savings'],budget:['Budget','Set spending limits by category'],monthly:['Monthly Summary','Review your monthly financial performance'],category:['Category Analysis','See where your money is going'],trend:['Spending Trend','Compare spending month to month'],report:['Reports','Financial summaries for reference'],export:['Export Data','Save transaction data as CSV'],categories:['Categories','Manage spending categories'],settings:['Settings','System preferences']}}
 };
 function lang(){return db.settings.language==='en'?'en':'ms'}
-function nav(){const L=LANG[lang()].nav;const items=[['dashboard','dashboard'],['add','add'],['expenses','expenses'],['income','income'],['saving','saving'],['budget','budget'],['monthly','monthly'],['category','category'],['trend','trend'],['report','report'],['export','export'],['categories','categories'],['settings','settings']];document.getElementById('nav').innerHTML=items.map(x=>'<button id="n-'+x[0]+'" onclick="go(\''+x[0]+'\')" title="'+L[x[0]]+'"><span class="ico">'+icon(x[1])+'</span><span>'+L[x[0]]+'</span></button>').join('')}
-function go(page){closeMenuOnMobile();document.querySelectorAll('.nav button').forEach(b=>b.classList.remove('active'));document.getElementById('n-'+page)?.classList.add('active');const meta=LANG[lang()].meta;document.getElementById('title').textContent=meta[page][0];document.getElementById('subtitle').textContent=meta[page][1];({dashboard,add,expenses,income,saving,budget,monthly,category,trend,report,export:exportPage,categories,settings}[page]||dashboard)()}
+function nav(){
+ const L=LANG[lang()].nav;
+ const items=[['dashboard','dashboard'],['add','add'],['expenses','expenses'],['income','income'],['saving','saving'],['budget','budget'],['monthly','monthly'],['category','category'],['trend','trend'],['report','report'],['export','export'],['categories','categories'],['settings','settings']];
+ document.getElementById('nav').innerHTML=items.map(x=>`<button id="n-${x[0]}" onclick="go('${x[0]}')" title="${L[x[0]]}"><span class="ico">${icon(x[1])}</span><span>${L[x[0]]}</span></button>`).join('');
+ const moreLabel=lang()==='en'?'More':'Lagi';
+ document.getElementById('mobileBottomNav').innerHTML=
+   `<button data-page="dashboard" onclick="go('dashboard')"><span>${icon('dashboard')}</span><small>${L.dashboard}</small></button>`+
+   `<button data-page="add" onclick="go('add')"><span>${icon('add')}</span><small>${L.add}</small></button>`+
+   `<button data-page="expenses" onclick="go('expenses')"><span>${icon('expenses')}</span><small>${L.expenses}</small></button>`+
+   `<button data-page="saving" onclick="go('saving')"><span>${icon('saving')}</span><small>${L.saving}</small></button>`+
+   `<button data-page="more" onclick="toggleMenu(true)"><span>${icon('more')}</span><small>${moreLabel}</small></button>`;
+}
+
+function go(page){closeMenuOnMobile();document.querySelectorAll('.nav button').forEach(b=>b.classList.remove('active'));document.getElementById('n-'+page)?.classList.add('active');document.querySelectorAll('#mobileBottomNav button').forEach(b=>b.classList.toggle('active',b.dataset.page===page));const meta=LANG[lang()].meta;document.getElementById('title').textContent=meta[page][0];document.getElementById('subtitle').textContent=meta[page][1];({dashboard,add,expenses,income,saving,budget,monthly,category,trend,report,export:exportPage,categories,settings}[page]||dashboard)()}
 function totals(m=month()){let inc=db.incomes.filter(x=>x.date.startsWith(m)).reduce((a,x)=>a+ +x.amount,0);let exp=db.expenses.filter(x=>x.date.startsWith(m)).reduce((a,x)=>a+ +x.amount,0);return{inc,exp,balance:inc-exp}}
 function dashboard(){
  let m=month(),t=totals(m),monthSavings=db.savings.filter(x=>x.date.startsWith(m)).reduce((a,x)=>a+Number(x.amount||0),0),rate=t.inc?((monthSavings/t.inc)*100):0;
