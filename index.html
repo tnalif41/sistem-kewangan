@@ -134,6 +134,14 @@ body{overflow-x:hidden}
 
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+/* Multi-device sync feedback */
+.sync-status{transition:opacity .2s ease}
+@media(max-width:640px){
+  .sync-status{font-size:12px}
+}
+</style>
 </head>
 <body>
 <div id="authScreen" class="auth-screen">
@@ -238,6 +246,10 @@ const DRIVE_SCOPE = 'https://www.googleapis.com/auth/drive.file';
 let supabaseClient=null;
 let driveFolderId=null, googleUser=null, accessToken=null, tokenClient=null, driveFileId=null, saveTimer=null, driveReady=false;
 let currentAuthUser=null;
+let driveRemoteModifiedTime=null;
+let driveSyncTimer=null;
+let driveSyncInFlight=false;
+let localDataDirty=false;
 
 function authConfigured(){
   return !SUPABASE_URL.startsWith('YOUR_') && !SUPABASE_PUBLISHABLE_KEY.startsWith('YOUR_');
@@ -280,7 +292,11 @@ function resetDbForUser(){
   db.settings.description ||= 'Personal Finance Manager'; db.settings.language ||= 'ms'; db.monthlyBudgets ||= {};
 }
 
-function save(){localStorage.setItem(KEY,JSON.stringify(db));saveToDrive(false)}
+function save(){
+  localStorage.setItem(KEY,JSON.stringify(db));
+  localDataDirty=true;
+  saveToDrive(false);
+}
 
 async function loginWithPassword(e){
   e.preventDefault();
@@ -412,6 +428,7 @@ async function initSupabase(){
 }
 
 async function signOut(){
+  stopDriveAutoSync();
   accessToken=null;tokenClient=null;driveFileId=null;driveFolderId=null;driveReady=false;
   if(supabaseClient)await supabaseClient.auth.signOut();
   currentAuthUser=null;googleUser=null;showAuth();showLoginView();
@@ -465,16 +482,31 @@ async function loadFromDrive(){
   try{
     setSync('busy','Menyemak Drive...');driveMessage('Sedang menyemak folder sistem-kewangan...','busy');
     const folderId=await findOrCreateDriveFolder(),f=await findDriveFile(folderId);
-    if(!f){driveFileId=null;await saveToDrive(true);driveMessage('Berjaya. Folder "sistem-kewangan" dan fail data telah dicipta di Google Drive.','success');return}
-    driveFileId=f.id;const r=await driveFetch('https://www.googleapis.com/drive/v3/files/'+encodeURIComponent(f.id)+'?alt=media');const remote=await r.json();
+    if(!f){
+      driveFileId=null;
+      driveRemoteModifiedTime=null;
+      localDataDirty=true;
+      await saveToDrive(true);
+      driveMessage('Berjaya. Folder "sistem-kewangan" dan fail data telah dicipta di Google Drive.','success');
+      startDriveAutoSync();
+      return;
+    }
+    driveFileId=f.id;
+    driveRemoteModifiedTime=f.modifiedTime||null;
+    const r=await driveFetch('https://www.googleapis.com/drive/v3/files/'+encodeURIComponent(f.id)+'?alt=media');
+    const remote=await r.json();
     if(remote&&typeof remote==='object'){
-      db=Object.assign(db,remote);db.expenses ||= [];db.incomes ||= [];db.savings ||= [];db.budgets ||= {};
+      db=Object.assign(db,remote);
+      db.expenses ||= [];db.incomes ||= [];db.savings ||= [];db.budgets ||= {};
       db.categories ||= ['Makanan','Pengangkutan','Bil & Utiliti','Rumah','Kesihatan','Hiburan','Belian','Lain-lain'];
       db.settings ||= {currency:'RM',name:'Sistem Kewangan',description:'Personal Finance Manager',language:'ms'};
       db.settings.description ||= 'Personal Finance Manager';db.settings.language ||= 'ms';db.monthlyBudgets ||= {};
       localStorage.setItem(KEY,JSON.stringify(db));
+      localDataDirty=false;
     }
-    driveReady=true;setSync('','Disimpan di Google Drive');driveMessage('Sync berjaya. Data menggunakan Google Drive sebagai stor utama.','success');nav();go('dashboard');
+    driveReady=true;setSync('','Disimpan di Google Drive');driveMessage('Sync berjaya. Auto-sync antara peranti telah diaktifkan.','success');
+    nav();go('dashboard');
+    startDriveAutoSync();
   }catch(e){
     console.error('Google Drive error:',e);driveReady=false;setSync('error','Gagal sync');
     let msg='Sync Google Drive gagal.';
@@ -484,24 +516,117 @@ async function loadFromDrive(){
     driveMessage(msg,'error');
   }
 }
-async function saveToDrive(immediate=false){
-  if(!accessToken){if(immediate)driveMessage('Belum disambungkan ke Google Drive. Tekan "Aktifkan Sync Google Drive".','error');return}
-  if(!immediate){clearTimeout(saveTimer);saveTimer=setTimeout(()=>saveToDrive(true),700);return}
+
+async function checkDriveForChanges(force=false){
+  if(!accessToken || !driveFileId || driveSyncInFlight)return;
+  if(localDataDirty && !force)return;
+  driveSyncInFlight=true;
   try{
-    setSync('busy','Menyimpan...');driveMessage('Sedang menyimpan data ke Google Drive...','busy');
-    const folderId=await findOrCreateDriveFolder(),blob=new Blob([JSON.stringify(db,null,2)],{type:'application/json'});
-    if(!driveFileId){const existing=await findDriveFile(folderId);if(existing)driveFileId=existing.id}
-    if(!driveFileId){
-      const metadata={name:DRIVE_FILE_NAME,mimeType:'application/json',parents:[folderId]},form=new FormData();
-      form.append('metadata',new Blob([JSON.stringify(metadata)],{type:'application/json'}));form.append('file',blob);
-      const r=await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,name,parents',{method:'POST',headers:{Authorization:'Bearer '+accessToken},body:form});
-      if(!r.ok)throw new Error(await r.text());driveFileId=(await r.json()).id;
-    }else{
-      const r=await fetch('https://www.googleapis.com/upload/drive/v3/files/'+encodeURIComponent(driveFileId)+'?uploadType=media',{method:'PATCH',headers:{Authorization:'Bearer '+accessToken,'Content-Type':'application/json'},body:blob});
-      if(r.status===401){accessToken=null;driveReady=false;throw new Error('DRIVE_TOKEN_EXPIRED')}if(!r.ok)throw new Error(await r.text());
+    const folderId=driveFolderId || await findOrCreateDriveFolder();
+    const f=await findDriveFile(folderId);
+    if(!f || !f.modifiedTime)return;
+    if(!force && driveRemoteModifiedTime && f.modifiedTime===driveRemoteModifiedTime)return;
+    driveRemoteModifiedTime=f.modifiedTime;
+    setSync('busy','Sync...');
+    const r=await driveFetch('https://www.googleapis.com/drive/v3/files/'+encodeURIComponent(f.id)+'?alt=media');
+    const remote=await r.json();
+    if(remote&&typeof remote==='object'){
+      db=Object.assign(db,remote);
+      db.expenses ||= [];db.incomes ||= [];db.savings ||= [];db.budgets ||= {};
+      db.categories ||= ['Makanan','Pengangkutan','Bil & Utiliti','Rumah','Kesihatan','Hiburan','Belian','Lain-lain'];
+      db.settings ||= {currency:'RM',name:'Sistem Kewangan',description:'Personal Finance Manager',language:'ms'};
+      db.settings.description ||= 'Personal Finance Manager';db.settings.language ||= 'ms';db.monthlyBudgets ||= {};
+      localStorage.setItem(KEY,JSON.stringify(db));
+      localDataDirty=false;
+      setSync('','Disimpan di Google Drive');
+      nav();
     }
-    driveReady=true;setSync('','Disimpan di Google Drive');driveMessage('✓ Sync berjaya — '+DRIVE_FILE_NAME+' disimpan dalam folder "sistem-kewangan".','success');
-  }catch(e){console.error('Google Drive save error:',e);driveReady=false;setSync('error','Gagal sync');let msg=e.message==='DRIVE_TOKEN_EXPIRED'?'Sesi Google Drive telah tamat. Tekan "Aktifkan Sync Google Drive" semula.':'Sync gagal.';driveMessage(msg,'error');if(immediate)alert(msg)}
+  }catch(e){
+    console.error('Auto-sync error:',e);
+    if(e.message==='DRIVE_TOKEN_EXPIRED'){
+      accessToken=null;driveReady=false;setSync('error','Drive perlu disambung semula');
+      stopDriveAutoSync();
+    }
+  }finally{
+    driveSyncInFlight=false;
+  }
+}
+
+function startDriveAutoSync(){
+  stopDriveAutoSync();
+  if(!accessToken)return;
+  driveSyncTimer=setInterval(()=>checkDriveForChanges(false),5000);
+  window.addEventListener('focus',syncDriveOnFocus);
+  document.addEventListener('visibilitychange',syncDriveOnVisibility);
+}
+
+function stopDriveAutoSync(){
+  if(driveSyncTimer){clearInterval(driveSyncTimer);driveSyncTimer=null;}
+  window.removeEventListener('focus',syncDriveOnFocus);
+  document.removeEventListener('visibilitychange',syncDriveOnVisibility);
+}
+
+function syncDriveOnFocus(){checkDriveForChanges(false)}
+function syncDriveOnVisibility(){if(document.visibilityState==='visible')checkDriveForChanges(false)}
+
+async function saveToDrive(immediate=false){
+  if(!accessToken){
+    if(immediate)driveMessage('Belum disambungkan ke Google Drive. Tekan "Aktifkan Sync Google Drive".','error');
+    return;
+  }
+  if(!immediate){
+    clearTimeout(saveTimer);
+    saveTimer=setTimeout(()=>saveToDrive(true),700);
+    return;
+  }
+  try{
+    setSync('busy','Menyimpan...');
+    driveMessage('Sedang menyimpan data ke Google Drive...','busy');
+    const folderId=await findOrCreateDriveFolder();
+    const blob=new Blob([JSON.stringify(db,null,2)],{type:'application/json'});
+    if(!driveFileId){
+      const existing=await findDriveFile(folderId);
+      if(existing){
+        driveFileId=existing.id;
+        driveRemoteModifiedTime=existing.modifiedTime||null;
+      }
+    }
+    if(!driveFileId){
+      const metadata={name:DRIVE_FILE_NAME,mimeType:'application/json',parents:[folderId]};
+      const form=new FormData();
+      form.append('metadata',new Blob([JSON.stringify(metadata)],{type:'application/json'}));
+      form.append('file',blob);
+      const r=await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,name,parents,modifiedTime',{
+        method:'POST',headers:{Authorization:'Bearer '+accessToken},body:form
+      });
+      if(r.status===401){accessToken=null;driveReady=false;throw new Error('DRIVE_TOKEN_EXPIRED')}
+      if(!r.ok)throw new Error(await r.text());
+      const created=await r.json();
+      driveFileId=created.id;
+      driveRemoteModifiedTime=created.modifiedTime||new Date().toISOString();
+    }else{
+      const r=await fetch('https://www.googleapis.com/upload/drive/v3/files/'+encodeURIComponent(driveFileId)+'?uploadType=media&fields=id,modifiedTime',{
+        method:'PATCH',
+        headers:{Authorization:'Bearer '+accessToken,'Content-Type':'application/json'},
+        body:blob
+      });
+      if(r.status===401){accessToken=null;driveReady=false;throw new Error('DRIVE_TOKEN_EXPIRED')}
+      if(!r.ok)throw new Error(await r.text());
+      const updated=await r.json().catch(()=>({}));
+      driveRemoteModifiedTime=updated.modifiedTime||new Date().toISOString();
+    }
+    localDataDirty=false;
+    driveReady=true;
+    setSync('','Disimpan di Google Drive');
+    driveMessage('✓ Sync berjaya — perubahan akan disemak automatik setiap 5 saat pada peranti lain.','success');
+    startDriveAutoSync();
+  }catch(e){
+    console.error('Google Drive save error:',e);
+    driveReady=false;setSync('error','Gagal sync');
+    let msg=e.message==='DRIVE_TOKEN_EXPIRED'?'Sesi Google Drive telah tamat. Tekan "Aktifkan Sync Google Drive" semula.':'Sync gagal.';
+    driveMessage(msg,'error');
+    if(immediate)alert(msg);
+  }
 }
 
 let KEY='sistemKewanganFreshV1';
