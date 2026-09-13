@@ -53,7 +53,7 @@ body{font-size:13px}.side{width:272px;transform:translateX(-100%);transition:tra
 .chart-bar{fill:#4f46e5}.chart-bar:hover{fill:#3730a3}.action-icon{width:32px;height:32px;padding:0!important;display:inline-flex!important;align-items:center;justify-content:center;border-radius:7px!important}.action-icon{width:34px;height:34px;padding:0;display:inline-flex!important;align-items:center;justify-content:center;border-radius:8px!important}.action-icon svg{width:16px;height:16px;stroke-width:1.8}.chart-value{font-size:11px;font-weight:700;fill:#334155}.chart-month{font-size:11px;fill:#64748b}
 .saving-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:14px}.saving-card{border:1px solid var(--line);border-radius:9px;padding:14px;background:#fff}.saving-card span{display:block;font-size:11px;color:#94a3b8;margin-bottom:5px}.saving-card b{font-size:19px}.setting-help{font-size:11px;color:#94a3b8;margin-top:5px}
 @media(max-width:720px){.saving-summary{grid-template-columns:1fr}}
-.auth-form{display:flex;flex-direction:column;gap:13px;text-align:left;max-width:340px;margin:0 auto}.auth-form .field label{font-size:12px;font-weight:700;color:#475569}.auth-form .field input{width:100%;padding:11px 12px;border:1px solid #d5dbe5;border-radius:7px;background:#fff;outline:none}.auth-form .field input:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(22,119,255,.09)}.remember-row{display:flex;align-items:center;gap:7px;font-size:11px;color:#64748b}.remember-row input{accent-color:var(--primary)}.auth-main-btn{width:100%;margin-top:2px}.google-auth-btn{width:100%;max-width:340px;margin:0 auto;display:block}.auth-link,.text-btn{border:0;background:none;color:var(--primary);cursor:pointer;font-size:11px;padding:7px 2px}.auth-small{font-size:11px;color:#64748b;margin:14px 0}.text-btn{font-weight:700;padding:0}.auth-message{display:none;margin:12px auto 0;max-width:340px;padding:10px 12px;border-radius:7px;font-size:11px;line-height:1.5;text-align:left}.auth-message.show{display:block;background:#f0f7ff;border:1px solid #dbeafe;color:#2563eb}.auth-message.error{background:#fff1f2;border-color:#fecdd3;color:#dc2626}.auth-message.success{background:#f0fdf4;border-color:#bbf7d0;color:#15803d}.security-note{max-width:340px;margin:12px auto 0;padding:10px 12px;border-radius:7px;background:#f8fafc;border:1px solid #e5e7eb;color:#64748b;font-size:10px;line-height:1.55;text-align:left}</style>
+.auth-form{display:flex;flex-direction:column;gap:13px;text-align:left;max-width:340px;margin:0 auto}.auth-form .field label{font-size:12px;font-weight:700;color:#475569}.auth-form .field input{width:100%;padding:11px 12px;border:1px solid #d5dbe5;border-radius:7px;background:#fff;outline:none}.auth-form .field input:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(22,119,255,.09)}.remember-row{display:flex;align-items:center;gap:7px;font-size:11px;color:#64748b}.remember-row input{accent-color:var(--primary)}.auth-main-btn{width:100%;margin-top:2px}.google-auth-btn{width:100%;max-width:340px;margin:0 auto;display:block}.auth-link,.text-btn{border:0;background:none;color:var(--primary);cursor:pointer;font-size:11px;padding:7px 2px}.auth-small{font-size:11px;color:#64748b;margin:14px 0}.text-btn{font-weight:700;padding:0}.auth-message{display:none;margin:12px auto 0;max-width:340px;padding:10px 12px;border-radius:7px;font-size:11px;line-height:1.5;text-align:left}.auth-message.show{display:block;background:#f0f7ff;border:1px solid #dbeafe;color:#2563eb}.auth-message.error{background:#fff1f2;border-color:#fecdd3;color:#dc2626}.auth-message.success{background:#f0fdf4;border-color:#bbf7d0;color:#15803d}.security-note{max-width:340px;margin:12px auto 0;padding:10px 12px;border-radius:7px;background:#f8fafc;border:1px solid #e5e7eb;color:#64748b;font-size:10px;line-height:1.55;text-align:left}.modal-backdrop{display:none;position:fixed;inset:0;background:rgba(15,23,42,.42);z-index:100;align-items:center;justify-content:center;padding:20px}.modal-backdrop.show{display:flex}.modal-card{width:min(430px,94vw);background:#fff;border:1px solid var(--line);border-radius:14px;padding:25px;box-shadow:0 24px 70px rgba(15,23,42,.2)}.modal-icon{width:44px;height:44px;border-radius:11px;background:#eff6ff;color:var(--primary);display:flex;align-items:center;justify-content:center;margin-bottom:13px}.modal-icon svg{width:22px;height:22px}.modal-card h3{margin:0 0 7px;font-size:19px;color:#172033}.modal-card p{margin:0;color:#64748b;font-size:12px;line-height:1.65}.modal-actions{display:flex;gap:9px;margin-top:20px}.modal-actions .btn{flex:1}</style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
@@ -104,6 +104,15 @@ body{font-size:13px}.side{width:272px;transform:translateX(-100%);transition:tra
       <div id="passwordMessage" class="auth-message"></div>
     </div>
     <div class="auth-footer">Authentication dilindungi oleh Supabase Auth. Password tidak disimpan dalam Google Drive atau localStorage.</div>
+  </div>
+</div>
+
+<div id="passwordPrompt" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="passwordPromptTitle">
+  <div class="modal-card">
+    <div class="modal-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/><path d="M12 14v3"/></svg></div>
+    <h3 id="passwordPromptTitle">Cipta password untuk akaun anda</h3>
+    <p id="passwordPromptText">Anda baru mendaftar menggunakan Google. Untuk login selepas ini, cipta password terlebih dahulu. Selepas itu anda boleh login menggunakan email Gmail dan password yang anda cipta.</p>
+    <div class="modal-actions"><button class="btn primary" onclick="continuePasswordSetup()">Create Password</button><button class="btn secondary" onclick="closePasswordPrompt()">Nanti</button></div>
   </div>
 </div>
 
@@ -247,6 +256,10 @@ async function setInitialPassword(e){
   },900);
 }
 
+function showPasswordPrompt(){document.getElementById('passwordPrompt')?.classList.add('show')}
+function closePasswordPrompt(){document.getElementById('passwordPrompt')?.classList.remove('show')}
+function continuePasswordSetup(){closePasswordPrompt();showPasswordSetup()}
+
 function isGoogleUser(user){
   const providers=user?.app_metadata?.providers||[];
   return user?.app_metadata?.provider==='google' || providers.includes('google');
@@ -298,8 +311,9 @@ async function initSupabase(){
       currentAuthUser=session.user;
       const hasPassword=!!session.user.user_metadata?.password_set;
       // OAuth-created accounts get a one-time password setup screen.
-      if(event==='SIGNED_IN' && isGoogleUser(session.user) && !hasPassword && !session.user.user_metadata?.password_set){
-        showPasswordSetup();
+      if(event==='SIGNED_IN' && isGoogleUser(session.user) && !hasPassword){
+        showAuth();
+        showPasswordPrompt();
         return;
       }
       await handleAuthenticatedUser(session.user);
@@ -310,7 +324,7 @@ async function initSupabase(){
     currentAuthUser=session.user;
     if(resetMode){showPasswordSetup();return}
     const isGoogle=isGoogleUser(session.user);
-    if(isGoogle && !session.user.user_metadata?.password_set){showPasswordSetup();return}
+    if(isGoogle && !session.user.user_metadata?.password_set){showAuth();showPasswordPrompt();return}
     await handleAuthenticatedUser(session.user);
   }else{
     showAuth();
@@ -572,8 +586,28 @@ function settings(){
  <div class="field"><label>${en?'Currency':'Mata Wang'}</label><select id="sCurrency"><option ${db.settings.currency==='RM'?'selected':''}>RM</option><option ${db.settings.currency==='MYR'?'selected':''}>MYR</option></select></div>
  <div class="field"><label>${en?'Language / Bahasa':'Bahasa / Language'}</label><select id="sLanguage"><option value="ms" ${db.settings.language==='ms'?'selected':''}>Bahasa Melayu</option><option value="en" ${db.settings.language==='en'?'selected':''}>English</option></select></div>
  </div><div class="actions"><button class="btn primary" onclick="saveSettings()">${en?'Save Settings':'Simpan Tetapan'}</button><button class="btn danger" onclick="resetData()">${en?'Reset All Data':'Reset Semua Data'}</button></div></div>
+ <div class="panel" style="margin-top:18px"><h3>${en?'Password & Security':'Password & Keselamatan'}</h3><p style="color:#64748b;font-size:12px;line-height:1.6">${en?'Change your account password here. You will need to enter your current password first.':'Ubah password akaun anda di sini. Anda perlu masukkan password semasa terlebih dahulu.'}</p><form onsubmit="changePassword(event)" class="formgrid"><div class="field"><label>${en?'Current Password':'Password Semasa'}</label><input id="currentPassword" type="password" autocomplete="current-password" minlength="8" required></div><div class="field"><label>${en?'New Password':'Password Baru'}</label><input id="changeNewPassword" type="password" autocomplete="new-password" minlength="8" required></div><div class="field"><label>${en?'Confirm New Password':'Sahkan Password Baru'}</label><input id="changeConfirmPassword" type="password" autocomplete="new-password" minlength="8" required></div><div class="actions"><button class="btn primary" type="submit">${en?'Change Password':'Ubah Password'}</button></div></form><div id="changePasswordMessage" class="auth-message"></div></div>
  <div class="panel" style="margin-top:18px"><h3>${en?'Data & Google Drive':'Data & Google Drive'}</h3><p>${db.expenses.length} ${en?'expense records':'transaksi belanja'} · ${db.incomes.length} ${en?'income records':'rekod pendapatan'} · ${db.savings.length} ${en?'saving records':'rekod simpanan'} · ${db.categories.length} ${en?'categories':'kategori'}</p><p style="color:#64748b;font-size:12px">${en?'Active account':'Akaun aktif'}: <b>${esc(currentAuthUser?.email||googleUser?.email||'Belum log masuk')}</b></p><p style="color:#64748b;font-size:12px">${en?'Main data is stored in the sistem-kewangan folder in Google Drive.':'Data utama disimpan dalam folder sistem-kewangan di Google Drive.'}</p><div id="driveStatusMessage" class="drive-status">Belum diuji.</div><div class="setting-help">${en?'Google Sign-In and Google Drive use two separate Google permissions. You only need to approve Drive access once; after that your data syncs automatically.':'Log masuk Google dan akses Google Drive menggunakan dua kebenaran Google yang berbeza. Kebenaran Drive hanya perlu diluluskan sekali; selepas itu data akan sync secara automatik.'}</div><div class="actions"><button class="btn primary" onclick="connectGoogleDrive()">${en?'Enable Google Drive Sync':'Aktifkan Sync Google Drive'}</button><button class="btn secondary" onclick="saveToDrive(true)">${en?'Sync Now':'Sync Sekarang'}</button><button class="btn danger" onclick="resetData()">${en?'Reset Cache':'Reset Cache'}</button></div></div>`;
 }
+async function changePassword(e){
+  e.preventDefault();
+  const current=document.getElementById('currentPassword').value;
+  const next=document.getElementById('changeNewPassword').value;
+  const confirm=document.getElementById('changeConfirmPassword').value;
+  const box=document.getElementById('changePasswordMessage');
+  const msg=(text,type)=>{box.textContent=text;box.className='auth-message show '+type};
+  if(next.length<8)return msg('Password mesti sekurang-kurangnya 8 aksara.','error');
+  if(!/[A-Z]/.test(next)||!/[a-z]/.test(next)||!/[0-9]/.test(next)||!/[^A-Za-z0-9]/.test(next))return msg('Gunakan huruf besar, huruf kecil, nombor dan simbol untuk password yang lebih kuat.','error');
+  if(next!==confirm)return msg('Password baru tidak sepadan.','error');
+  if(!currentAuthUser?.email)return msg('Sesi login tidak dijumpai. Sila login semula.','error');
+  const {error:verifyError}=await supabaseClient.auth.signInWithPassword({email:currentAuthUser.email,password:current});
+  if(verifyError)return msg('Password semasa tidak betul.','error');
+  const {error}=await supabaseClient.auth.updateUser({password:next,data:{password_set:true}});
+  if(error)return msg(friendlyAuthError(error),'error');
+  document.getElementById('currentPassword').value='';document.getElementById('changeNewPassword').value='';document.getElementById('changeConfirmPassword').value='';
+  msg(lang()==='en'?'Password changed successfully.':'Password berjaya diubah.','success');
+}
+
 function saveSettings(){db.settings.name=sName.value.trim()||'Sistem Kewangan';db.settings.description=sDesc.value.trim()||'Personal Finance Manager';db.settings.currency=sCurrency.value;db.settings.language=sLanguage.value;save();document.querySelector('.brand').innerHTML='<span class="brand-mark">SK</span>'+esc(db.settings.name)+'<small>'+esc(db.settings.description)+'</small>';nav();settings();go('settings');alert(db.settings.language==='en'?'Settings saved.':'Tetapan disimpan.')}
 function resetData(){if(confirm('Semua data akan dipadam. Teruskan?')){localStorage.removeItem(KEY);location.reload()}}
 initSupabase();
