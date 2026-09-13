@@ -53,25 +53,57 @@ body{font-size:13px}.side{width:272px;transform:translateX(-100%);transition:tra
 .chart-bar{fill:#4f46e5}.chart-bar:hover{fill:#3730a3}.action-icon{width:32px;height:32px;padding:0!important;display:inline-flex!important;align-items:center;justify-content:center;border-radius:7px!important}.action-icon{width:34px;height:34px;padding:0;display:inline-flex!important;align-items:center;justify-content:center;border-radius:8px!important}.action-icon svg{width:16px;height:16px;stroke-width:1.8}.chart-value{font-size:11px;font-weight:700;fill:#334155}.chart-month{font-size:11px;fill:#64748b}
 .saving-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:14px}.saving-card{border:1px solid var(--line);border-radius:9px;padding:14px;background:#fff}.saving-card span{display:block;font-size:11px;color:#94a3b8;margin-bottom:5px}.saving-card b{font-size:19px}.setting-help{font-size:11px;color:#94a3b8;margin-top:5px}
 @media(max-width:720px){.saving-summary{grid-template-columns:1fr}}
-</style>
+.auth-form{display:flex;flex-direction:column;gap:13px;text-align:left;max-width:340px;margin:0 auto}.auth-form .field label{font-size:12px;font-weight:700;color:#475569}.auth-form .field input{width:100%;padding:11px 12px;border:1px solid #d5dbe5;border-radius:7px;background:#fff;outline:none}.auth-form .field input:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(22,119,255,.09)}.remember-row{display:flex;align-items:center;gap:7px;font-size:11px;color:#64748b}.remember-row input{accent-color:var(--primary)}.auth-main-btn{width:100%;margin-top:2px}.google-auth-btn{width:100%;max-width:340px;margin:0 auto;display:block}.auth-link,.text-btn{border:0;background:none;color:var(--primary);cursor:pointer;font-size:11px;padding:7px 2px}.auth-small{font-size:11px;color:#64748b;margin:14px 0}.text-btn{font-weight:700;padding:0}.auth-message{display:none;margin:12px auto 0;max-width:340px;padding:10px 12px;border-radius:7px;font-size:11px;line-height:1.5;text-align:left}.auth-message.show{display:block;background:#f0f7ff;border:1px solid #dbeafe;color:#2563eb}.auth-message.error{background:#fff1f2;border-color:#fecdd3;color:#dc2626}.auth-message.success{background:#f0fdf4;border-color:#bbf7d0;color:#15803d}.security-note{max-width:340px;margin:12px auto 0;padding:10px 12px;border-radius:7px;background:#f8fafc;border:1px solid #e5e7eb;color:#64748b;font-size:10px;line-height:1.55;text-align:left}</style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 <div id="authScreen" class="auth-screen">
   <div class="auth-card">
     <div class="auth-logo"><span>SK</span></div>
     <div class="auth-brand">SISTEM KEWANGAN</div>
-    <div class="auth-title">Selamat datang</div>
-    <p class="auth-sub">Log masuk untuk mengurus belanja, pendapatan dan bajet anda dengan lebih teratur.</p>
-    <div class="auth-login-label">Log masuk dengan</div>
-    <div class="google-login-wrap">
-      <div id="googleLogin" class="google-login"></div>
+    <div id="authLoginView">
+      <div class="auth-title">Selamat datang</div>
+      <p class="auth-sub">Log masuk untuk mengurus belanja, pendapatan dan bajet anda dengan lebih teratur.</p>
+      <form onsubmit="loginWithPassword(event)" class="auth-form">
+        <div class="field"><label>Email / Gmail</label><input id="authEmail" type="email" autocomplete="email" required placeholder="nama@gmail.com"></div>
+        <div class="field"><label>Password</label><input id="authPassword" type="password" autocomplete="current-password" required placeholder="Password"></div>
+        
+        <button id="emailLoginBtn" class="btn primary auth-main-btn" type="submit">Log Masuk</button>
+      </form>
+      <button class="auth-link" onclick="showForgotPassword()">Lupa password?</button>
+      <div class="auth-divider"><span>atau</span></div>
+      <button class="btn secondary google-auth-btn" onclick="loginWithGoogle()">Continue with Google</button>
+      <p class="auth-small">Belum ada akaun? <button class="text-btn" onclick="loginWithGoogle(true)">Sign up with Google</button></p>
+      <div id="authMessage" class="auth-message"></div>
+      <div class="auth-drive-note">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0 4-4m-4 4-4-4"/><path d="M5 15.5v2A2.5 2.5 0 0 0 7.5 20h9a2.5 2.5 0 0 0 2.5-2.5v-2"/></svg>
+        <span>Google Drive digunakan untuk sync data. Akses Drive ialah permission berasingan daripada login.</span>
+      </div>
     </div>
-    <div class="auth-divider"><span>atau</span></div>
-    <div class="auth-drive-note">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0 4-4m-4 4-4-4"/><path d="M5 15.5v2A2.5 2.5 0 0 0 7.5 20h9a2.5 2.5 0 0 0 2.5-2.5v-2"/></svg>
-      <span>Data anda boleh diselaraskan ke Google Drive akaun yang digunakan.</span>
+
+    <div id="authForgotView" style="display:none">
+      <div class="auth-title">Reset password</div>
+      <p class="auth-sub">Masukkan email akaun anda. Kami akan hantar pautan untuk menetapkan password baru.</p>
+      <form onsubmit="sendPasswordReset(event)" class="auth-form">
+        <div class="field"><label>Email / Gmail</label><input id="resetEmail" type="email" autocomplete="email" required></div>
+        <button class="btn primary auth-main-btn" type="submit">Hantar Reset Link</button>
+      </form>
+      <button class="auth-link" onclick="showLoginView()">Kembali ke Login</button>
+      <div id="resetMessage" class="auth-message"></div>
     </div>
-    <div class="auth-footer">Dengan meneruskan, anda menggunakan akaun Google untuk mengakses sistem ini.</div>
+
+    <div id="authPasswordView" style="display:none">
+      <div class="auth-title">Create Your Password</div>
+      <p class="auth-sub">Akaun Google anda telah disahkan. Cipta password supaya selepas ini anda boleh login menggunakan Gmail + password.</p>
+      <form onsubmit="setInitialPassword(event)" class="auth-form">
+        <div class="field"><label>Password baru</label><input id="newPassword" type="password" autocomplete="new-password" minlength="8" required placeholder="Minimum 8 aksara"></div>
+        <div class="field"><label>Confirm password</label><input id="confirmPassword" type="password" autocomplete="new-password" minlength="8" required placeholder="Ulang password"></div>
+        <button class="btn primary auth-main-btn" type="submit">Simpan Password</button>
+      </form>
+      <div class="security-note">Gunakan sekurang-kurangnya 8 aksara. Untuk keselamatan lebih baik, gunakan gabungan huruf besar, huruf kecil, nombor dan simbol.</div>
+      <div id="passwordMessage" class="auth-message"></div>
+    </div>
+    <div class="auth-footer">Authentication dilindungi oleh Supabase Auth. Password tidak disimpan dalam Google Drive atau localStorage.</div>
   </div>
 </div>
 
@@ -102,304 +134,283 @@ body{font-size:13px}.side{width:272px;transform:translateX(-100%);transition:tra
 <script>
 
 // =========================
-// Google Login + Google Drive
+// Supabase Authentication + Google Drive
 // =========================
+// Create a Supabase project and replace these two values.
+// NEVER put a service_role key here.
+const SUPABASE_URL = 'https://mqbqltlzliwfknmdxuju.supabase.co';
+const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_SzIC2EdxhRdoiUs8H9nApg_G6CG7JeR';
+
 const GOOGLE_CLIENT_ID = '869538436436-p5do1gmr0oh0jesjc61ftn285pqtpoic.apps.googleusercontent.com';
 const DRIVE_FILE_NAME = 'Sistem Kewangan - Data.json';
 const DRIVE_FOLDER_NAME = 'sistem-kewangan';
 const DRIVE_SCOPE = 'https://www.googleapis.com/auth/drive.file';
 
-let driveFolderId = null;
-let googleUser = null;
-let accessToken = null;
-let tokenClient = null;
-let driveFileId = null;
-let saveTimer = null;
-let driveReady = false;
+let supabaseClient=null;
+let driveFolderId=null, googleUser=null, accessToken=null, tokenClient=null, driveFileId=null, saveTimer=null, driveReady=false;
+let currentAuthUser=null;
 
-function setSync(state, text){
-  const el=document.getElementById('syncBadge');
-  if(!el)return;
+function authConfigured(){
+  return !SUPABASE_URL.startsWith('YOUR_') && !SUPABASE_PUBLISHABLE_KEY.startsWith('YOUR_');
+}
+function setAuthMessage(id,message,type='show'){
+  const el=document.getElementById(id); if(!el)return;
+  el.textContent=message; el.className='auth-message show '+(type||'');
+}
+function clearAuthMessage(id){const el=document.getElementById(id);if(el){el.textContent='';el.className='auth-message';}}
+function showLoginView(){document.getElementById('authLoginView').style.display='block';document.getElementById('authForgotView').style.display='none';document.getElementById('authPasswordView').style.display='none';clearAuthMessage('authMessage');}
+function showForgotPassword(){document.getElementById('authLoginView').style.display='none';document.getElementById('authForgotView').style.display='block';document.getElementById('authPasswordView').style.display='none';}
+function showPasswordSetup(){document.getElementById('authLoginView').style.display='none';document.getElementById('authForgotView').style.display='none';document.getElementById('authPasswordView').style.display='block';clearAuthMessage('passwordMessage');}
+function showAuth(){document.getElementById('authScreen').style.display='flex';document.getElementById('appShell').style.display='none';}
+function showApp(){document.getElementById('authScreen').style.display='none';document.getElementById('appShell').style.display='flex';}
+
+function setSync(state,text){
+  const el=document.getElementById('syncBadge'); if(!el)return;
   const cls=state==='busy'?'busy':state==='error'?'error':'';
   el.innerHTML='<span class="sync-dot '+cls+'"></span> '+(text||'Google Drive');
 }
+function driveMessage(message,type='info'){
+  const el=document.getElementById('driveStatusMessage'); if(!el)return;
+  el.textContent=message; el.className='drive-status '+type;
+}
+function toggleMenu(open){const side=document.getElementById('side'),ov=document.getElementById('overlay');if(!side)return;side.classList.toggle('open',!!open);ov.classList.toggle('show',!!open)}
+function closeMenuOnMobile(){if(window.innerWidth<=720)toggleMenu(false)}
 
-function driveMessage(message, type='info'){
-  const el=document.getElementById('driveStatusMessage');
-  if(!el)return;
-  el.textContent=message;
-  el.className='drive-status '+type;
+function setUserKey(uid){
+  KEY='sistemKewanganFreshV1:'+uid;
+}
+function resetDbForUser(){
+  db=JSON.parse(localStorage.getItem(KEY)||'null')||{
+    expenses:[],incomes:[],savings:[],budgets:{},
+    categories:['Makanan','Pengangkutan','Bil & Utiliti','Rumah','Kesihatan','Hiburan','Belian','Lain-lain'],
+    settings:{currency:'RM',name:'Sistem Kewangan',description:'Personal Finance Manager',language:'ms'},monthlyBudgets:{}
+  };
+  db.expenses ||= []; db.incomes ||= []; db.savings ||= []; db.budgets ||= {};
+  db.categories ||= ['Makanan','Pengangkutan','Bil & Utiliti','Rumah','Kesihatan','Hiburan','Belian','Lain-lain'];
+  db.settings ||= {currency:'RM',name:'Sistem Kewangan',description:'Personal Finance Manager',language:'ms'};
+  db.settings.description ||= 'Personal Finance Manager'; db.settings.language ||= 'ms'; db.monthlyBudgets ||= {};
 }
 
-function toggleMenu(open){
-  const side=document.getElementById('side'), ov=document.getElementById('overlay');
-  if(!side)return;
-  side.classList.toggle('open',!!open);
-  ov.classList.toggle('show',!!open);
-}
-function closeMenuOnMobile(){ if(window.innerWidth<=720) toggleMenu(false); }
+function save(){localStorage.setItem(KEY,JSON.stringify(db));saveToDrive(false)}
 
-function showAuth(){
-  document.getElementById('authScreen').style.display='flex';
-  document.getElementById('appShell').style.display='none';
+async function loginWithPassword(e){
+  e.preventDefault();
+  if(!authConfigured()){setAuthMessage('authMessage','Supabase belum dikonfigurasi. Masukkan SUPABASE_URL dan SUPABASE_PUBLISHABLE_KEY dalam kod.','error');return}
+  const email=document.getElementById('authEmail').value.trim();
+  const password=document.getElementById('authPassword').value;
+  const btn=document.getElementById('emailLoginBtn'); btn.disabled=true; btn.textContent='Sedang log masuk...';
+  clearAuthMessage('authMessage');
+  try{
+    const {data,error}=await supabaseClient.auth.signInWithPassword({email,password});
+    if(error)throw error;
+    if(data.session)await handleAuthenticatedUser(data.user);
+  }catch(err){
+    setAuthMessage('authMessage',friendlyAuthError(err),'error');
+  }finally{btn.disabled=false;btn.textContent='Log Masuk'}
 }
-function showApp(){
-  document.getElementById('authScreen').style.display='none';
-  document.getElementById('appShell').style.display='flex';
+
+async function loginWithGoogle(isSignup=false){
+  if(!authConfigured()){setAuthMessage('authMessage','Supabase belum dikonfigurasi. Masukkan tetapan Supabase dahulu.','error');return}
+  clearAuthMessage('authMessage');
+  const {error}=await supabaseClient.auth.signInWithOAuth({
+    provider:'google',
+    options:{redirectTo:window.location.origin+window.location.pathname,queryParams:{access_type:'offline',prompt:'select_account'}}
+  });
+  if(error)setAuthMessage('authMessage',friendlyAuthError(error),'error');
+}
+
+async function sendPasswordReset(e){
+  e.preventDefault();
+  if(!authConfigured())return setAuthMessage('resetMessage','Supabase belum dikonfigurasi.','error');
+  const email=document.getElementById('resetEmail').value.trim();
+  const {error}=await supabaseClient.auth.resetPasswordForEmail(email,{redirectTo:window.location.origin+window.location.pathname+'?reset=1'});
+  if(error)setAuthMessage('resetMessage',friendlyAuthError(error),'error');
+  else setAuthMessage('resetMessage','Reset link telah dihantar. Semak inbox dan folder spam.','success');
+}
+
+async function setInitialPassword(e){
+  e.preventDefault();
+  const p=document.getElementById('newPassword').value;
+  const c=document.getElementById('confirmPassword').value;
+  if(p.length<8)return setAuthMessage('passwordMessage','Password mesti sekurang-kurangnya 8 aksara.','error');
+  if(!/[A-Z]/.test(p)||!/[a-z]/.test(p)||!/[0-9]/.test(p)||!/[^A-Za-z0-9]/.test(p))return setAuthMessage('passwordMessage','Gunakan huruf besar, huruf kecil, nombor dan simbol untuk password yang lebih kuat.','error');
+  if(p!==c)return setAuthMessage('passwordMessage','Password tidak sepadan.','error');
+  const {error}=await supabaseClient.auth.updateUser({password:p,data:{password_set:true}});
+  if(error)return setAuthMessage('passwordMessage',friendlyAuthError(error),'error');
+  const createdEmail=currentAuthUser?.email||'';
+  setAuthMessage('passwordMessage','Password berjaya dicipta. Sila login semula menggunakan Gmail + password.','success');
+  setTimeout(async()=>{
+    if(supabaseClient) await supabaseClient.auth.signOut();
+    currentAuthUser=null; googleUser=null; showAuth(); showLoginView();
+    const emailEl=document.getElementById('authEmail'); if(emailEl) emailEl.value=createdEmail;
+    setAuthMessage('authMessage','Password berjaya dicipta. Sekarang login menggunakan Gmail + password.','success');
+  },900);
+}
+
+function isGoogleUser(user){
+  const providers=user?.app_metadata?.providers||[];
+  return user?.app_metadata?.provider==='google' || providers.includes('google');
+}
+
+function friendlyAuthError(err){
+  const msg=String(err?.message||err||'');
+  if(/invalid login credentials/i.test(msg))return 'Email atau password tidak betul.';
+  if(/email not confirmed/i.test(msg))return 'Email belum disahkan. Semak inbox untuk verification email.';
+  if(/password/i.test(msg)&&/weak|should be at least|characters/i.test(msg))return 'Password terlalu lemah. Gunakan password yang lebih kuat.';
+  if(/rate limit|too many requests/i.test(msg))return 'Terlalu banyak percubaan. Sila tunggu sebentar sebelum cuba lagi.';
+  return msg||'Operasi authentication gagal. Cuba lagi.';
+}
+
+async function handleAuthenticatedUser(user){
+  currentAuthUser=user;
+  setUserKey(user.id);
+  // Migrate old local cache once for the first authenticated browser user.
+  if(!localStorage.getItem(KEY)){
+    const legacy=localStorage.getItem('sistemKewanganFreshV1');
+    if(legacy){localStorage.setItem(KEY,legacy);localStorage.removeItem('sistemKewanganFreshV1')}
+  }
+  resetDbForUser();
+  googleUser={sub:user.id,name:user.user_metadata?.full_name||user.user_metadata?.name||user.email,email:user.email,picture:user.user_metadata?.avatar_url||user.user_metadata?.picture||''};
+  localStorage.setItem('lastAuthEmail',user.email||'');
+  showApp();renderUser();nav();go('dashboard');
+  // Do not request Drive permission on every login. Drive is connected separately.
+  if(accessToken)loadFromDrive();
 }
 
 function renderUser(){
   if(!googleUser)return;
   const img=esc(googleUser.picture||'');
-  const name=esc(googleUser.name||googleUser.email||'Google User');
+  const name=esc(googleUser.name||googleUser.email||'User');
   const email=esc(googleUser.email||'');
   const block='<div class="user-area"><img src="'+img+'" alt=""><div class="user-copy"><strong>'+name+'</strong><span>'+email+'</span></div><button class="signout" onclick="signOut()">Log keluar</button></div>';
   document.getElementById('desktopUser').innerHTML=block;
-  document.getElementById('mobileUser').innerHTML='<img src="'+img+'" alt="" title="'+name+'">';
+  document.getElementById('mobileUser').innerHTML=img?'<img src="'+img+'" alt="" title="'+name+'">':'<span>'+name+'</span>';
 }
 
-function decodeJwt(token){
-  try{
-    const p=token.split('.')[1].replace(/-/g,'+').replace(/_/g,'/');
-    return JSON.parse(decodeURIComponent(atob(p).split('').map(c=>'%'+('00'+c.charCodeAt(0).toString(16)).slice(-2)).join('')));
-  }catch(e){return null}
-}
-
-function initGoogle(){
-  if(GOOGLE_CLIENT_ID.startsWith('YOUR_')){
-    showAuth();
-    document.getElementById('googleLogin').innerHTML='<div class="auth-note" style="margin:0">Google Login belum diaktifkan. Tukar GOOGLE_CLIENT_ID dalam kod kepada Web OAuth Client ID Google Cloud anda.</div>';
-    return;
-  }
-  const s=document.createElement('script');
-  s.src='https://accounts.google.com/gsi/client';
-  s.async=true;s.defer=true;
-  s.onload=()=>{
-    if(window.__skGoogleInitialized)return;
-    window.__skGoogleInitialized=true;
-    google.accounts.id.initialize({
-      client_id:GOOGLE_CLIENT_ID,
-      callback:onGoogleCredential,
-      auto_select:false,
-      cancel_on_tap_outside:true
-    });
-    const loginEl=document.getElementById('googleLogin');
-    if(loginEl && !loginEl.dataset.rendered){
-      google.accounts.id.renderButton(loginEl,{
-        theme:'outline',size:'large',shape:'rectangular',text:'signin_with',width:320
-      });
-      loginEl.dataset.rendered='1';
-    }
-    const saved=localStorage.getItem('googleProfile');
-    if(saved){try{googleUser=JSON.parse(saved);showAuth()}catch(e){}}
-  };
-  s.onerror=()=>{
-    document.getElementById('googleLogin').innerHTML='<div class="auth-note" style="margin:0">Google Login tidak dapat dimuat. Semak sambungan internet atau tetapan domain OAuth.</div>';
-  };
-  document.head.appendChild(s);
-}
-
-function onGoogleCredential(response){
-  const p=decodeJwt(response.credential);
-  if(!p)return alert('Log masuk Google gagal.');
-  googleUser={sub:p.sub,name:p.name,email:p.email,picture:p.picture};
-  localStorage.setItem('googleProfile',JSON.stringify(googleUser));
-  showApp(); renderUser();
-  requestDriveToken(true);
-}
-
-function requestDriveToken(forceConsent=false){
-  if(!window.google || !google.accounts || !google.accounts.oauth2){
-    driveMessage('Google Drive belum siap. Cuba refresh halaman.','error');
-    return;
-  }
-  if(!tokenClient){
-    tokenClient=google.accounts.oauth2.initTokenClient({
-      client_id:GOOGLE_CLIENT_ID,
-      scope:DRIVE_SCOPE,
-      callback:async(resp)=>{
-        if(resp.error){
-          accessToken=null; driveReady=false;
-          setSync('error','Drive tidak disambung');
-          driveMessage('Kebenaran Google Drive belum diberikan. Tekan "Aktifkan Sync Google Drive" untuk benarkan akses.','error');
-          alert('Log masuk Google berjaya. Google Drive memerlukan kebenaran tambahan sekali sahaja untuk sync data. Tekan "Aktifkan Sync Google Drive" di Tetapan.');
-          return;
-        }
-        accessToken=resp.access_token;
-        driveReady=true;
-        await loadFromDrive();
+async function initSupabase(){
+  const resetMode=new URLSearchParams(window.location.search).get('reset')==='1';
+  if(!authConfigured()){showAuth();setAuthMessage('authMessage','Authentication belum aktif. Sila setup Supabase dahulu.','error');return}
+  supabaseClient=window.supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY,{
+    auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}
+  });
+  supabaseClient.auth.onAuthStateChange(async(event,session)=>{
+    if(session?.user){
+      currentAuthUser=session.user;
+      const hasPassword=!!session.user.user_metadata?.password_set;
+      // OAuth-created accounts get a one-time password setup screen.
+      if(event==='SIGNED_IN' && isGoogleUser(session.user) && !hasPassword && !session.user.user_metadata?.password_set){
+        showPasswordSetup();
+        return;
       }
-    });
-  }
-  try{
-    tokenClient.requestAccessToken({prompt:forceConsent?'consent':''});
-  }catch(e){
-    console.error(e);
-    driveMessage('Tetingkap kebenaran Google Drive tidak dapat dibuka. Cuba tekan "Aktifkan Sync Google Drive".','error');
+      await handleAuthenticatedUser(session.user);
+    }else if(event==='SIGNED_OUT'){showAuth()}
+  });
+  const {data:{session}}=await supabaseClient.auth.getSession();
+  if(session?.user){
+    currentAuthUser=session.user;
+    if(resetMode){showPasswordSetup();return}
+    const isGoogle=isGoogleUser(session.user);
+    if(isGoogle && !session.user.user_metadata?.password_set){showPasswordSetup();return}
+    await handleAuthenticatedUser(session.user);
+  }else{
+    showAuth();
   }
 }
 
-async function driveFetch(url, options={}){
-  if(!accessToken) throw new Error('NO_ACCESS_TOKEN');
+async function signOut(){
+  accessToken=null;tokenClient=null;driveFileId=null;driveFolderId=null;driveReady=false;
+  if(supabaseClient)await supabaseClient.auth.signOut();
+  currentAuthUser=null;googleUser=null;showAuth();showLoginView();
+}
+
+// Google Identity Services is used ONLY for Drive permission, never for app login.
+function loadGoogleIdentityForDrive(){
+  return new Promise((resolve,reject)=>{
+    if(window.google?.accounts?.oauth2)return resolve();
+    const s=document.createElement('script');s.src='https://accounts.google.com/gsi/client';s.async=true;s.defer=true;
+    s.onload=()=>resolve();s.onerror=()=>reject(new Error('Google Drive authentication library gagal dimuat.'));document.head.appendChild(s);
+  });
+}
+async function requestDriveToken(forceConsent=false){
+  try{
+    await loadGoogleIdentityForDrive();
+    if(!tokenClient){
+      tokenClient=google.accounts.oauth2.initTokenClient({
+        client_id:GOOGLE_CLIENT_ID,scope:DRIVE_SCOPE,
+        callback:async(resp)=>{
+          if(resp.error){accessToken=null;driveReady=false;setSync('error','Drive tidak disambung');driveMessage('Kebenaran Google Drive belum diberikan. Anda boleh cuba semula dari Tetapan.','error');return}
+          accessToken=resp.access_token;driveReady=true;await loadFromDrive();
+        }
+      });
+    }
+    tokenClient.requestAccessToken({prompt:forceConsent?'consent':''});
+  }catch(e){console.error(e);driveMessage('Google Drive tidak dapat disambungkan. Cuba lagi.','error')}
+}
+function connectGoogleDrive(){requestDriveToken(true)}
+
+async function driveFetch(url,options={}){
+  if(!accessToken)throw new Error('NO_ACCESS_TOKEN');
   const headers=Object.assign({},options.headers||{},{Authorization:'Bearer '+accessToken});
   const r=await fetch(url,Object.assign({},options,{headers}));
-  if(r.status===401){accessToken=null;driveReady=false;throw new Error('DRIVE_TOKEN_EXPIRED');}
-  if(!r.ok)throw new Error(await r.text());
-  return r;
+  if(r.status===401){accessToken=null;driveReady=false;throw new Error('DRIVE_TOKEN_EXPIRED')}
+  if(!r.ok)throw new Error(await r.text());return r;
 }
-
 async function findOrCreateDriveFolder(){
   if(driveFolderId)return driveFolderId;
   const q="name='"+DRIVE_FOLDER_NAME.replace(/'/g,"\\'")+"' and mimeType='application/vnd.google-apps.folder' and trashed=false";
-  const r=await driveFetch('https://www.googleapis.com/drive/v3/files?q='+encodeURIComponent(q)+'&spaces=drive&fields=files(id,name,modifiedTime)&pageSize=10');
-  const j=await r.json();
-  if(j.files&&j.files[0]){driveFolderId=j.files[0].id;return driveFolderId;}
-  const cr=await driveFetch('https://www.googleapis.com/drive/v3/files',{
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({name:DRIVE_FOLDER_NAME,mimeType:'application/vnd.google-apps.folder',parents:['root']})
-  });
-  const folder=await cr.json();
-  if(!folder.id)throw new Error('Folder Google Drive tidak berjaya dicipta.');
-  driveFolderId=folder.id;
-  return driveFolderId;
+  const r=await driveFetch('https://www.googleapis.com/drive/v3/files?q='+encodeURIComponent(q)+'&spaces=drive&fields=files(id,name,modifiedTime)&pageSize=10');const j=await r.json();
+  if(j.files&&j.files[0]){driveFolderId=j.files[0].id;return driveFolderId}
+  const cr=await driveFetch('https://www.googleapis.com/drive/v3/files',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:DRIVE_FOLDER_NAME,mimeType:'application/vnd.google-apps.folder',parents:['root']})});
+  const folder=await cr.json();if(!folder.id)throw new Error('Folder Google Drive tidak berjaya dicipta.');driveFolderId=folder.id;return driveFolderId;
 }
-
 async function findDriveFile(folderId){
   const q="name='"+DRIVE_FILE_NAME.replace(/'/g,"\\'")+"' and trashed=false and '"+folderId+"' in parents";
-  const r=await driveFetch('https://www.googleapis.com/drive/v3/files?q='+encodeURIComponent(q)+'&spaces=drive&fields=files(id,name,modifiedTime,parents)&pageSize=10');
-  const j=await r.json();
-  return j.files&&j.files[0]?j.files[0]:null;
+  const r=await driveFetch('https://www.googleapis.com/drive/v3/files?q='+encodeURIComponent(q)+'&spaces=drive&fields=files(id,name,modifiedTime,parents)&pageSize=10');const j=await r.json();return j.files&&j.files[0]?j.files[0]:null;
 }
-
 async function loadFromDrive(){
   try{
-    setSync('busy','Menyemak Drive...');
-    driveMessage('Sedang menyemak folder sistem-kewangan...','busy');
-    const folderId=await findOrCreateDriveFolder();
-    const f=await findDriveFile(folderId);
-
-    if(!f){
-      driveFileId=null;
-      await saveToDrive(true);
-      driveMessage('Berjaya. Folder "sistem-kewangan" dan fail data telah dicipta di Google Drive.','success');
-      return;
-    }
-
-    driveFileId=f.id;
-    const r=await driveFetch('https://www.googleapis.com/drive/v3/files/'+encodeURIComponent(f.id)+'?alt=media');
-    const remote=await r.json();
-
-    if(remote && typeof remote==='object'){
-      db=Object.assign(db,remote);
-      if(!db.expenses)db.expenses=[];
-      if(!db.incomes)db.incomes=[];
-      if(!db.savings)db.savings=[];
-      if(!db.budgets)db.budgets={};
-      if(!db.categories||!db.categories.length)db.categories=['Makanan','Pengangkutan','Bil & Utiliti','Rumah','Kesihatan','Hiburan','Belian','Lain-lain'];
-      if(!db.settings)db.settings={currency:'RM',name:'Sistem Kewangan',description:'Personal Finance Manager',language:'ms'};
-      db.settings.description ||= 'Personal Finance Manager'; db.settings.language ||= 'ms';
-      if(!db.monthlyBudgets)db.monthlyBudgets={};
+    setSync('busy','Menyemak Drive...');driveMessage('Sedang menyemak folder sistem-kewangan...','busy');
+    const folderId=await findOrCreateDriveFolder(),f=await findDriveFile(folderId);
+    if(!f){driveFileId=null;await saveToDrive(true);driveMessage('Berjaya. Folder "sistem-kewangan" dan fail data telah dicipta di Google Drive.','success');return}
+    driveFileId=f.id;const r=await driveFetch('https://www.googleapis.com/drive/v3/files/'+encodeURIComponent(f.id)+'?alt=media');const remote=await r.json();
+    if(remote&&typeof remote==='object'){
+      db=Object.assign(db,remote);db.expenses ||= [];db.incomes ||= [];db.savings ||= [];db.budgets ||= {};
+      db.categories ||= ['Makanan','Pengangkutan','Bil & Utiliti','Rumah','Kesihatan','Hiburan','Belian','Lain-lain'];
+      db.settings ||= {currency:'RM',name:'Sistem Kewangan',description:'Personal Finance Manager',language:'ms'};
+      db.settings.description ||= 'Personal Finance Manager';db.settings.language ||= 'ms';db.monthlyBudgets ||= {};
       localStorage.setItem(KEY,JSON.stringify(db));
     }
-    driveReady=true;
-    setSync('','Disimpan di Google Drive');
-    driveMessage('Sync berjaya. Data sedang menggunakan Google Drive sebagai stor utama.','success');
-    nav(); go('dashboard');
+    driveReady=true;setSync('','Disimpan di Google Drive');driveMessage('Sync berjaya. Data menggunakan Google Drive sebagai stor utama.','success');nav();go('dashboard');
   }catch(e){
-    console.error('Google Drive error:',e);
-    driveReady=false;
-    setSync('error','Gagal sync');
+    console.error('Google Drive error:',e);driveReady=false;setSync('error','Gagal sync');
     let msg='Sync Google Drive gagal.';
     if(e.message==='NO_ACCESS_TOKEN')msg='Akses Google Drive belum tersedia.';
     else if(e.message==='DRIVE_TOKEN_EXPIRED')msg='Sesi Google Drive telah tamat. Tekan "Aktifkan Sync Google Drive" semula.';
-    else{
-      try{
-        const parsed=JSON.parse(e.message);
-        if(parsed.error?.message)msg='Google Drive: '+parsed.error.message;
-        else msg='Google Drive: '+e.message;
-      }catch(_){}
-    }
-    driveMessage(msg+' Jika ini kali pertama, pastikan Google Drive API dan OAuth Data Access telah dikonfigurasi.','error');
-  }
-}
-
-async function saveToDrive(immediate=false){
-  if(!accessToken){
-    if(immediate)driveMessage('Belum disambungkan ke Google Drive. Tekan "Aktifkan Sync Google Drive".','error');
-    return;
-  }
-  if(!immediate){
-    clearTimeout(saveTimer);
-    saveTimer=setTimeout(()=>saveToDrive(true),700);
-    return;
-  }
-  try{
-    setSync('busy','Menyimpan...');
-    driveMessage('Sedang menyimpan data ke Google Drive...','busy');
-    const folderId=await findOrCreateDriveFolder();
-    const blob=new Blob([JSON.stringify(db,null,2)],{type:'application/json'});
-
-    if(!driveFileId){
-      const existing=await findDriveFile(folderId);
-      if(existing)driveFileId=existing.id;
-    }
-
-    if(!driveFileId){
-      const metadata={name:DRIVE_FILE_NAME,mimeType:'application/json',parents:[folderId]};
-      const form=new FormData();
-      form.append('metadata',new Blob([JSON.stringify(metadata)],{type:'application/json'}));
-      form.append('file',blob);
-      const r=await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,name,parents',{
-        method:'POST',headers:{Authorization:'Bearer '+accessToken},body:form
-      });
-      if(!r.ok)throw new Error(await r.text());
-      driveFileId=(await r.json()).id;
-    }else{
-      const r=await fetch('https://www.googleapis.com/upload/drive/v3/files/'+encodeURIComponent(driveFileId)+'?uploadType=media',{
-        method:'PATCH',
-        headers:{Authorization:'Bearer '+accessToken,'Content-Type':'application/json'},
-        body:blob
-      });
-      if(r.status===401){accessToken=null;driveReady=false;throw new Error('DRIVE_TOKEN_EXPIRED');}
-      if(!r.ok)throw new Error(await r.text());
-    }
-    driveReady=true;
-    setSync('','Disimpan di Google Drive');
-    driveMessage('✓ Sync berjaya — '+DRIVE_FILE_NAME+' disimpan dalam folder "sistem-kewangan".','success');
-  }catch(e){
-    console.error('Google Drive save error:',e);
-    driveReady=false;
-    setSync('error','Gagal sync');
-    let msg='Sync gagal.';
-    if(e.message==='DRIVE_TOKEN_EXPIRED')msg='Sesi Google Drive telah tamat. Tekan "Aktifkan Sync Google Drive" semula.';
-    else{
-      try{
-        const parsed=JSON.parse(e.message);
-        if(parsed.error?.message)msg='Google Drive: '+parsed.error.message;
-        else msg='Google Drive: '+e.message;
-      }catch(_){}
-    }
+    else{try{const parsed=JSON.parse(e.message);msg=parsed.error?.message?'Google Drive: '+parsed.error.message:'Google Drive: '+e.message}catch(_){}}
     driveMessage(msg,'error');
-    if(immediate)alert(msg);
   }
 }
-
-function connectGoogleDrive(){requestDriveToken(true);}
-
-function save(){
-  localStorage.setItem(KEY,JSON.stringify(db));
-  saveToDrive(false);
+async function saveToDrive(immediate=false){
+  if(!accessToken){if(immediate)driveMessage('Belum disambungkan ke Google Drive. Tekan "Aktifkan Sync Google Drive".','error');return}
+  if(!immediate){clearTimeout(saveTimer);saveTimer=setTimeout(()=>saveToDrive(true),700);return}
+  try{
+    setSync('busy','Menyimpan...');driveMessage('Sedang menyimpan data ke Google Drive...','busy');
+    const folderId=await findOrCreateDriveFolder(),blob=new Blob([JSON.stringify(db,null,2)],{type:'application/json'});
+    if(!driveFileId){const existing=await findDriveFile(folderId);if(existing)driveFileId=existing.id}
+    if(!driveFileId){
+      const metadata={name:DRIVE_FILE_NAME,mimeType:'application/json',parents:[folderId]},form=new FormData();
+      form.append('metadata',new Blob([JSON.stringify(metadata)],{type:'application/json'}));form.append('file',blob);
+      const r=await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,name,parents',{method:'POST',headers:{Authorization:'Bearer '+accessToken},body:form});
+      if(!r.ok)throw new Error(await r.text());driveFileId=(await r.json()).id;
+    }else{
+      const r=await fetch('https://www.googleapis.com/upload/drive/v3/files/'+encodeURIComponent(driveFileId)+'?uploadType=media',{method:'PATCH',headers:{Authorization:'Bearer '+accessToken,'Content-Type':'application/json'},body:blob});
+      if(r.status===401){accessToken=null;driveReady=false;throw new Error('DRIVE_TOKEN_EXPIRED')}if(!r.ok)throw new Error(await r.text());
+    }
+    driveReady=true;setSync('','Disimpan di Google Drive');driveMessage('✓ Sync berjaya — '+DRIVE_FILE_NAME+' disimpan dalam folder "sistem-kewangan".','success');
+  }catch(e){console.error('Google Drive save error:',e);driveReady=false;setSync('error','Gagal sync');let msg=e.message==='DRIVE_TOKEN_EXPIRED'?'Sesi Google Drive telah tamat. Tekan "Aktifkan Sync Google Drive" semula.':'Sync gagal.';driveMessage(msg,'error');if(immediate)alert(msg)}
 }
 
-function signOut(){
-  if(window.google && google.accounts && google.accounts.id)google.accounts.id.disableAutoSelect();
-  accessToken=null;tokenClient=null;driveFileId=null;driveFolderId=null;googleUser=null;
-  localStorage.removeItem('googleProfile');
-  showAuth();
-}
-
-const KEY='sistemKewanganFreshV1';
+let KEY='sistemKewanganFreshV1';
 let db=JSON.parse(localStorage.getItem(KEY)||'null')||{
  expenses:[], incomes:[], savings:[], budgets:{},
  categories:['Makanan','Pengangkutan','Bil & Utiliti','Rumah','Kesihatan','Hiburan','Belian','Lain-lain'],
@@ -561,11 +572,11 @@ function settings(){
  <div class="field"><label>${en?'Currency':'Mata Wang'}</label><select id="sCurrency"><option ${db.settings.currency==='RM'?'selected':''}>RM</option><option ${db.settings.currency==='MYR'?'selected':''}>MYR</option></select></div>
  <div class="field"><label>${en?'Language / Bahasa':'Bahasa / Language'}</label><select id="sLanguage"><option value="ms" ${db.settings.language==='ms'?'selected':''}>Bahasa Melayu</option><option value="en" ${db.settings.language==='en'?'selected':''}>English</option></select></div>
  </div><div class="actions"><button class="btn primary" onclick="saveSettings()">${en?'Save Settings':'Simpan Tetapan'}</button><button class="btn danger" onclick="resetData()">${en?'Reset All Data':'Reset Semua Data'}</button></div></div>
- <div class="panel" style="margin-top:18px"><h3>${en?'Data & Google Drive':'Data & Google Drive'}</h3><p>${db.expenses.length} ${en?'expense records':'transaksi belanja'} · ${db.incomes.length} ${en?'income records':'rekod pendapatan'} · ${db.savings.length} ${en?'saving records':'rekod simpanan'} · ${db.categories.length} ${en?'categories':'kategori'}</p><p style="color:#64748b;font-size:12px">${en?'Active account':'Akaun aktif'}: <b>${esc(googleUser?.email||'Belum log masuk')}</b></p><p style="color:#64748b;font-size:12px">${en?'Main data is stored in the sistem-kewangan folder in Google Drive.':'Data utama disimpan dalam folder sistem-kewangan di Google Drive.'}</p><div id="driveStatusMessage" class="drive-status">Belum diuji.</div><div class="setting-help">${en?'Google Sign-In and Google Drive use two separate Google permissions. You only need to approve Drive access once; after that your data syncs automatically.':'Log masuk Google dan akses Google Drive menggunakan dua kebenaran Google yang berbeza. Kebenaran Drive hanya perlu diluluskan sekali; selepas itu data akan sync secara automatik.'}</div><div class="actions"><button class="btn primary" onclick="connectGoogleDrive()">${en?'Enable Google Drive Sync':'Aktifkan Sync Google Drive'}</button><button class="btn secondary" onclick="saveToDrive(true)">${en?'Sync Now':'Sync Sekarang'}</button><button class="btn danger" onclick="resetData()">${en?'Reset Cache':'Reset Cache'}</button></div></div>`;
+ <div class="panel" style="margin-top:18px"><h3>${en?'Data & Google Drive':'Data & Google Drive'}</h3><p>${db.expenses.length} ${en?'expense records':'transaksi belanja'} · ${db.incomes.length} ${en?'income records':'rekod pendapatan'} · ${db.savings.length} ${en?'saving records':'rekod simpanan'} · ${db.categories.length} ${en?'categories':'kategori'}</p><p style="color:#64748b;font-size:12px">${en?'Active account':'Akaun aktif'}: <b>${esc(currentAuthUser?.email||googleUser?.email||'Belum log masuk')}</b></p><p style="color:#64748b;font-size:12px">${en?'Main data is stored in the sistem-kewangan folder in Google Drive.':'Data utama disimpan dalam folder sistem-kewangan di Google Drive.'}</p><div id="driveStatusMessage" class="drive-status">Belum diuji.</div><div class="setting-help">${en?'Google Sign-In and Google Drive use two separate Google permissions. You only need to approve Drive access once; after that your data syncs automatically.':'Log masuk Google dan akses Google Drive menggunakan dua kebenaran Google yang berbeza. Kebenaran Drive hanya perlu diluluskan sekali; selepas itu data akan sync secara automatik.'}</div><div class="actions"><button class="btn primary" onclick="connectGoogleDrive()">${en?'Enable Google Drive Sync':'Aktifkan Sync Google Drive'}</button><button class="btn secondary" onclick="saveToDrive(true)">${en?'Sync Now':'Sync Sekarang'}</button><button class="btn danger" onclick="resetData()">${en?'Reset Cache':'Reset Cache'}</button></div></div>`;
 }
 function saveSettings(){db.settings.name=sName.value.trim()||'Sistem Kewangan';db.settings.description=sDesc.value.trim()||'Personal Finance Manager';db.settings.currency=sCurrency.value;db.settings.language=sLanguage.value;save();document.querySelector('.brand').innerHTML='<span class="brand-mark">SK</span>'+esc(db.settings.name)+'<small>'+esc(db.settings.description)+'</small>';nav();settings();go('settings');alert(db.settings.language==='en'?'Settings saved.':'Tetapan disimpan.')}
 function resetData(){if(confirm('Semua data akan dipadam. Teruskan?')){localStorage.removeItem(KEY);location.reload()}}
-nav();go('dashboard'); initGoogle();
+initSupabase();
 </script>
 </body>
 </html>
