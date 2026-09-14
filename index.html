@@ -59,6 +59,7 @@ body{font-size:13px}.side{width:272px;transform:translateX(-100%);transition:tra
 html{overflow-x:hidden}
 body{overflow-x:hidden}
 .mobile-bottom-nav{display:none}
+.mobile-logout{display:none;width:40px;height:40px;border:1px solid #e2e8f0;background:#fff;color:#475569;border-radius:9px;align-items:center;justify-content:center;cursor:pointer}.mobile-logout svg{width:19px;height:19px}
 @media(max-width:720px){
   :root{--mobile-nav-h:66px}
   .app{min-height:100dvh}
@@ -67,6 +68,7 @@ body{overflow-x:hidden}
   .mobile-menu{width:40px;height:40px;border-radius:9px}
   .mobile-user img{width:32px;height:32px}
   .mobile-user span{max-width:150px}
+  .mobile-logout{display:inline-flex}
   .main{padding:74px 12px calc(var(--mobile-nav-h) + 18px);min-width:0}
   .top{gap:12px;min-width:0}
   .top>div:first-child{min-width:0;flex:1}
@@ -216,6 +218,9 @@ body{overflow-x:hidden}
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
     </button>
     <div class="mobile-user" id="mobileUser"></div>
+    <button class="mobile-logout" onclick="signOut()" aria-label="Log keluar" title="Log keluar">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 4H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h5"/><path d="M14 8l4 4-4 4M8 12h10"/></svg>
+    </button>
   </div>
   <nav class="mobile-bottom-nav" id="mobileBottomNav" aria-label="Navigasi mudah alih"></nav>
   <div class="top">
@@ -387,12 +392,33 @@ async function acceptInvite(id){
   try{const {data,error}=await supabaseClient.rpc('accept_workspace_invite',{invite_id:id});if(error)throw error;await switchWorkspace(data);await renderWorkspacePanel();alert('Berjaya menyertai ruang kewangan bersama.')}catch(e){alert(e.message||'Gagal menerima jemputan')}
 }
 async function renderWorkspacePanel(){
-  const el=document.getElementById('workspacePanel'); if(!el||!supabaseClient)return;
+  const el=document.getElementById('workspacePanel'); if(!el||!supabaseClient||!currentAuthUser)return;
   try{
     const list=await loadWorkspaceList();
-    const {data:inv}=await supabaseClient.from('finance_workspace_invites').select('id,workspace_id,invited_email,status,created_at,finance_workspaces(name)').eq('status','pending').ilike('invited_email',currentAuthUser?.email||'');
-    el.innerHTML='<div class="panel"><h3>Ruang Kewangan & Sync</h3><p style="color:#64748b;font-size:12px">Setiap akaun mempunyai login sendiri. Ruang bersama membolehkan anda dan pasangan berkongsi data tanpa berkongsi password.</p><div class="field"><label>Ruang aktif</label><select id="workspaceSelect" onchange="switchWorkspace(this.value)">'+list.map(w=>'<option value="'+w.id+'" '+(w.id===workspaceId?'selected':'')+'>'+esc(w.name)+(w.is_shared?' · Shared':' · Personal')+'</option>').join('')+'</select></div><div class="actions"><button class="btn primary" onclick="createSharedWorkspace()">Buat Ruang Bersama</button>'+(workspaceMeta?'':'')+'<button class="btn secondary" onclick="invitePartner()">Jemput Pasangan</button></div>'+(inv&&inv.length?'<div class="notice" style="margin-top:12px"><b>Jemputan masuk</b>'+inv.map(i=>'<div style="margin-top:8px">'+esc(i.finance_workspaces?.name||'Ruang bersama')+' <button class="btn primary" style="margin-left:8px" onclick="acceptInvite(\''+i.id+'\')">Terima</button></div>').join('')+'</div>':'')+'<div class="setting-help">Live sync aktif untuk ruang ini. Perubahan pada device lain akan dikemas kini secara automatik.</div></div>';
-  }catch(e){el.innerHTML='<div class="panel"><h3>Ruang Kewangan</h3><p style="color:#dc2626">Database belum tersedia. Jalankan SQL schema yang disediakan.</p></div>'}
+    const {data:inv,error:invErr}=await supabaseClient.from('finance_workspace_invites')
+      .select('id,workspace_id,invited_email,status,created_at')
+      .eq('status','pending')
+      .ilike('invited_email',currentAuthUser.email||'');
+    if(invErr)throw invErr;
+    const inviteRows=inv||[];
+    const inviteWorkspaceIds=[...new Set(inviteRows.map(i=>i.workspace_id))];
+    let inviteNames={};
+    if(inviteWorkspaceIds.length){
+      const {data:ws,error:wsErr}=await supabaseClient.from('finance_workspaces').select('id,name').in('id',inviteWorkspaceIds);
+      if(wsErr)throw wsErr;
+      (ws||[]).forEach(w=>inviteNames[w.id]=w.name);
+    }
+    const en=lang()==='en';
+    el.innerHTML=`<div class="panel workspace-settings-panel"><h3>${en?'Workspace & Sync':'Ruang Kewangan & Sync'}</h3>
+      <p style="color:#64748b;font-size:12px;line-height:1.6">${en?'Each account has its own login. A shared workspace lets you and your partner share financial data without sharing passwords.':'Setiap akaun mempunyai login sendiri. Ruang bersama membolehkan anda dan pasangan berkongsi data tanpa berkongsi password.'}</p>
+      <div class="field"><label>${en?'Active Workspace':'Ruang Aktif'}</label><select id="workspaceSelect" onchange="switchWorkspace(this.value)">${list.map(w=>`<option value="${w.id}" ${w.id===workspaceId?'selected':''}>${esc(w.name)}${w.is_shared?' · Shared':' · Personal'}</option>`).join('')}</select></div>
+      <div class="actions"><button class="btn primary" onclick="createSharedWorkspace()">${en?'Create Shared Workspace':'Buat Ruang Bersama'}</button><button class="btn secondary" onclick="invitePartner()">${en?'Invite Partner':'Jemput Pasangan'}</button></div>
+      ${inviteRows.length?`<div class="notice" style="margin-top:12px"><b>${en?'Pending invitations':'Jemputan masuk'}</b>${inviteRows.map(i=>`<div style="margin-top:8px;display:flex;align-items:center;justify-content:space-between;gap:8px"><span>${esc(inviteNames[i.workspace_id]||'Shared Workspace')}</span><button class="btn primary" onclick="acceptInvite('${i.id}')">${en?'Accept':'Terima'}</button></div>`).join('')}</div>`:''}
+      <div class="setting-help">${en?'Live sync is active for the selected workspace. Changes from another device are updated automatically.':'Live sync aktif untuk ruang yang dipilih. Perubahan pada device lain akan dikemas kini secara automatik.'}</div></div>`;
+  }catch(e){
+    console.error('Workspace panel error',e);
+    el.innerHTML=`<div class="panel"><h3>${lang()==='en'?'Workspace & Sync':'Ruang Kewangan & Sync'}</h3><p style="color:#dc2626">${lang()==='en'?'Workspace could not be loaded. Check Supabase permissions or refresh the page.':'Ruang bersama tidak dapat dimuatkan. Semak permission Supabase atau refresh page.'}</p><div class="setting-help">${esc(e?.message||'Unknown error')}</div></div>`;
+  }
 }
 
 async function loginWithPassword(e){
@@ -905,6 +931,7 @@ function settings(){
  <div class="panel" style="margin-top:18px"><h3>${en?'Password & Security':'Password & Keselamatan'}</h3><p style="color:#64748b;font-size:12px;line-height:1.6">${en?'Change your account password here. You will need to enter your current password first.':'Ubah password akaun anda di sini. Anda perlu masukkan password semasa terlebih dahulu.'}</p><form onsubmit="changePassword(event)" class="formgrid"><div class="field"><label>${en?'Current Password':'Password Semasa'}</label><input id="currentPassword" type="password" autocomplete="current-password" minlength="8" required></div><div class="field"><label>${en?'New Password':'Password Baru'}</label><input id="changeNewPassword" type="password" autocomplete="new-password" minlength="8" required></div><div class="field"><label>${en?'Confirm New Password':'Sahkan Password Baru'}</label><input id="changeConfirmPassword" type="password" autocomplete="new-password" minlength="8" required></div><div class="actions"><button class="btn primary" type="submit">${en?'Change Password':'Ubah Password'}</button></div></form><div id="changePasswordMessage" class="auth-message"></div></div>
  <div id="workspacePanel"></div>
  <div class="panel" style="margin-top:18px"><h3>${en?'Data & Google Drive':'Data & Google Drive'}</h3><p>${db.expenses.length} ${en?'expense records':'transaksi belanja'} · ${db.incomes.length} ${en?'income records':'rekod pendapatan'} · ${db.savings.length} ${en?'saving records':'rekod simpanan'} · ${db.categories.length} ${en?'categories':'kategori'}</p><p style="color:#64748b;font-size:12px">${en?'Active account':'Akaun aktif'}: <b>${esc(currentAuthUser?.email||googleUser?.email||'Belum log masuk')}</b></p><p style="color:#64748b;font-size:12px">${en?'Main data is stored securely in Supabase Database. Google Drive is optional backup/export.':'Data utama disimpan dengan selamat dalam Supabase Database. Google Drive ialah backup/export pilihan.'}</p><div id="driveStatusMessage" class="drive-status">Belum diuji.</div><div class="setting-help">${en?'Google Sign-In and Google Drive use two separate Google permissions. You only need to approve Drive access once; after that your data syncs automatically.':'Log masuk Google dan akses Google Drive menggunakan dua kebenaran Google yang berbeza. Kebenaran Drive hanya perlu diluluskan sekali; selepas itu data akan sync secara automatik.'}</div><div class="actions"><button class="btn primary" onclick="connectGoogleDrive()">${en?'Enable Google Drive Sync':'Aktifkan Sync Google Drive'}</button><button class="btn secondary" onclick="saveToDrive(true)">${en?'Sync Now':'Sync Sekarang'}</button><button class="btn danger" onclick="resetData()">${en?'Reset Cache':'Reset Cache'}</button></div></div>`;
+ renderWorkspacePanel();
 }
 async function changePassword(e){
   e.preventDefault();
