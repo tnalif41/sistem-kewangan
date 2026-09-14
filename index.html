@@ -132,6 +132,7 @@ body{overflow-x:hidden}
   .mobile-bottom-nav button small{font-size:8px}
 }
 
+.workspace-live{font-size:11px;color:#16a34a;margin-top:8px}.workspace-actions{display:flex;gap:8px;flex-wrap:wrap}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
@@ -245,6 +246,7 @@ const DRIVE_SCOPE = 'https://www.googleapis.com/auth/drive.file';
 
 let supabaseClient=null;
 let driveFolderId=null, googleUser=null, accessToken=null, tokenClient=null, driveFileId=null, saveTimer=null, driveReady=false;
+let workspaceId=null, workspaceChannel=null, workspaceMeta=null, dbWriteTimer=null, dbWriteInFlight=false, pendingDbWrite=false;
 let currentAuthUser=null;
 let driveRemoteModifiedTime=null;
 let driveSyncTimer=null;
@@ -295,7 +297,102 @@ function resetDbForUser(){
 function save(){
   localStorage.setItem(KEY,JSON.stringify(db));
   localDataDirty=true;
-  saveToDrive(false);
+  queueSupabaseSave();
+}
+
+function defaultDb(){return {expenses:[],incomes:[],savings:[],budgets:{},categories:['Makanan','Pengangkutan','Bil & Utiliti','Rumah','Kesihatan','Hiburan','Belian','Lain-lain'],settings:{currency:'RM',name:'Sistem Kewangan',description:'Personal Finance Manager',language:'ms'},monthlyBudgets:{}}}
+function normalizeDb(data){const d=data&&typeof data==='object'?data:{}; const base=defaultDb(); d.expenses ||= [];d.incomes ||= [];d.savings ||= [];d.budgets ||= {};d.categories ||= base.categories;d.settings ||= base.settings;d.settings.currency ||= 'RM';d.settings.name ||= 'Sistem Kewangan';d.settings.description ||= 'Personal Finance Manager';d.settings.language ||= 'ms';d.monthlyBudgets ||= {};return d}
+
+async function ensurePersonalWorkspace(){
+  const {data,error}=await supabaseClient.rpc('create_personal_workspace');
+  if(error) throw error;
+  return data;
+}
+async function loadWorkspaceList(){
+  const {data,error}=await supabaseClient.from('finance_workspaces').select('id,name,is_shared,owner_id,created_at').order('created_at');
+  if(error) throw error;
+  return data||[];
+}
+async function loadWorkspaceData(wid){
+  const {data,error}=await supabaseClient.from('finance_workspace_data').select('data,updated_at,updated_by').eq('workspace_id',wid).maybeSingle();
+  if(error) throw error;
+  workspaceId=wid; workspaceMeta=data||null;
+  db=normalizeDb(data?.data || null);
+  localStorage.setItem(KEY,JSON.stringify(db));
+  return db;
+}
+function subscribeWorkspace(wid){
+  if(workspaceChannel) supabaseClient.removeChannel(workspaceChannel);
+  workspaceChannel=supabaseClient.channel('finance-workspace-'+wid)
+    .on('postgres_changes',{event:'*',schema:'public',table:'finance_workspace_data',filter:'workspace_id=eq.'+wid},payload=>{
+      const row=payload.new; if(!row || row.workspace_id!==wid) return;
+      if(row.updated_by===currentAuthUser?.id && row.updated_at===workspaceMeta?.updated_at) return;
+      workspaceMeta=row; db=normalizeDb(row.data); localStorage.setItem(KEY,JSON.stringify(db)); localDataDirty=false;
+      renderUser(); nav(); const active=document.querySelector('.nav-item.active')?.dataset?.page || 'dashboard'; go(active);
+      setSync('','Live Sync');
+    }).subscribe();
+}
+async function queueSupabaseSave(){
+  if(!supabaseClient||!workspaceId||!currentAuthUser)return;
+  pendingDbWrite=true; clearTimeout(dbWriteTimer); dbWriteTimer=setTimeout(flushSupabaseSave,250);
+}
+async function flushSupabaseSave(){
+  if(dbWriteInFlight||!pendingDbWrite||!workspaceId||!currentAuthUser)return;
+  pendingDbWrite=false; dbWriteInFlight=true; setSync('busy','Syncing...');
+  try{
+    const payload={workspace_id:workspaceId,data:db,updated_by:currentAuthUser.id,updated_at:new Date().toISOString()};
+    const {data,error}=await supabaseClient.from('finance_workspace_data').upsert(payload,{onConflict:'workspace_id'}).select().single();
+    if(error) throw error; workspaceMeta=data; localDataDirty=false; setSync('','Live Sync');
+  }catch(e){console.error('Supabase save error',e); localDataDirty=true; setSync('error','Sync gagal');}
+  finally{dbWriteInFlight=false;if(pendingDbWrite)queueSupabaseSave()}
+}
+async function initFinanceDatabase(){
+  if(!supabaseClient||!currentAuthUser)return;
+  try{
+    const personalId=await ensurePersonalWorkspace();
+    const localSnapshot=localStorage.getItem(KEY);
+    const {data:remoteRow,error:remoteErr}=await supabaseClient.from('finance_workspace_data').select('data,updated_at,updated_by').eq('workspace_id',personalId).maybeSingle();
+    if(remoteErr)throw remoteErr;
+    if(localSnapshot && remoteRow && (!remoteRow.data || Object.keys(remoteRow.data).length===0)){
+      const localDb=normalizeDb(JSON.parse(localSnapshot));
+      const {data:seeded,error:seedErr}=await supabaseClient.from('finance_workspace_data').upsert({workspace_id:personalId,data:localDb,updated_by:currentAuthUser.id,updated_at:new Date().toISOString()},{onConflict:'workspace_id'}).select().single();
+      if(seedErr)throw seedErr;
+      workspaceMeta=seeded;
+    }
+    const list=await loadWorkspaceList();
+    const preferred=workspaceId && list.some(x=>x.id===workspaceId)?workspaceId:personalId;
+    await loadWorkspaceData(preferred); subscribeWorkspace(preferred);
+    await renderWorkspacePanel();
+    setSync('','Live Sync');
+  }catch(e){console.error('Database init error',e);setSync('error','DB gagal');}
+}
+async function switchWorkspace(wid){
+  if(!wid||wid===workspaceId)return;
+  pendingDbWrite=true;
+  await flushSupabaseSave();
+  const waitStart=Date.now(); while(dbWriteInFlight && Date.now()-waitStart<5000){await new Promise(r=>setTimeout(r,50));}
+  setSync('busy','Memuat...');
+  try{await loadWorkspaceData(wid);subscribeWorkspace(wid);await renderWorkspacePanel();nav();go('dashboard');setSync('','Live Sync')}catch(e){console.error(e);setSync('error','Gagal tukar ruang')}
+}
+async function createSharedWorkspace(){
+  const name=prompt('Nama ruang kewangan bersama:', 'Kewangan Rumah'); if(!name)return;
+  try{const {data,error}=await supabaseClient.rpc('create_shared_workspace',{workspace_name:name});if(error)throw error;await switchWorkspace(data);alert('Ruang bersama berjaya dicipta. Sekarang anda boleh jemput pasangan.')}catch(e){alert(friendlyAuthError(e))}
+}
+async function invitePartner(){
+  if(!workspaceMeta && !workspaceId)return;
+  const email=prompt('Masukkan email Gmail pasangan:'); if(!email)return;
+  try{const {data,error}=await supabaseClient.rpc('invite_to_workspace',{wid:workspaceId,email:email.trim()});if(error)throw error;alert('Jemputan dicipta untuk '+email+'. Pasangan boleh login dengan akaun sendiri dan jemputan akan muncul dalam Tetapan. Kod jemputan: '+data)}catch(e){alert(e.message||'Jemputan gagal')}
+}
+async function acceptInvite(id){
+  try{const {data,error}=await supabaseClient.rpc('accept_workspace_invite',{invite_id:id});if(error)throw error;await switchWorkspace(data);await renderWorkspacePanel();alert('Berjaya menyertai ruang kewangan bersama.')}catch(e){alert(e.message||'Gagal menerima jemputan')}
+}
+async function renderWorkspacePanel(){
+  const el=document.getElementById('workspacePanel'); if(!el||!supabaseClient)return;
+  try{
+    const list=await loadWorkspaceList();
+    const {data:inv}=await supabaseClient.from('finance_workspace_invites').select('id,workspace_id,invited_email,status,created_at,finance_workspaces(name)').eq('status','pending').ilike('invited_email',currentAuthUser?.email||'');
+    el.innerHTML='<div class="panel"><h3>Ruang Kewangan & Sync</h3><p style="color:#64748b;font-size:12px">Setiap akaun mempunyai login sendiri. Ruang bersama membolehkan anda dan pasangan berkongsi data tanpa berkongsi password.</p><div class="field"><label>Ruang aktif</label><select id="workspaceSelect" onchange="switchWorkspace(this.value)">'+list.map(w=>'<option value="'+w.id+'" '+(w.id===workspaceId?'selected':'')+'>'+esc(w.name)+(w.is_shared?' · Shared':' · Personal')+'</option>').join('')+'</select></div><div class="actions"><button class="btn primary" onclick="createSharedWorkspace()">Buat Ruang Bersama</button>'+(workspaceMeta?'':'')+'<button class="btn secondary" onclick="invitePartner()">Jemput Pasangan</button></div>'+(inv&&inv.length?'<div class="notice" style="margin-top:12px"><b>Jemputan masuk</b>'+inv.map(i=>'<div style="margin-top:8px">'+esc(i.finance_workspaces?.name||'Ruang bersama')+' <button class="btn primary" style="margin-left:8px" onclick="acceptInvite(\''+i.id+'\')">Terima</button></div>').join('')+'</div>':'')+'<div class="setting-help">Live sync aktif untuk ruang ini. Perubahan pada device lain akan dikemas kini secara automatik.</div></div>';
+  }catch(e){el.innerHTML='<div class="panel"><h3>Ruang Kewangan</h3><p style="color:#dc2626">Database belum tersedia. Jalankan SQL schema yang disediakan.</p></div>'}
 }
 
 async function loginWithPassword(e){
@@ -382,6 +479,7 @@ async function handleAuthenticatedUser(user){
   googleUser={sub:user.id,name:user.user_metadata?.full_name||user.user_metadata?.name||user.email,email:user.email,picture:user.user_metadata?.avatar_url||user.user_metadata?.picture||''};
   localStorage.setItem('lastAuthEmail',user.email||'');
   showApp();renderUser();nav();go('dashboard');
+  await initFinanceDatabase();
   // Do not request Drive permission on every login. Drive is connected separately.
   if(accessToken)loadFromDrive();
 }
@@ -429,6 +527,7 @@ async function initSupabase(){
 
 async function signOut(){
   stopDriveAutoSync();
+  if(workspaceChannel&&supabaseClient){try{await supabaseClient.removeChannel(workspaceChannel)}catch(_){} workspaceChannel=null;} workspaceId=null; workspaceMeta=null;
   accessToken=null;tokenClient=null;driveFileId=null;driveFolderId=null;driveReady=false;
   if(supabaseClient)await supabaseClient.auth.signOut();
   currentAuthUser=null;googleUser=null;showAuth();showLoginView();
@@ -804,7 +903,8 @@ function settings(){
  <div class="field"><label>${en?'Language / Bahasa':'Bahasa / Language'}</label><select id="sLanguage"><option value="ms" ${db.settings.language==='ms'?'selected':''}>Bahasa Melayu</option><option value="en" ${db.settings.language==='en'?'selected':''}>English</option></select></div>
  </div><div class="actions"><button class="btn primary" onclick="saveSettings()">${en?'Save Settings':'Simpan Tetapan'}</button><button class="btn danger" onclick="resetData()">${en?'Reset All Data':'Reset Semua Data'}</button></div></div>
  <div class="panel" style="margin-top:18px"><h3>${en?'Password & Security':'Password & Keselamatan'}</h3><p style="color:#64748b;font-size:12px;line-height:1.6">${en?'Change your account password here. You will need to enter your current password first.':'Ubah password akaun anda di sini. Anda perlu masukkan password semasa terlebih dahulu.'}</p><form onsubmit="changePassword(event)" class="formgrid"><div class="field"><label>${en?'Current Password':'Password Semasa'}</label><input id="currentPassword" type="password" autocomplete="current-password" minlength="8" required></div><div class="field"><label>${en?'New Password':'Password Baru'}</label><input id="changeNewPassword" type="password" autocomplete="new-password" minlength="8" required></div><div class="field"><label>${en?'Confirm New Password':'Sahkan Password Baru'}</label><input id="changeConfirmPassword" type="password" autocomplete="new-password" minlength="8" required></div><div class="actions"><button class="btn primary" type="submit">${en?'Change Password':'Ubah Password'}</button></div></form><div id="changePasswordMessage" class="auth-message"></div></div>
- <div class="panel" style="margin-top:18px"><h3>${en?'Data & Google Drive':'Data & Google Drive'}</h3><p>${db.expenses.length} ${en?'expense records':'transaksi belanja'} · ${db.incomes.length} ${en?'income records':'rekod pendapatan'} · ${db.savings.length} ${en?'saving records':'rekod simpanan'} · ${db.categories.length} ${en?'categories':'kategori'}</p><p style="color:#64748b;font-size:12px">${en?'Active account':'Akaun aktif'}: <b>${esc(currentAuthUser?.email||googleUser?.email||'Belum log masuk')}</b></p><p style="color:#64748b;font-size:12px">${en?'Main data is stored in the sistem-kewangan folder in Google Drive.':'Data utama disimpan dalam folder sistem-kewangan di Google Drive.'}</p><div id="driveStatusMessage" class="drive-status">Belum diuji.</div><div class="setting-help">${en?'Google Sign-In and Google Drive use two separate Google permissions. You only need to approve Drive access once; after that your data syncs automatically.':'Log masuk Google dan akses Google Drive menggunakan dua kebenaran Google yang berbeza. Kebenaran Drive hanya perlu diluluskan sekali; selepas itu data akan sync secara automatik.'}</div><div class="actions"><button class="btn primary" onclick="connectGoogleDrive()">${en?'Enable Google Drive Sync':'Aktifkan Sync Google Drive'}</button><button class="btn secondary" onclick="saveToDrive(true)">${en?'Sync Now':'Sync Sekarang'}</button><button class="btn danger" onclick="resetData()">${en?'Reset Cache':'Reset Cache'}</button></div></div>`;
+ <div id="workspacePanel"></div>
+ <div class="panel" style="margin-top:18px"><h3>${en?'Data & Google Drive':'Data & Google Drive'}</h3><p>${db.expenses.length} ${en?'expense records':'transaksi belanja'} · ${db.incomes.length} ${en?'income records':'rekod pendapatan'} · ${db.savings.length} ${en?'saving records':'rekod simpanan'} · ${db.categories.length} ${en?'categories':'kategori'}</p><p style="color:#64748b;font-size:12px">${en?'Active account':'Akaun aktif'}: <b>${esc(currentAuthUser?.email||googleUser?.email||'Belum log masuk')}</b></p><p style="color:#64748b;font-size:12px">${en?'Main data is stored securely in Supabase Database. Google Drive is optional backup/export.':'Data utama disimpan dengan selamat dalam Supabase Database. Google Drive ialah backup/export pilihan.'}</p><div id="driveStatusMessage" class="drive-status">Belum diuji.</div><div class="setting-help">${en?'Google Sign-In and Google Drive use two separate Google permissions. You only need to approve Drive access once; after that your data syncs automatically.':'Log masuk Google dan akses Google Drive menggunakan dua kebenaran Google yang berbeza. Kebenaran Drive hanya perlu diluluskan sekali; selepas itu data akan sync secara automatik.'}</div><div class="actions"><button class="btn primary" onclick="connectGoogleDrive()">${en?'Enable Google Drive Sync':'Aktifkan Sync Google Drive'}</button><button class="btn secondary" onclick="saveToDrive(true)">${en?'Sync Now':'Sync Sekarang'}</button><button class="btn danger" onclick="resetData()">${en?'Reset Cache':'Reset Cache'}</button></div></div>`;
 }
 async function changePassword(e){
   e.preventDefault();
