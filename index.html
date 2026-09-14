@@ -29,7 +29,7 @@ body{font-size:13px}.side{width:272px;transform:translateX(-100%);transition:tra
 .nav button{justify-content:flex-start;font-size:13px;gap:12px}.nav button .ico{width:18px;height:18px}
 .main{margin-left:0;width:100%;padding:12px;padding-top:66px}.mobile-topbar{display:flex;position:fixed;top:0;left:0;right:0;height:54px;background:#fff;border-bottom:1px solid var(--line);z-index:9;align-items:center;justify-content:space-between;padding:0 12px}
 .mobile-menu{border:1px solid #d9dee7;background:#fff;border-radius:6px;width:38px;height:38px;cursor:pointer;color:#374151}
-.mobile-menu svg{width:20px;height:20px}.mobile-user{display:flex;align-items:center;gap:8px;min-width:0}.mobile-user img{width:30px;height:30px;border-radius:50%}.mobile-user span{max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px}
+.mobile-menu svg{width:20px;height:20px}.mobile-user{display:flex;align-items:center;gap:8px;min-width:0}.mobile-user img{width:30px;height:30px;border-radius:50%}.mobile-user span{max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px} .mobile-logout{border:1px solid #d9dee7;background:#fff;border-radius:6px;width:38px;height:38px;cursor:pointer;color:#374151;display:flex;align-items:center;justify-content:center}.mobile-logout svg{width:19px;height:19px}.notification-btn{border:1px solid #d9dee7;background:#fff;border-radius:6px;min-width:38px;height:38px;cursor:pointer;color:#374151;display:inline-flex;align-items:center;justify-content:center;position:relative}.notification-btn svg{width:19px;height:19px}.notification-dot{position:absolute;top:5px;right:5px;width:7px;height:7px;border-radius:50%;background:#dc2626}
 .top{align-items:flex-start;margin-bottom:14px}.top h1{font-size:20px;line-height:26px}.top p{font-size:12px}.top .btn{font-size:12px;padding:8px 10px;min-height:36px}
 .cards,.formgrid,.statrow{grid-template-columns:1fr}.grid{grid-template-columns:1fr}.panel{padding:14px;border-radius:7px}.panel h3{font-size:15px}
 .budget-hero{display:block;padding:15px}.budget-edit{margin-top:14px}.budget-edit input{width:100%;min-width:0}.budget-edit .btn{white-space:nowrap}
@@ -226,6 +226,9 @@ body{overflow-x:hidden}
   <div class="top">
     <div><h1 id="title">Dashboard</h1><p id="subtitle">Pantau kewangan anda dengan mudah.</p></div>
     <div style="display:flex;align-items:center;gap:8px">
+      <button class="notification-btn" id="notificationBtn" onclick="showNotifications()" title="Notifications" aria-label="Notifications">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/></svg><i id="notificationDot" class="notification-dot" style="display:none"></i>
+      </button>
       <span class="sync-badge" id="syncBadge"><span class="sync-dot"></span> Google Drive</span>
       <div id="desktopUser"></div>
       <button class="btn primary" onclick="go('add')">＋ Tambah Belanja</button>
@@ -253,6 +256,7 @@ let supabaseClient=null;
 let driveFolderId=null, googleUser=null, accessToken=null, tokenClient=null, driveFileId=null, saveTimer=null, driveReady=false;
 let workspaceId=null, workspaceChannel=null, workspaceMeta=null, dbWriteTimer=null, dbWriteInFlight=false, pendingDbWrite=false;
 let currentAuthUser=null;
+let notificationChannel=null, lockConfig={auto_lock_enabled:true,lock_after_days:31}, lockedMonths=new Set();
 let driveRemoteModifiedTime=null;
 let driveSyncTimer=null;
 let driveSyncInFlight=false;
@@ -287,6 +291,9 @@ function closeMenuOnMobile(){if(window.innerWidth<=720)toggleMenu(false)}
 function setUserKey(uid){
   KEY='sistemKewanganFreshV1:'+uid;
 }
+function getWorkspaceKey(uid=currentAuthUser?.id){return uid?'sistemKewanganActiveWorkspace:'+uid:null;}
+function rememberWorkspace(wid){const k=getWorkspaceKey();if(k&&wid)localStorage.setItem(k,wid);}
+function getRememberedWorkspace(){const k=getWorkspaceKey();return k?localStorage.getItem(k):null;}
 function resetDbForUser(){
   db=JSON.parse(localStorage.getItem(KEY)||'null')||{
     expenses:[],incomes:[],savings:[],budgets:{},
@@ -322,6 +329,7 @@ async function loadWorkspaceData(wid){
   const {data,error}=await supabaseClient.from('finance_workspace_data').select('data,updated_at,updated_by').eq('workspace_id',wid).maybeSingle();
   if(error) throw error;
   workspaceId=wid; workspaceMeta=data||null;
+  rememberWorkspace(wid);
   db=normalizeDb(data?.data || null);
   localStorage.setItem(KEY,JSON.stringify(db));
   return db;
@@ -348,7 +356,9 @@ async function flushSupabaseSave(){
     const payload={workspace_id:workspaceId,data:db,updated_by:currentAuthUser.id,updated_at:new Date().toISOString()};
     const {data,error}=await supabaseClient.from('finance_workspace_data').upsert(payload,{onConflict:'workspace_id'}).select().single();
     if(error) throw error; workspaceMeta=data; localDataDirty=false; setSync('','Live Sync');
-  }catch(e){console.error('Supabase save error',e); localDataDirty=true; setSync('error','Sync gagal');}
+  }catch(e){console.error('Supabase save error',e); localDataDirty=true; setSync('error',String(e?.message||'Sync gagal').includes('LOCKED_PERIOD')?'Bulan dikunci':'Sync gagal');
+    try{await loadWorkspaceData(workspaceId);subscribeWorkspace(workspaceId);nav();const b=document.querySelector('#nav button.active');go(b?.id?.replace(/^n-/,'')||'expenses');}catch(reloadErr){console.error('Rollback reload failed',reloadErr);}
+  }
   finally{dbWriteInFlight=false;if(pendingDbWrite)queueSupabaseSave()}
 }
 async function initFinanceDatabase(){
@@ -365,9 +375,10 @@ async function initFinanceDatabase(){
       workspaceMeta=seeded;
     }
     const list=await loadWorkspaceList();
-    const preferred=workspaceId && list.some(x=>x.id===workspaceId)?workspaceId:personalId;
-    await loadWorkspaceData(preferred); subscribeWorkspace(preferred);
-    await renderWorkspacePanel();
+    const remembered=getRememberedWorkspace();
+    const preferred=(remembered && list.some(x=>x.id===remembered)) ? remembered : (workspaceId && list.some(x=>x.id===workspaceId) ? workspaceId : personalId);
+    await loadWorkspaceData(preferred); subscribeWorkspace(preferred); subscribeNotifications(); await loadLockState();
+    await renderWorkspacePanel(); await updateNotificationDot();
     setSync('','Live Sync');
   }catch(e){console.error('Database init error',e);setSync('error','DB gagal');}
 }
@@ -394,7 +405,7 @@ async function acceptInvite(id){
 async function renderWorkspacePanel(){
   const el=document.getElementById('workspacePanel'); if(!el||!supabaseClient||!currentAuthUser)return;
   try{
-    const list=await loadWorkspaceList();
+    const list=await loadWorkspaceList(); window.__workspaceList=list;
     const {data:inv,error:invErr}=await supabaseClient.from('finance_workspace_invites')
       .select('id,workspace_id,invited_email,status,created_at')
       .eq('status','pending')
@@ -867,8 +878,9 @@ function expenses(){
  content.innerHTML=`<div class="panel"><div class="toolbar"><input id="search" placeholder="Cari transaksi..." oninput="filterExpenses()"><select id="fcat" onchange="filterExpenses()"><option value="">Semua kategori</option>${db.categories.map(c=>`<option>${esc(c)}</option>`).join('')}</select><button class="btn primary" onclick="go('add')">＋ Tambah</button></div><div id="expenseTable"></div></div>`;renderExpenses(rows)
 }
 function filterExpenses(){let q=search.value.toLowerCase(),c=fcat.value;renderExpenses(db.expenses.filter(x=>(!q||(x.item+' '+x.category+' '+x.note).toLowerCase().includes(q))&&(!c||x.category===c)).sort((a,b)=>b.date.localeCompare(a.date)))}
-function renderExpenses(rows){let total=rows.reduce((a,x)=>a+ +x.amount,0);expenseTable.innerHTML=rows.length?`<div class="table-scroll"><table><thead><tr><th>Tarikh</th><th>Kategori</th><th>Perkara</th><th>Bayaran</th><th class="amount">Jumlah</th><th>Tindakan</th></tr></thead><tbody>${rows.map(x=>`<tr><td>${x.date}</td><td>${esc(x.category)}</td><td>${esc(x.item)}</td><td>${esc(x.pay)}</td><td class="amount">${db.settings.currency} ${money(x.amount)}</td><td><button class="btn secondary action-icon" onclick="add(${x.id})" title="Edit" aria-label="Edit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m4 16-.7 4.7L8 20l11.2-11.2a2.2 2.2 0 0 0-3.1-3.1L4.9 16.9Z"/><path d="m14.7 7.3 2 2"/></svg></button> <button class="btn danger action-icon" onclick="delExpense(${x.id})" title="Padam" aria-label="Padam"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13M10 11v5M14 11v5"/></svg></button></td></tr>`).join('')}</tbody><tfoot><tr><th colspan="4">Jumlah</th><th class="amount">${db.settings.currency} ${money(total)}</th><th></th></tr></tfoot></table>`:'<div class="empty">Tiada transaksi dijumpai.</div>'}
-function delExpense(id){if(confirm('Padam transaksi ini?')){db.expenses=db.expenses.filter(x=>x.id!==id);save();expenses()}}
+function renderExpenses(rows){let total=rows.reduce((a,x)=>a+ +x.amount,0);expenseTable.innerHTML=rows.length?`<div class="table-scroll"><table><thead><tr><th>Tarikh</th><th>Kategori</th><th>Perkara</th><th>Bayaran</th><th class="amount">Jumlah</th><th>Tindakan</th></tr></thead><tbody>${rows.map(x=>`<tr><td>${x.date}${transactionLocked(x.date)?' 🔒':''}</td><td>${esc(x.category)}</td><td>${esc(x.item)}</td><td>${esc(x.pay)}</td><td class="amount">${db.settings.currency} ${money(x.amount)}</td><td><button class="btn secondary action-icon" onclick="editExpenseGuard(${x.id})" title="Edit" aria-label="Edit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m4 16-.7 4.7L8 20l11.2-11.2a2.2 2.2 0 0 0-3.1-3.1L4.9 16.9Z"/><path d="m14.7 7.3 2 2"/></svg></button> <button class="btn danger action-icon" onclick="delExpense(${x.id})" title="Padam" aria-label="Padam"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13M10 11v5M14 11v5"/></svg></button></td></tr>`).join('')}</tbody><tfoot><tr><th colspan="4">Jumlah</th><th class="amount">${db.settings.currency} ${money(total)}</th><th></th></tr></tfoot></table>`:'<div class="empty">Tiada transaksi dijumpai.</div>'}
+function editExpenseGuard(id){const x=db.expenses.find(r=>r.id===id);if(x&&transactionLocked(x.date)){alert('Bulan ini telah dikunci. Transaksi tidak boleh diedit.');return}add(id)}
+function delExpense(id){const x=db.expenses.find(r=>r.id===id);if(x&&transactionLocked(x.date)){alert('Bulan ini telah dikunci. Transaksi tidak boleh dipadam.');return}if(confirm('Padam transaksi ini?')){db.expenses=db.expenses.filter(x=>x.id!==id);save();expenses()}}
 function saving(){
  let total=db.savings.reduce((a,x)=>a+Number(x.amount||0),0), m=month(), monthTotal=db.savings.filter(x=>x.date.startsWith(m)).reduce((a,x)=>a+Number(x.amount||0),0);
  content.innerHTML=`<div class="saving-summary"><div class="saving-card"><span>Jumlah Simpanan</span><b>${db.settings.currency} ${money(total)}</b></div><div class="saving-card"><span>Simpanan Bulan Ini</span><b>${db.settings.currency} ${money(monthTotal)}</b></div><div class="saving-card"><span>Bilangan Rekod</span><b>${db.savings.length}</b></div></div>
@@ -877,13 +889,13 @@ function saving(){
 function addSaving(){
  content.innerHTML=`<div class="panel"><div class="notice">Rekod simpanan anda secara berasingan daripada belanja.</div><form onsubmit="saveSaving(event)"><div class="formgrid"><div class="field"><label>Tarikh</label><input id="svDate" type="date" value="${new Date().toISOString().slice(0,10)}" required></div><div class="field"><label>Tujuan Simpanan</label><input id="svGoal" placeholder="Contoh: Dana kecemasan" required></div><div class="field"><label>Jumlah (${db.settings.currency})</label><input id="svAmt" type="number" step="0.01" min="0" required></div><div class="field"><label>Nota</label><input id="svNote" placeholder="Pilihan"></div></div><div class="actions"><button type="button" class="btn secondary" onclick="go('saving')">Batal</button><button class="btn primary">Simpan Simpanan</button></div></form></div>`;
 }
-function saveSaving(e){e.preventDefault();db.savings.push({id:Date.now(),date:svDate.value,goal:svGoal.value,amount:+svAmt.value,note:svNote.value});save();saving()}
-function delSaving(id){if(confirm('Padam rekod simpanan ini?')){db.savings=db.savings.filter(x=>x.id!==id);save();saving()}}
+function saveSaving(e){e.preventDefault();if(transactionLocked(svDate.value)){alert('Bulan ini telah dikunci. Tidak boleh tambah simpanan.');return}db.savings.push({id:Date.now(),date:svDate.value,goal:svGoal.value,amount:+svAmt.value,note:svNote.value});save();saving()}
+function delSaving(id){const x=db.savings.find(r=>r.id===id);if(x&&transactionLocked(x.date)){alert('Bulan ini telah dikunci. Simpanan tidak boleh dipadam.');return}if(confirm('Padam rekod simpanan ini?')){db.savings=db.savings.filter(x=>x.id!==id);save();saving()}}
 function income(){
  content.innerHTML=`<div class="panel"><form onsubmit="addIncome(event)"><div class="formgrid"><div class="field"><label>Tarikh</label><input id="iDate" type="date" value="${new Date().toISOString().slice(0,10)}" required></div><div class="field"><label>Sumber</label><input id="iSource" placeholder="Gaji / Freelance / Bisnes" required></div><div class="field"><label>Jumlah (${db.settings.currency})</label><input id="iAmt" type="number" step=".01" min="0" required></div></div><div class="actions"><button class="btn primary">Simpan Pendapatan</button></div></form></div><div class="panel" style="margin-top:18px"><h3>Rekod Pendapatan</h3><div class="table-scroll"><table><thead><tr><th>Tarikh</th><th>Sumber</th><th class="amount">Jumlah</th><th></th></tr></thead><tbody>${db.incomes.slice().sort((a,b)=>b.date.localeCompare(a.date)).map(x=>`<tr><td>${x.date}</td><td>${esc(x.source)}</td><td class="amount">${db.settings.currency} ${money(x.amount)}</td><td><button class="btn danger" onclick="delIncome(${x.id})">Padam</button></td></tr>`).join('')||'<tr><td colspan="4" class="empty">Belum ada rekod.</td></tr>'}</tbody></table></div></div>`
 }
-function addIncome(e){e.preventDefault();db.incomes.push({id:Date.now(),date:iDate.value,source:iSource.value,amount:+iAmt.value});save();income()}
-function delIncome(id){db.incomes=db.incomes.filter(x=>x.id!==id);save();income()}
+function addIncome(e){e.preventDefault();if(transactionLocked(iDate.value)){alert('Bulan ini telah dikunci. Tidak boleh tambah pendapatan.');return}db.incomes.push({id:Date.now(),date:iDate.value,source:iSource.value,amount:+iAmt.value});save();income()}
+function delIncome(id){const x=db.incomes.find(r=>r.id===id);if(x&&transactionLocked(x.date)){alert('Bulan ini telah dikunci. Pendapatan tidak boleh dipadam.');return}db.incomes=db.incomes.filter(x=>x.id!==id);save();income()}
 function budget(){
  let m=month(),t=totals(), rows=db.categories.map(c=>{let b=+(db.budgets[c]||0),s=db.expenses.filter(x=>x.date.startsWith(m)&&x.category===c).reduce((a,x)=>a+ +x.amount,0);return[c,b,s]});
  content.innerHTML=`<div class="panel"><div class="notice">Tetapkan bajet kategori. Sistem akan kira penggunaan dan baki secara automatik.</div><div class="field" style="max-width:360px;margin-bottom:18px"><label>My Monthly Budget Is (${month()})</label><input id="overallBudget" type="number" min="0" step=".01" value="${db.monthlyBudgets?.[month()]||''}" placeholder="Contoh 3000"></div><div class="formgrid">${db.categories.map(c=>`<div class="field"><label>${esc(c)}</label><input id="b_${encodeURIComponent(c)}" type="number" min="0" step=".01" value="${db.budgets[c]||''}" placeholder="0"></div>`).join('')}</div><div class="actions"><button class="btn primary" onclick="saveBudget()">Simpan Budget</button></div></div><div class="panel" style="margin-top:18px"><h3>Penggunaan Budget Bulan Ini</h3>${rows.map(r=>{let pct=r[1]?Math.min(100,r[2]/r[1]*100):0;return `<div class="bar"><div class="barhead"><span>${esc(r[0])}</span><b>${db.settings.currency} ${money(r[2])} / ${db.settings.currency} ${money(r[1])}</b></div><div class="track"><div class="fill" style="width:${pct}%"></div></div></div>`}).join('')}</div>`
@@ -920,6 +932,97 @@ function categories(){
 }
 function newCat(e){e.preventDefault();let c=newCategory.value.trim();if(c&&!db.categories.includes(c)){db.categories.push(c);save()}categories()}
 function delCat(c){c=decodeURIComponent(c);if(db.categories.length<=1)return alert('Mesti ada sekurang-kurangnya satu kategori.');if(confirm('Padam kategori '+c+'?')){db.categories=db.categories.filter(x=>x!==c);delete db.budgets[c];save();categories()}}
+
+async function loadLockState(){
+  if(!supabaseClient||!workspaceId)return;
+  try{
+    const {data:s,error:se}=await supabaseClient.from('finance_workspace_settings').select('auto_lock_enabled,lock_after_days').eq('workspace_id',workspaceId).maybeSingle();
+    if(se)throw se;
+    lockConfig=Object.assign({auto_lock_enabled:true,lock_after_days:31},s||{});
+    const {data:lp,error:le}=await supabaseClient.from('finance_locked_periods').select('month_start').eq('workspace_id',workspaceId);
+    if(le)throw le;
+    lockedMonths=new Set((lp||[]).map(x=>String(x.month_start).slice(0,7)));
+  }catch(e){console.warn('Lock state load failed',e)}
+}
+function isMonthLockedClient(monthKey){
+  if(lockedMonths.has(monthKey))return true;
+  if(!lockConfig.auto_lock_enabled)return false;
+  const end=new Date(monthKey+'-01T00:00:00');
+  end.setMonth(end.getMonth()+1); end.setDate(end.getDate()-1);
+  const cutoff=new Date(end); cutoff.setDate(cutoff.getDate()+Number(lockConfig.lock_after_days||31));
+  const today=new Date(); today.setHours(0,0,0,0);
+  return cutoff < today;
+}
+function transactionLocked(date){return !!date && isMonthLockedClient(String(date).slice(0,7))}
+async function closeMonth(){
+  const m=prompt(lang()==='en'?'Enter month to lock (YYYY-MM):':'Masukkan bulan untuk dikunci (YYYY-MM):',month());
+  if(!m||!/^\d{4}-\d{2}$/.test(m))return alert(lang()==='en'?'Invalid month.':'Bulan tidak sah.');
+  try{
+    const {error}=await supabaseClient.rpc('lock_workspace_month',{p_workspace_id:workspaceId,p_month_start:m+'-01'});
+    if(error)throw error;
+    await loadLockState(); await renderWorkspacePanel(); nav(); go('settings');
+    alert(lang()==='en'?'Month locked successfully.':'Bulan berjaya dikunci.');
+  }catch(e){alert(e.message||'Gagal mengunci bulan.')}
+}
+async function unlockMonth(){
+  const m=prompt(lang()==='en'?'Enter month to unlock (YYYY-MM):':'Masukkan bulan untuk dibuka semula (YYYY-MM):',month());
+  if(!m||!/^\d{4}-\d{2}$/.test(m))return;
+  try{
+    const {error}=await supabaseClient.rpc('unlock_workspace_month',{p_workspace_id:workspaceId,p_month_start:m+'-01'});
+    if(error)throw error;
+    await loadLockState(); await renderWorkspacePanel(); nav(); go('settings');
+    alert(lang()==='en'?'Month unlocked.':'Bulan dibuka semula.');
+  }catch(e){alert(e.message||'Gagal membuka bulan.')}
+}
+async function saveLockSettings(){
+  const enabled=document.getElementById('lockEnabled').value==='true';
+  const days=Math.max(0,Math.min(3650,parseInt(document.getElementById('lockDays').value||31,10)));
+  try{
+    const {error}=await supabaseClient.rpc('set_workspace_lock_settings',{p_workspace_id:workspaceId,p_enabled:enabled,p_days:days});
+    if(error)throw error;
+    await loadLockState(); await renderWorkspacePanel(); alert(lang()==='en'?'Locking settings saved.':'Tetapan locking disimpan.');
+  }catch(e){alert(e.message||'Gagal menyimpan tetapan locking.')}
+}
+async function renderLockPanel(){
+  await loadLockState();
+  const en=lang()==='en', owner=listIsOwner();
+  const locked=[...lockedMonths].sort().reverse();
+  return `<div class="panel" style="margin-top:18px"><h3>${en?'Locking Period':'Tempoh Penguncian'}</h3>
+    <p style="color:#64748b;font-size:12px;line-height:1.6">${en?'Locked months cannot have expenses, income or savings edited, deleted, or added. The database enforces this rule.':'Bulan yang dikunci tidak boleh diubah, dipadam atau ditambah transaksi belanja, pendapatan dan simpanan. Database turut menguatkuasakan peraturan ini.'}</p>
+    <div class="formgrid"><div class="field"><label>${en?'Automatic lock':'Auto lock'}</label><select id="lockEnabled"><option value="true" ${lockConfig.auto_lock_enabled?'selected':''}>${en?'Enabled':'Aktif'}</option><option value="false" ${!lockConfig.auto_lock_enabled?'selected':''}>${en?'Disabled':'Tidak aktif'}</option></select></div>
+    <div class="field"><label>${en?'Lock after days':'Kunci selepas (hari)'}</label><input id="lockDays" type="number" min="0" max="3650" value="${Number(lockConfig.lock_after_days||31)}"></div></div>
+    <div class="actions"><button class="btn primary" onclick="saveLockSettings()">${en?'Save Locking Settings':'Simpan Tetapan Locking'}</button>${owner?`<button class="btn secondary" onclick="closeMonth()">${en?'Close Month':'Tutup Bulan'}</button><button class="btn secondary" onclick="unlockMonth()">${en?'Unlock Month':'Buka Bulan'}</button>`:''}</div>
+    <div class="setting-help">${en?'Explicitly locked months':'Bulan yang dikunci secara manual'}: ${locked.length?locked.map(m=>`<b>${m}</b>`).join(', '):'—'}</div>
+  </div>`;
+}
+function listIsOwner(){
+  return !!(currentAuthUser && workspaceMeta && window.__workspaceList && window.__workspaceList.some(w=>w.id===workspaceId && w.owner_id===currentAuthUser.id));
+}
+async function renderNotifications(){
+  if(!supabaseClient||!currentAuthUser)return '';
+  const {data,error}=await supabaseClient.from('finance_notifications').select('id,workspace_id,type,title,message,is_read,created_at').eq('recipient_user_id',currentAuthUser.id).order('created_at',{ascending:false}).limit(20);
+  if(error) return `<div class="panel"><h3>Notifications</h3><p class="setting-help">${esc(error.message)}</p></div>`;
+  const rows=data||[];
+  document.getElementById('notificationDot')?.style && (document.getElementById('notificationDot').style.display=rows.some(x=>!x.is_read)?'block':'none');
+  return `<div class="panel" style="margin-top:18px"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px"><h3>Notifications</h3><button class="btn secondary" onclick="markNotificationsRead()">Mark read</button></div>${rows.length?rows.map(n=>`<div style="padding:10px 0;border-bottom:1px solid var(--line);opacity:${n.is_read?.7:1}"><b>${esc(n.title)}</b><div style="font-size:12px;color:#64748b">${esc(n.message)}</div><small style="color:#94a3b8">${new Date(n.created_at).toLocaleString()}</small></div>`).join(''):'<div class="empty">Tiada notifikasi.</div>'}</div>`;
+}
+async function showNotifications(){await renderNotifications(); if(document.getElementById('notificationPanel')){document.getElementById('notificationPanel').innerHTML=await renderNotifications()}else{alert('Buka Tetapan untuk melihat Notifications.');go('settings')}}
+async function markNotificationsRead(){
+  if(!currentAuthUser)return;
+  await supabaseClient.from('finance_notifications').update({is_read:true}).eq('recipient_user_id',currentAuthUser.id).eq('is_read',false);
+  await renderNotifications(); await updateNotificationDot();
+}
+async function updateNotificationDot(){
+  if(!supabaseClient||!currentAuthUser)return;
+  const {data}=await supabaseClient.from('finance_notifications').select('id').eq('recipient_user_id',currentAuthUser.id).eq('is_read',false).limit(1);
+  const dot=document.getElementById('notificationDot'); if(dot)dot.style.display=data?.length?'block':'none';
+}
+function subscribeNotifications(){
+  if(notificationChannel&&supabaseClient){try{supabaseClient.removeChannel(notificationChannel)}catch(_){}}
+  if(!supabaseClient||!currentAuthUser)return;
+  notificationChannel=supabaseClient.channel('finance-notifications-'+currentAuthUser.id)
+    .on('postgres_changes',{event:'INSERT',schema:'public',table:'finance_notifications',filter:'recipient_user_id=eq.'+currentAuthUser.id},async()=>{await updateNotificationDot(); if(document.getElementById('notificationPanel'))document.getElementById('notificationPanel').innerHTML=await renderNotifications()}).subscribe();
+}
 function settings(){
  const en=lang()==='en';
  content.innerHTML=`<div class="panel"><h3>${en?'App Identity':'Identiti Aplikasi'}</h3><div class="formgrid">
@@ -929,9 +1032,9 @@ function settings(){
  <div class="field"><label>${en?'Language / Bahasa':'Bahasa / Language'}</label><select id="sLanguage"><option value="ms" ${db.settings.language==='ms'?'selected':''}>Bahasa Melayu</option><option value="en" ${db.settings.language==='en'?'selected':''}>English</option></select></div>
  </div><div class="actions"><button class="btn primary" onclick="saveSettings()">${en?'Save Settings':'Simpan Tetapan'}</button><button class="btn danger" onclick="resetData()">${en?'Reset All Data':'Reset Semua Data'}</button></div></div>
  <div class="panel" style="margin-top:18px"><h3>${en?'Password & Security':'Password & Keselamatan'}</h3><p style="color:#64748b;font-size:12px;line-height:1.6">${en?'Change your account password here. You will need to enter your current password first.':'Ubah password akaun anda di sini. Anda perlu masukkan password semasa terlebih dahulu.'}</p><form onsubmit="changePassword(event)" class="formgrid"><div class="field"><label>${en?'Current Password':'Password Semasa'}</label><input id="currentPassword" type="password" autocomplete="current-password" minlength="8" required></div><div class="field"><label>${en?'New Password':'Password Baru'}</label><input id="changeNewPassword" type="password" autocomplete="new-password" minlength="8" required></div><div class="field"><label>${en?'Confirm New Password':'Sahkan Password Baru'}</label><input id="changeConfirmPassword" type="password" autocomplete="new-password" minlength="8" required></div><div class="actions"><button class="btn primary" type="submit">${en?'Change Password':'Ubah Password'}</button></div></form><div id="changePasswordMessage" class="auth-message"></div></div>
- <div id="workspacePanel"></div>
+ <div id="workspacePanel"></div><div id="lockingPanel"></div><div id="notificationPanel"></div>
  <div class="panel" style="margin-top:18px"><h3>${en?'Data & Google Drive':'Data & Google Drive'}</h3><p>${db.expenses.length} ${en?'expense records':'transaksi belanja'} · ${db.incomes.length} ${en?'income records':'rekod pendapatan'} · ${db.savings.length} ${en?'saving records':'rekod simpanan'} · ${db.categories.length} ${en?'categories':'kategori'}</p><p style="color:#64748b;font-size:12px">${en?'Active account':'Akaun aktif'}: <b>${esc(currentAuthUser?.email||googleUser?.email||'Belum log masuk')}</b></p><p style="color:#64748b;font-size:12px">${en?'Main data is stored securely in Supabase Database. Google Drive is optional backup/export.':'Data utama disimpan dengan selamat dalam Supabase Database. Google Drive ialah backup/export pilihan.'}</p><div id="driveStatusMessage" class="drive-status">Belum diuji.</div><div class="setting-help">${en?'Google Sign-In and Google Drive use two separate Google permissions. You only need to approve Drive access once; after that your data syncs automatically.':'Log masuk Google dan akses Google Drive menggunakan dua kebenaran Google yang berbeza. Kebenaran Drive hanya perlu diluluskan sekali; selepas itu data akan sync secara automatik.'}</div><div class="actions"><button class="btn primary" onclick="connectGoogleDrive()">${en?'Enable Google Drive Sync':'Aktifkan Sync Google Drive'}</button><button class="btn secondary" onclick="saveToDrive(true)">${en?'Sync Now':'Sync Sekarang'}</button><button class="btn danger" onclick="resetData()">${en?'Reset Cache':'Reset Cache'}</button></div></div>`;
- renderWorkspacePanel();
+ renderWorkspacePanel(); renderLockPanel().then(html=>{const x=document.getElementById("lockingPanel");if(x)x.innerHTML=html;}); renderNotifications().then(html=>{const x=document.getElementById("notificationPanel");if(x)x.innerHTML=html;});
 }
 async function changePassword(e){
   e.preventDefault();
