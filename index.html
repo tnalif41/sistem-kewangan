@@ -1,3 +1,434 @@
+
+Baik. Kita teruskan dengan Locking Period + Audit Log + Notification untuk Shared Workspace, tetapi saya cadangkan kita buat database layer dahulu supaya feature ini benar-benar enforce dan bukan sekadar paparan UI.
+
+Saya akan gunakan model Tutup Bulan (Close Month) sebagai mekanisme utama. Ini paling selamat untuk rekod kewangan.
+
+Flow yang akan kita bina
+September 2026
+🟢 OPEN
+    ↓
+Tutup Bulan
+    ↓
+🔒 September 2026 LOCKED
+    ↓
+Edit/Delete transaksi September
+             ↓
+           ❌ BLOCKED
+Untuk Shared Workspace:
+
+A tutup September
+        ↓
+Supabase
+        ↓
+🔒 September LOCKED
+        ↓
+Realtime
+   ↙          ↘
+ A             B
+🔔             🔔
+Dan setiap perubahan akan direkodkan:
+
+14 Sep 2026  9:30 PM
+Account A
+Added Expense
+Groceries RM30
+
+14 Sep 2026  9:35 PM
+Account A
+Closed September 2026
+Saya juga akan pastikan Personal workspace dan Shared workspace mempunyai locking masing-masing.
+
+Database yang akan ditambah
+finance_workspace_settings
+finance_locked_periods
+finance_notifications
+finance_audit_logs
+Dan database akan reject perubahan kepada transaksi yang berada dalam bulan locked.
+
+Jangan run SQL lama/schema asal lagi. Saya akan sediakan migration SQL yang hanya CREATE TABLE / FUNCTION / POLICY yang diperlukan dan tidak drop table/data sedia ada.
+
+Untuk langkah seterusnya, saya akan bina migration SQL + patch staging HTML bersama-sama supaya selepas migration berjaya kita terus boleh test:
+
+Add transaction
+
+Close month
+
+Cuba edit → mesti gagal
+
+Cuba delete → mesti gagal
+
+A lock month → B dapat notification
+
+B nampak audit activity
+
+Realtime kekal berfungsi
+
+Refresh/logout/login → lock status kekal
+
+Saya akan kekalkan main untouched; semua perubahan ini untuk staging dahulu.
+
+
+okay teruskan
+
+Baik. Saya teruskan dan saya dah sediakan dua komponen untuk staging:
+
+1. Database migration
+Migration ini menambah:
+
+finance_workspace_settings — tetapan auto-lock
+
+finance_locked_periods — bulan yang telah ditutup
+
+finance_notifications — notifikasi untuk Shared Workspace
+
+finance_audit_logs — rekod aktiviti
+
+RLS untuk table baru
+
+Realtime untuk notification
+
+Database trigger yang betul-betul menghalang edit/delete/add transaksi dalam bulan locked
+
+Close Month / Unlock Month
+
+Auto-lock selepas bilangan hari yang ditetapkan
+
+Notification kepada semua ahli Shared Workspace
+
+Download SQL Migration – Locking + Notifications
+
+2. HTML staging terbaru
+Versi ini sudah ditambah:
+
+Locking Period dalam Tetapan
+
+Auto-lock ON/OFF
+
+Tetapan berapa hari sebelum lock
+
+Tutup Bulan
+
+Buka Bulan
+
+Status bulan locked
+
+🔒 pada transaksi yang locked
+
+Edit/delete akan disekat di UI
+
+Jika database reject kerana locked, data local akan reload semula supaya tidak nampak seolah-olah berjaya disimpan
+
+Notification center
+
+Notification indicator
+
+Realtime notification untuk Shared Workspace
+
+Logout mobile dikekalkan
+
+Realtime workspace active-page fix dikekalkan
+
+Download HTML Staging – Locking + Notifications
+
+JavaScript versi ini juga sudah lulus syntax check.
+
+⚠️ Urutan pemasangan — penting
+Jangan paste HTML dahulu.
+
+Step 1 — Supabase
+Buka:
+
+Supabase → SQL Editor → New Query
+
+Paste kandungan:
+
+supabase_locking_notifications_migration.sql
+
+Kemudian Run.
+
+Migration ini tidak drop table/data sedia ada.
+
+Step 2 — Pastikan migration berjaya
+Selepas Run, sepatutnya tiada error.
+
+Kemudian boleh verify:
+
+select table_name
+from information_schema.tables
+where table_schema = 'public'
+  and table_name in (
+    'finance_workspace_settings',
+    'finance_locked_periods',
+    'finance_notifications',
+    'finance_audit_logs'
+  )
+order by table_name;
+Expected:
+
+finance_audit_logs
+finance_locked_periods
+finance_notifications
+finance_workspace_settings
+Step 3 — Update staging
+Gantikan index.html dalam branch:
+
+staging
+dengan:
+
+index_locking_notifications_staging.html
+
+Commit → Push.
+
+Jangan merge ke main.
+
+🧪 Test yang kita akan buat
+Selepas Cloudflare deploy:
+
+Test A — Normal
+Tambah:
+
+14/09/2026 — Groceries RM50
+
+Edit RM50 → RM60.
+
+Expected:
+
+✅ Berjaya
+
+Test B — Lock
+Pergi:
+
+Tetapan → Locking Period → Tutup Bulan
+
+Masukkan:
+
+2026-09
+Kemudian cuba:
+
+Edit Groceries RM60 → RM100
+
+Expected:
+
+❌ Bulan ini telah dikunci.
+Cuba delete pula.
+
+Expected:
+
+❌ Tidak boleh delete.
+Test C — Bypass protection
+Ini yang paling penting.
+
+Walaupun seseorang cuba bypass JavaScript/browser, database trigger sepatutnya reject:
+
+LOCKED_PERIOD:
+A locked transaction cannot be edited or deleted.
+Jadi locking bukan kosmetik.
+
+Test D — Shared notification
+Account A:
+
+Close September 2026
+
+Account B:
+
+🔔 Bulan 2026-09 telah dikunci...
+
+Kemudian A/B buat perubahan pada Shared Workspace.
+
+Kedua-duanya boleh nampak activity/notification.
+
+Satu keputusan design yang saya buat
+Saya jadikan Owner sahaja yang boleh:
+
+Close Month
+
+Unlock Month
+
+ubah Locking Period
+
+Tetapi kedua-dua partner boleh:
+
+tambah transaksi bulan OPEN
+
+edit transaksi bulan OPEN
+
+delete transaksi bulan OPEN
+
+Ini lebih selamat untuk kewangan shared.
+
+Dan auto-lock default = 31 hari selepas hujung bulan. Jadi kalau mahu lebih ketat, kita boleh ubah contohnya kepada 7 hari atau 14 hari.
+
+Jalankan Step 1 dahulu. Kalau SQL berjaya, beritahu saya “SQL berjaya” dan kita teruskan deploy HTML + test locking/realtime.
+
+
+
+supabase_locking_notifications_migration.sql
+Code
+
+
+index_locking_notifications_staging.html
+HTML
+
+
+untuk notification tu buat loceng dengan nombor notification atas dan dropdown hover nk tengok notification. lepas tu mention apa yang dah edit/ubah/delete. bukan hanya mesntion kemaskini. untuk versi mobile, icon user letakbelah kanan dan logout tu duduk bawah dropdown logo tu. lepas tu pastikan tetapan terakhir untuk bahasa ruang aktif.
+
+Baik. Saya ubah design notification ikut yang anda minta — lebih jelas dan sesuai untuk sistem kewangan.
+
+🔔 Notification sekarang
+Desktop
+
+Ada ikon loceng
+
+Nombor notification merah di atas loceng, contoh 3
+
+Hover pada loceng → dropdown notification
+
+Klik notification → tandakan sebagai dibaca
+
+Ada Tanda semua dibaca
+
+Mobile
+
+Loceng berada di bahagian kanan atas
+
+Nombor notification di atas loceng
+
+Tap loceng → dropdown notification
+
+Icon user/avatar berada paling kanan
+
+Tap avatar → dropdown akaun
+
+Log keluar berada di bawah maklumat akaun dalam dropdown, bukan lagi butang berasingan
+
+Contoh notification:
+
+🔔 3
+
+Edit belanja
+Groceries · Diubah: jumlah · RM 100 → RM 120
+14/09/2026, 9:42 PM
+
+Padam belanja
+Dinner · RM 35 · Makanan
+14/09/2026, 9:45 PM
+
+Tambah pendapatan
+Salary · RM 3,500
+14/09/2026, 10:01 PM
+Jadi bukan lagi sekadar:
+
+❌ Data dikemas kini
+
+Tetapi akan beritahu apa yang ditambah, diedit, atau dipadam.
+
+Untuk edit, ia cuba nyatakan perubahan seperti:
+
+Diubah: jumlah · RM100 → RM120
+
+atau:
+
+Diubah: kategori
+
+dan audit log turut menyimpan nilai lama + nilai baru.
+
+🌐 Bahasa + ruang aktif
+Saya juga ubah supaya bahasa diingat mengikut workspace.
+
+Contoh:
+
+Personal Workspace
+Bahasa Melayu
+
+Rumah Tangga
+English
+Kalau anda:
+
+Pilih Rumah Tangga
+
+Tukar bahasa ke English
+
+Logout
+
+Login semula
+
+Masuk semula Rumah Tangga
+
+→ English kekal untuk workspace tersebut.
+
+Workspace aktif juga masih diingati untuk setiap account.
+
+📦 Fail staging terbaru
+HTML
+Download index_locking_notifications_staging.html
+
+Gantikan index.html dalam branch staging sahaja.
+
+SQL — detailed notification
+Ada satu lagi SQL patch yang penting. Migration locking sebelum ini menghasilkan notification generik. SQL baru ini menggantikannya dengan sistem yang mengesan:
+
+➕ tambah transaksi
+
+✏️ edit transaksi
+
+🗑️ padam transaksi
+
+perubahan jumlah
+
+perubahan kategori
+
+perubahan tarikh
+
+perubahan nama/item
+
+nilai lama → nilai baru
+
+audit log lengkap
+
+Download supabase_notifications_detail_migration.sql
+
+Run SQL patch ini selepas migration Locking + Notifications yang sebelumnya sudah berjaya.
+
+Urutan sekarang
+Supabase
+   ↓
+Run detailed notification SQL
+   ↓
+GitHub staging
+   ↓
+Replace index.html
+   ↓
+Commit + Push
+   ↓
+Cloudflare staging
+   ↓
+Test
+Kemudian kita test dengan A + B:
+
+A
+
+Edit Groceries RM100 → RM120
+
+B
+
+🔔 1
+Edit belanja
+Groceries · Diubah: jumlah · RM100 → RM120
+
+Kemudian:
+
+A delete Groceries
+
+B
+
+🔔 1
+Padam belanja
+Groceries · RM120
+
+Dan selepas itu kita test Close Month → notification kepada kedua-dua account → cuba edit locked transaction → database reject.
+
+main kekal tidak disentuh.
+
 <!DOCTYPE html>
 <html lang="ms">
 <head>
@@ -29,7 +460,7 @@ body{font-size:13px}.side{width:272px;transform:translateX(-100%);transition:tra
 .nav button{justify-content:flex-start;font-size:13px;gap:12px}.nav button .ico{width:18px;height:18px}
 .main{margin-left:0;width:100%;padding:12px;padding-top:66px}.mobile-topbar{display:flex;position:fixed;top:0;left:0;right:0;height:54px;background:#fff;border-bottom:1px solid var(--line);z-index:9;align-items:center;justify-content:space-between;padding:0 12px}
 .mobile-menu{border:1px solid #d9dee7;background:#fff;border-radius:6px;width:38px;height:38px;cursor:pointer;color:#374151}
-.mobile-menu svg{width:20px;height:20px}.mobile-user{display:flex;align-items:center;gap:8px;min-width:0}.mobile-user img{width:30px;height:30px;border-radius:50%}.mobile-user span{max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px} .mobile-logout{border:1px solid #d9dee7;background:#fff;border-radius:6px;width:38px;height:38px;cursor:pointer;color:#374151;display:flex;align-items:center;justify-content:center}.mobile-logout svg{width:19px;height:19px}.notification-btn{border:1px solid #d9dee7;background:#fff;border-radius:6px;min-width:38px;height:38px;cursor:pointer;color:#374151;display:inline-flex;align-items:center;justify-content:center;position:relative}.notification-btn svg{width:19px;height:19px}.notification-dot{position:absolute;top:5px;right:5px;width:7px;height:7px;border-radius:50%;background:#dc2626}
+.mobile-menu svg{width:20px;height:20px}.mobile-user{display:flex;align-items:center;gap:8px;min-width:0}.mobile-user img{width:30px;height:30px;border-radius:50%}.mobile-user span{max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px} .mobile-logout{border:1px solid #d9dee7;background:#fff;border-radius:6px;width:38px;height:38px;cursor:pointer;color:#374151;display:flex;align-items:center;justify-content:center}.mobile-logout svg{width:19px;height:19px}.notification-wrap{position:relative;display:inline-flex}.notification-btn{border:1px solid #d9dee7;background:#fff;border-radius:8px;min-width:38px;height:38px;cursor:pointer;color:#374151;display:inline-flex;align-items:center;justify-content:center;position:relative}.notification-btn svg{width:19px;height:19px}.notification-count{position:absolute;top:-6px;right:-6px;min-width:18px;height:18px;padding:0 5px;border-radius:999px;background:#dc2626;color:#fff;font-size:10px;font-weight:700;line-height:18px;text-align:center;border:2px solid #fff;display:none}.notification-dropdown{position:absolute;right:0;top:46px;width:360px;max-width:calc(100vw - 24px);background:#fff;border:1px solid #e5e7eb;border-radius:10px;box-shadow:0 14px 38px rgba(15,23,42,.14);padding:10px;z-index:30;display:none}.notification-wrap:hover .notification-dropdown,.notification-wrap.open .notification-dropdown{display:block}.notification-head{display:flex;justify-content:space-between;align-items:center;padding:4px 4px 9px;border-bottom:1px solid #eef0f3}.notification-list{max-height:360px;overflow:auto}.notification-item{padding:11px 6px;border-bottom:1px solid #eef0f3;cursor:pointer}.notification-item:last-child{border-bottom:0}.notification-item.unread{background:#f8fbff}.notification-item b{display:block;font-size:13px;color:#1f2937}.notification-item .nmsg{font-size:12px;color:#64748b;line-height:1.45;margin-top:3px}.notification-item small{display:block;color:#94a3b8;font-size:10px;margin-top:5px}.notification-empty{padding:28px 8px;text-align:center;color:#94a3b8;font-size:12px}.mobile-user{position:relative;display:flex;align-items:center}.mobile-user-btn{width:38px;height:38px;border:1px solid #d9dee7;background:#fff;border-radius:50%;padding:0;display:flex;align-items:center;justify-content:center;overflow:hidden;cursor:pointer}.mobile-user-btn img{width:100%;height:100%;object-fit:cover}.mobile-user-btn .user-fallback{font-size:12px;font-weight:700;color:#1677ff}.mobile-user-dropdown{position:absolute;right:0;top:46px;width:190px;background:#fff;border:1px solid #e5e7eb;border-radius:10px;box-shadow:0 14px 38px rgba(15,23,42,.14);padding:8px;display:none;z-index:31}.mobile-user.open .mobile-user-dropdown{display:block}.mobile-user-dropdown .user-info{padding:8px 9px;border-bottom:1px solid #eef0f3;margin-bottom:6px}.mobile-user-dropdown .user-info strong{display:block;font-size:12px}.mobile-user-dropdown .user-info span{display:block;color:#94a3b8;font-size:10px;margin-top:2px;overflow:hidden;text-overflow:ellipsis}.mobile-user-dropdown .logout-item{width:100%;border:0;background:#fff;text-align:left;padding:10px 9px;border-radius:7px;cursor:pointer;color:#dc2626;font-size:12px}.mobile-user-dropdown .logout-item:hover{background:#fff5f5}
 .top{align-items:flex-start;margin-bottom:14px}.top h1{font-size:20px;line-height:26px}.top p{font-size:12px}.top .btn{font-size:12px;padding:8px 10px;min-height:36px}
 .cards,.formgrid,.statrow{grid-template-columns:1fr}.grid{grid-template-columns:1fr}.panel{padding:14px;border-radius:7px}.panel h3{font-size:15px}
 .budget-hero{display:block;padding:15px}.budget-edit{margin-top:14px}.budget-edit input{width:100%;min-width:0}.budget-edit .btn{white-space:nowrap}
@@ -68,7 +499,7 @@ body{overflow-x:hidden}
   .mobile-menu{width:40px;height:40px;border-radius:9px}
   .mobile-user img{width:32px;height:32px}
   .mobile-user span{max-width:150px}
-  .mobile-logout{display:inline-flex}
+  .mobile-logout{display:none}
   .main{padding:74px 12px calc(var(--mobile-nav-h) + 18px);min-width:0}
   .top{gap:12px;min-width:0}
   .top>div:first-child{min-width:0;flex:1}
@@ -217,18 +648,24 @@ body{overflow-x:hidden}
     <button class="mobile-menu" onclick="toggleMenu(true)" aria-label="Buka menu">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
     </button>
-    <div class="mobile-user" id="mobileUser"></div>
-    <button class="mobile-logout" onclick="signOut()" aria-label="Log keluar" title="Log keluar">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 4H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h5"/><path d="M14 8l4 4-4 4M8 12h10"/></svg>
-    </button>
+    <div style="display:flex;align-items:center;gap:8px">
+      <div class="notification-wrap" id="mobileNotificationWrap">
+        <button class="notification-btn" onclick="toggleNotificationDropdown(event,'mobileNotificationWrap')" title="Notifications" aria-label="Notifications">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/></svg><span id="mobileNotificationCount" class="notification-count"></span>
+        </button><div class="notification-dropdown" id="mobileNotificationDropdown"></div>
+      </div>
+      <div class="mobile-user" id="mobileUser"></div>
+    </div>
   </div>
   <nav class="mobile-bottom-nav" id="mobileBottomNav" aria-label="Navigasi mudah alih"></nav>
   <div class="top">
     <div><h1 id="title">Dashboard</h1><p id="subtitle">Pantau kewangan anda dengan mudah.</p></div>
     <div style="display:flex;align-items:center;gap:8px">
-      <button class="notification-btn" id="notificationBtn" onclick="showNotifications()" title="Notifications" aria-label="Notifications">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/></svg><i id="notificationDot" class="notification-dot" style="display:none"></i>
-      </button>
+      <div class="notification-wrap" id="desktopNotificationWrap">
+        <button class="notification-btn" id="notificationBtn" onclick="toggleNotificationDropdown(event,'desktopNotificationWrap')" title="Notifications" aria-label="Notifications">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/></svg><span id="notificationCount" class="notification-count"></span>
+        </button><div class="notification-dropdown" id="notificationDropdown"></div>
+      </div>
       <span class="sync-badge" id="syncBadge"><span class="sync-dot"></span> Google Drive</span>
       <div id="desktopUser"></div>
       <button class="btn primary" onclick="go('add')">＋ Tambah Belanja</button>
@@ -331,6 +768,9 @@ async function loadWorkspaceData(wid){
   workspaceId=wid; workspaceMeta=data||null;
   rememberWorkspace(wid);
   db=normalizeDb(data?.data || null);
+  const langKey=currentAuthUser&&workspaceId?'sistemKewanganWorkspaceLanguage:'+currentAuthUser.id+':'+workspaceId:null;
+  const rememberedLang=langKey?localStorage.getItem(langKey):null;
+  if(rememberedLang==='ms'||rememberedLang==='en')db.settings.language=rememberedLang;
   localStorage.setItem(KEY,JSON.stringify(db));
   return db;
 }
@@ -528,8 +968,13 @@ function renderUser(){
   const email=esc(googleUser.email||'');
   const block='<div class="user-area"><img src="'+img+'" alt=""><div class="user-copy"><strong>'+name+'</strong><span>'+email+'</span></div><button class="signout" onclick="signOut()">Log keluar</button></div>';
   document.getElementById('desktopUser').innerHTML=block;
-  document.getElementById('mobileUser').innerHTML=img?'<img src="'+img+'" alt="" title="'+name+'">':'<span>'+name+'</span>';
+  const initial=(googleUser.name||googleUser.email||'U').trim().charAt(0).toUpperCase();
+  document.getElementById('mobileUser').innerHTML='<button class="mobile-user-btn" onclick="toggleUserDropdown(event)" aria-label="Akaun" title="Akaun">'+(img?'<img src="'+img+'" alt="">':'<span class="user-fallback">'+esc(initial)+'</span>')+'</button><div class="mobile-user-dropdown" id="mobileUserDropdown"><div class="user-info"><strong>'+name+'</strong><span>'+email+'</span></div><button class="logout-item" onclick="signOut()">'+(lang()==='en'?'Log out':'Log keluar')+'</button></div>';
 }
+function toggleUserDropdown(e){e?.stopPropagation();const el=document.getElementById('mobileUser');el?.classList.toggle('open');document.getElementById('desktopNotificationWrap')?.classList.remove('open');document.getElementById('mobileNotificationWrap')?.classList.remove('open');}
+function toggleNotificationDropdown(e,id){e?.stopPropagation();const el=document.getElementById(id);if(!el)return;const was=el.classList.contains('open');document.querySelectorAll('.notification-wrap.open').forEach(x=>x.classList.remove('open'));document.getElementById('mobileUser')?.classList.remove('open');if(!was){el.classList.add('open');renderNotificationDropdown(id)}}
+document.addEventListener('click',()=>{document.querySelectorAll('.notification-wrap.open').forEach(x=>x.classList.remove('open'));document.getElementById('mobileUser')?.classList.remove('open')});
+
 
 async function initSupabase(){
   const resetMode=new URLSearchParams(window.location.search).get('reset')==='1';
@@ -998,31 +1443,41 @@ async function renderLockPanel(){
 function listIsOwner(){
   return !!(currentAuthUser && workspaceMeta && window.__workspaceList && window.__workspaceList.some(w=>w.id===workspaceId && w.owner_id===currentAuthUser.id));
 }
+async function getNotifications(limit=20){
+  if(!supabaseClient||!currentAuthUser)return [];
+  const {data,error}=await supabaseClient.from('finance_notifications').select('id,workspace_id,type,title,message,is_read,created_at,actor_user_id').eq('recipient_user_id',currentAuthUser.id).order('created_at',{ascending:false}).limit(limit);
+  if(error){console.error('Notification load failed',error);return [];}
+  return data||[];
+}
+function notificationHtml(rows,en=lang()==='en'){
+  return rows.length?rows.map(n=>`<div class="notification-item ${n.is_read?'':'unread'}" onclick="readNotification('${n.id}')"><b>${esc(n.title)}</b><div class="nmsg">${esc(n.message)}</div><small>${new Date(n.created_at).toLocaleString()}</small></div>`).join(''):`<div class="notification-empty">${en?'No notifications yet.':'Tiada notifikasi buat masa ini.'}</div>`;
+}
+async function renderNotificationDropdown(id){
+  const box=document.getElementById(id==='mobileNotificationWrap'?'mobileNotificationDropdown':'notificationDropdown');if(!box)return;
+  const rows=await getNotifications(12);
+  const en=lang()==='en';
+  box.innerHTML=`<div class="notification-head"><b>${en?'Notifications':'Notifikasi'}</b><button class="btn secondary" style="padding:5px 8px;min-height:30px;font-size:11px" onclick="markNotificationsRead(event)">${en?'Mark all read':'Tanda semua dibaca'}</button></div><div class="notification-list">${notificationHtml(rows,en)}</div>`;
+}
 async function renderNotifications(){
-  if(!supabaseClient||!currentAuthUser)return '';
-  const {data,error}=await supabaseClient.from('finance_notifications').select('id,workspace_id,type,title,message,is_read,created_at').eq('recipient_user_id',currentAuthUser.id).order('created_at',{ascending:false}).limit(20);
-  if(error) return `<div class="panel"><h3>Notifications</h3><p class="setting-help">${esc(error.message)}</p></div>`;
-  const rows=data||[];
-  document.getElementById('notificationDot')?.style && (document.getElementById('notificationDot').style.display=rows.some(x=>!x.is_read)?'block':'none');
-  return `<div class="panel" style="margin-top:18px"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px"><h3>Notifications</h3><button class="btn secondary" onclick="markNotificationsRead()">Mark read</button></div>${rows.length?rows.map(n=>`<div style="padding:10px 0;border-bottom:1px solid var(--line);opacity:${n.is_read?.7:1}"><b>${esc(n.title)}</b><div style="font-size:12px;color:#64748b">${esc(n.message)}</div><small style="color:#94a3b8">${new Date(n.created_at).toLocaleString()}</small></div>`).join(''):'<div class="empty">Tiada notifikasi.</div>'}</div>`;
+  const rows=await getNotifications(20);
+  const en=lang()==='en';
+  return `<div class="panel" style="margin-top:18px"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px"><h3>${en?'Notifications':'Notifikasi'}</h3><button class="btn secondary" onclick="markNotificationsRead(event)">${en?'Mark all read':'Tanda semua dibaca'}</button></div><div>${notificationHtml(rows,en)}</div></div>`;
 }
-async function showNotifications(){await renderNotifications(); if(document.getElementById('notificationPanel')){document.getElementById('notificationPanel').innerHTML=await renderNotifications()}else{alert('Buka Tetapan untuk melihat Notifications.');go('settings')}}
-async function markNotificationsRead(){
-  if(!currentAuthUser)return;
-  await supabaseClient.from('finance_notifications').update({is_read:true}).eq('recipient_user_id',currentAuthUser.id).eq('is_read',false);
-  await renderNotifications(); await updateNotificationDot();
-}
+async function showNotifications(){const wrap=document.getElementById('desktopNotificationWrap');if(wrap){wrap.classList.add('open');await renderNotificationDropdown('desktopNotificationWrap');}}
+async function readNotification(id){if(!supabaseClient||!currentAuthUser)return;await supabaseClient.from('finance_notifications').update({is_read:true}).eq('id',id).eq('recipient_user_id',currentAuthUser.id);await updateNotificationDot();await renderNotificationDropdown('desktopNotificationWrap');await renderNotificationDropdown('mobileNotificationWrap');}
+async function markNotificationsRead(e){e?.stopPropagation();if(!currentAuthUser)return;await supabaseClient.from('finance_notifications').update({is_read:true}).eq('recipient_user_id',currentAuthUser.id).eq('is_read',false);await updateNotificationDot();await renderNotificationDropdown('desktopNotificationWrap');await renderNotificationDropdown('mobileNotificationWrap');if(document.getElementById('notificationPanel'))document.getElementById('notificationPanel').innerHTML=await renderNotifications();}
 async function updateNotificationDot(){
   if(!supabaseClient||!currentAuthUser)return;
-  const {data}=await supabaseClient.from('finance_notifications').select('id').eq('recipient_user_id',currentAuthUser.id).eq('is_read',false).limit(1);
-  const dot=document.getElementById('notificationDot'); if(dot)dot.style.display=data?.length?'block':'none';
+  const {count}=await supabaseClient.from('finance_notifications').select('id',{count:'exact',head:true}).eq('recipient_user_id',currentAuthUser.id).eq('is_read',false);
+  ['notificationCount','mobileNotificationCount'].forEach(id=>{const el=document.getElementById(id);if(!el)return;const n=Number(count||0);el.textContent=n>99?'99+':String(n);el.style.display=n?'block':'none';});
 }
 function subscribeNotifications(){
-  if(notificationChannel&&supabaseClient){try{supabaseClient.removeChannel(notificationChannel)}catch(_){}}
+  if(notificationChannel&&supabaseClient){try{supabaseClient.removeChannel(notificationChannel)}catch(_){} }
   if(!supabaseClient||!currentAuthUser)return;
   notificationChannel=supabaseClient.channel('finance-notifications-'+currentAuthUser.id)
-    .on('postgres_changes',{event:'INSERT',schema:'public',table:'finance_notifications',filter:'recipient_user_id=eq.'+currentAuthUser.id},async()=>{await updateNotificationDot(); if(document.getElementById('notificationPanel'))document.getElementById('notificationPanel').innerHTML=await renderNotifications()}).subscribe();
+    .on('postgres_changes',{event:'INSERT',schema:'public',table:'finance_notifications',filter:'recipient_user_id=eq.'+currentAuthUser.id},async()=>{await updateNotificationDot();await renderNotificationDropdown('desktopNotificationWrap');await renderNotificationDropdown('mobileNotificationWrap');if(document.getElementById('notificationPanel'))document.getElementById('notificationPanel').innerHTML=await renderNotifications()}).subscribe();
 }
+
 function settings(){
  const en=lang()==='en';
  content.innerHTML=`<div class="panel"><h3>${en?'App Identity':'Identiti Aplikasi'}</h3><div class="formgrid">
@@ -1055,9 +1510,18 @@ async function changePassword(e){
   msg(lang()==='en'?'Password changed successfully.':'Password berjaya diubah.','success');
 }
 
-function saveSettings(){db.settings.name=sName.value.trim()||'Sistem Kewangan';db.settings.description=sDesc.value.trim()||'Personal Finance Manager';db.settings.currency=sCurrency.value;db.settings.language=sLanguage.value;save();document.querySelector('.brand').innerHTML='<span class="brand-mark">SK</span>'+esc(db.settings.name)+'<small>'+esc(db.settings.description)+'</small>';nav();settings();go('settings');alert(db.settings.language==='en'?'Settings saved.':'Tetapan disimpan.')}
+function saveSettings(){db.settings.name=sName.value.trim()||'Sistem Kewangan';db.settings.description=sDesc.value.trim()||'Personal Finance Manager';db.settings.currency=sCurrency.value;db.settings.language=sLanguage.value;if(currentAuthUser){localStorage.setItem('sistemKewanganLanguage:'+currentAuthUser.id,db.settings.language);if(workspaceId)localStorage.setItem('sistemKewanganWorkspaceLanguage:'+currentAuthUser.id+':'+workspaceId,db.settings.language);}save();document.querySelector('.brand').innerHTML='<span class="brand-mark">SK</span>'+esc(db.settings.name)+'<small>'+esc(db.settings.description)+'</small>';nav();settings();go('settings');alert(db.settings.language==='en'?'Settings saved.':'Tetapan disimpan.')}
 function resetData(){if(confirm('Semua data akan dipadam. Teruskan?')){localStorage.removeItem(KEY);location.reload()}}
 initSupabase();
 </script>
 </body>
 </html>
+
+index_locking_notifications_staging.html
+HTML
+
+
+supabase_notifications_detail_migration.sql
+Code
+
+
