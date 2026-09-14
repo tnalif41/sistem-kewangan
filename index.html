@@ -328,7 +328,7 @@ function subscribeWorkspace(wid){
       const row=payload.new; if(!row || row.workspace_id!==wid) return;
       if(row.updated_by===currentAuthUser?.id && row.updated_at===workspaceMeta?.updated_at) return;
       workspaceMeta=row; db=normalizeDb(row.data); localStorage.setItem(KEY,JSON.stringify(db)); localDataDirty=false;
-      renderUser(); nav(); const active=document.querySelector('.nav-item.active')?.dataset?.page || 'dashboard'; go(active);
+      renderUser(); nav(); const activeBtn=document.querySelector('#nav button.active'); const active=activeBtn?.id?.replace(/^n-/,'') || 'dashboard'; go(active);
       setSync('','Live Sync');
     }).subscribe();
 }
