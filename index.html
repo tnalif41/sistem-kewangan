@@ -10,6 +10,8 @@
 *{box-sizing:border-box}body{margin:0;font-family:Arial,"Helvetica Neue",sans-serif;background:var(--bg);color:var(--text);font-size:14px}button,input,select,textarea{font:inherit}.app{display:flex;min-height:100vh}
 .side{width:236px;background:#fff;border-right:1px solid var(--line);position:fixed;inset:0 auto 0 0;overflow:auto;z-index:10}.brand{height:72px;padding:19px 20px;color:var(--primary);font-size:20px;font-weight:700;border-bottom:1px solid var(--line)}.brand small{display:block;color:#9ca3af;font-size:11px;font-weight:400;margin-top:3px}
 .nav{padding:12px 10px}.nav button{display:flex;align-items:center;gap:12px;width:100%;border:0;background:transparent;color:#4b5563;text-align:left;padding:10px 12px;border-radius:6px;margin:2px 0;font-size:14px;line-height:20px;cursor:pointer}.nav button:hover{background:#f3f7ff;color:var(--primary)}.nav button.active{background:var(--primary-soft);color:var(--primary);font-weight:600}.nav .ico{width:18px;height:18px;display:inline-flex;align-items:center;justify-content:center;flex:0 0 18px}.nav svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.nav-group{margin-top:9px}.nav-group:first-child{margin-top:0}.nav-group-toggle{display:flex!important;align-items:center!important;justify-content:space-between!important;width:100%!important;padding:7px 12px 6px!important;margin:0!important;border:0!important;background:transparent!important;color:#9aa3b2!important;font-size:10px!important;font-weight:700!important;letter-spacing:.08em!important;line-height:16px!important;cursor:pointer!important}.nav-group-toggle:hover{color:#64748b!important;background:transparent!important}.nav-chevron{width:14px!important;height:14px!important;transition:transform .18s ease}.nav-group.expanded .nav-chevron{transform:rotate(180deg)}.nav-submenu{display:none}.nav-group.expanded .nav-submenu{display:block}.nav-item{margin:2px 0!important;padding:9px 12px!important}.nav-item .nav-text{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.nav-main{margin-bottom:3px}.nav-main .nav-item{margin-top:0!important}
+
 .main{margin-left:236px;width:calc(100% - 236px);padding:26px 30px;max-width:1500px}.top{display:flex;justify-content:space-between;align-items:center;gap:24px;margin-bottom:22px;position:relative;z-index:30}.page-heading{min-width:0}.page-heading-row{display:flex;align-items:center;gap:11px;min-height:40px}.top h1{margin:0;font-size:24px;line-height:30px;font-weight:600}.top p{margin:4px 0 0;color:var(--muted);font-size:13px}.top-actions{display:flex;align-items:center;justify-content:flex-end;gap:8px;position:relative;flex:0 0 auto}.desktop-notification{z-index:120}.desktop-notification .notification-dropdown{top:calc(100% + 10px);left:0;right:auto}.desktop-notification .notification-btn{width:40px;height:40px;min-width:40px;border-radius:10px}.desktop-notification .notification-count{top:-6px;right:-6px}.desktop-notification .notification-dropdown:before{left:14px;right:auto}
 .btn{border:1px solid transparent;border-radius:4px;padding:9px 16px;min-height:38px;font-weight:500;cursor:pointer}.primary{background:var(--primary);color:#fff;border-color:var(--primary)}.primary:hover{background:var(--primary-dark)}.secondary{background:#fff;color:#374151;border-color:#d9dee7}.danger{background:#fff;color:var(--danger);border-color:#fecaca}
 .cards{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}.card{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:18px;box-shadow:var(--shadow)}.label{color:var(--muted);font-size:12px}.value{font-size:24px;font-weight:600;margin-top:8px}.green{color:var(--success)}.red{color:var(--danger)}.blue{color:var(--primary)}
@@ -558,6 +560,7 @@ body{overflow-x:hidden}
   .side.open{
     z-index:1200!important;
   }
+  body.menu-open .main .top{visibility:hidden!important;}
 }
 </style>
 
@@ -707,7 +710,8 @@ function showApp(){document.getElementById('authScreen').style.display='none';do
 function setSync(state,text){
   const el=document.getElementById('syncBadge'); if(!el)return;
   const cls=state==='busy'?'busy':state==='error'?'error':'';
-  el.innerHTML='<span class="sync-dot '+cls+'"></span> '+(text||'Google Drive');
+  el.innerHTML='<span class="sync-dot '+cls+'"></span> '+(text||'Sync tidak aktif');
+  el.title=(text||'Sync tidak aktif');
 }
 function driveMessage(message,type='info'){
   const el=document.getElementById('driveStatusMessage'); if(!el)return;
@@ -775,6 +779,7 @@ async function loadWorkspaceData(wid){
 }
 function subscribeWorkspace(wid){
   if(workspaceChannel) supabaseClient.removeChannel(workspaceChannel);
+  setSync('busy','Connecting...');
   workspaceChannel=supabaseClient.channel('finance-workspace-'+wid)
     .on('postgres_changes',{event:'*',schema:'public',table:'finance_workspace_data',filter:'workspace_id=eq.'+wid},payload=>{
       const row=payload.new; if(!row || row.workspace_id!==wid) return;
@@ -782,7 +787,11 @@ function subscribeWorkspace(wid){
       workspaceMeta=row; db=normalizeDb(row.data); localStorage.setItem(KEY,JSON.stringify(db)); localDataDirty=false;
       renderUser(); nav(); const activeBtn=document.querySelector('#nav button.active'); const active=activeBtn?.id?.replace(/^n-/,'') || 'dashboard'; go(active);
       setSync('','Live Sync');
-    }).subscribe();
+    })
+    .subscribe(status=>{
+      if(status==='SUBSCRIBED') setSync('','Live Sync');
+      else if(status==='CHANNEL_ERROR'||status==='TIMED_OUT'||status==='CLOSED') setSync('error','Sync tidak aktif');
+    });
 }
 async function queueSupabaseSave(){
   if(!supabaseClient||!workspaceId||!currentAuthUser)return;
@@ -818,8 +827,8 @@ async function initFinanceDatabase(){
     const preferred=(remembered && list.some(x=>x.id===remembered)) ? remembered : (workspaceId && list.some(x=>x.id===workspaceId) ? workspaceId : personalId);
     await loadWorkspaceData(preferred); subscribeWorkspace(preferred); subscribeNotifications(); await loadLockState();
     await renderWorkspacePanel(); await updateNotificationDot();
-    setSync('','Live Sync');
-  }catch(e){console.error('Database init error',e);setSync('error','DB gagal');}
+    // Do not claim Live Sync here; subscribeWorkspace() updates the badge only after the realtime channel is actually subscribed.
+  }catch(e){console.error('Database init error',e);setSync('error','Sync tidak aktif');}
 }
 async function switchWorkspace(wid){
   if(!wid||wid===workspaceId)return;
@@ -1293,8 +1302,28 @@ en:{nav:{dashboard:'Dashboard',add:'Add Expense',expenses:'Expense List',income:
 function lang(){return db.settings.language==='en'?'en':'ms'}
 function nav(){
  const L=LANG[lang()].nav;
- const items=[['dashboard','dashboard'],['add','add'],['expenses','expenses'],['income','income'],['saving','saving'],['budget','budget'],['monthly','monthly'],['category','category'],['trend','trend'],['report','report'],['export','export'],['categories','categories'],['settings','settings']];
- document.getElementById('nav').innerHTML=items.map(x=>`<button id="n-${x[0]}" onclick="go('${x[0]}')" title="${L[x[0]]}"><span class="ico">${icon(x[1])}</span><span>${L[x[0]]}</span></button>`).join('');
+ const groups=lang()==='en' ? [
+  {key:'main',label:'MAIN',items:[['dashboard','dashboard']]},
+  {key:'transactions',label:'TRANSACTIONS',items:[['add','add'],['expenses','expenses'],['income','income']]},
+  {key:'planning',label:'PLANNING',items:[['saving','saving'],['budget','budget']]},
+  {key:'analysis',label:'ANALYSIS',items:[['monthly','monthly'],['category','category'],['trend','trend'],['report','report']]},
+  {key:'system',label:'SYSTEM',items:[['export','export'],['categories','categories'],['settings','settings']]}
+ ] : [
+  {key:'main',label:'UTAMA',items:[['dashboard','dashboard']]},
+  {key:'transactions',label:'TRANSAKSI',items:[['add','add'],['expenses','expenses'],['income','income']]},
+  {key:'planning',label:'PERANCANGAN',items:[['saving','saving'],['budget','budget']]},
+  {key:'analysis',label:'ANALISIS',items:[['monthly','monthly'],['category','category'],['trend','trend'],['report','report']]},
+  {key:'system',label:'SISTEM',items:[['export','export'],['categories','categories'],['settings','settings']]}
+ ];
+ const current=document.querySelector('.nav button.active')?.id?.replace(/^n-/,'') || location.hash.replace('#','') || 'dashboard';
+ const html=groups.map(g=>{
+   const hasActive=g.items.some(x=>x[0]===current);
+   const isMain=g.key==='main';
+   const items=g.items.map(x=>`<button id="n-${x[0]}" class="nav-item ${x[0]===current?'active':''}" onclick="go('${x[0]}')" title="${L[x[0]]}"><span class="ico">${icon(x[1])}</span><span class="nav-text">${L[x[0]]}</span></button>`).join('');
+   if(isMain) return `<div class="nav-group nav-main">${items}</div>`;
+   return `<div class="nav-group ${hasActive?'expanded':''}" data-group="${g.key}"><button class="nav-group-toggle" type="button" onclick="toggleNavGroup(this.parentElement)"><span>${g.label}</span><svg class="nav-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button><div class="nav-submenu">${items}</div></div>`;
+ }).join('');
+ document.getElementById('nav').innerHTML=html;
  const moreLabel=lang()==='en'?'More':'Lagi';
  document.getElementById('mobileBottomNav').innerHTML=
    `<button data-page="dashboard" onclick="go('dashboard')"><span>${icon('dashboard')}</span><small>${L.dashboard}</small></button>`+
@@ -1302,6 +1331,10 @@ function nav(){
    `<button data-page="expenses" onclick="go('expenses')"><span>${icon('expenses')}</span><small>${L.expenses}</small></button>`+
    `<button data-page="saving" onclick="go('saving')"><span>${icon('saving')}</span><small>${L.saving}</small></button>`+
    `<button data-page="more" onclick="toggleMenu(true)"><span>${icon('more')}</span><small>${moreLabel}</small></button>`;
+}
+function toggleNavGroup(group){
+ if(!group)return;
+ group.classList.toggle('expanded');
 }
 
 function go(page){closeMenuOnMobile();document.querySelectorAll('.nav button').forEach(b=>b.classList.remove('active'));document.getElementById('n-'+page)?.classList.add('active');document.querySelectorAll('#mobileBottomNav button').forEach(b=>b.classList.toggle('active',b.dataset.page===page));const meta=LANG[lang()].meta;document.getElementById('title').textContent=meta[page][0];document.getElementById('subtitle').textContent=meta[page][1];({dashboard,add,expenses,income,saving,budget,monthly,category,trend,report,export:exportPage,categories,settings}[page]||dashboard)()}
