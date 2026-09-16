@@ -462,6 +462,20 @@ body{overflow-x:hidden}
 }
 </style>
 
+
+<style id="notification-final-v15">
+@media (min-width:761px){
+  .desktop-notification .notification-dropdown{
+    position:fixed!important;
+    width:min(370px,calc(100vw - 24px))!important;
+    max-width:calc(100vw - 24px)!important;
+    right:auto!important;
+    margin:0!important;
+    z-index:2147483000!important;
+  }
+}
+</style>
+
 </head>
 <body>
 <div id="authScreen" class="auth-screen">
@@ -888,14 +902,36 @@ function toggleNotificationDropdown(e,id){
       dropdown.style.right='10px';
       dropdown.style.left='auto';
     }else{
-      // Align the right edge of the bubble with the right edge of the bell.
-      dropdown.style.top=Math.round(r.bottom+10)+'px';
-      dropdown.style.right=Math.max(12,Math.round(window.innerWidth-r.right))+'px';
-      dropdown.style.left='auto';
+      // Fixed viewport overlay: align the bubble's RIGHT edge to the bell's RIGHT edge,
+      // while clamping it inside the viewport.
+      const gap=10;
+      const width=Math.min(370, window.innerWidth-24);
+      const maxLeft=Math.max(12, window.innerWidth-width-12);
+      const desiredLeft=r.right-width;
+      const left=Math.max(12, Math.min(desiredLeft, maxLeft));
+      dropdown.style.setProperty('width', width+'px', 'important');
+      dropdown.style.setProperty('top', Math.round(r.bottom+gap)+'px', 'important');
+      dropdown.style.setProperty('left', Math.round(left)+'px', 'important');
+      dropdown.style.setProperty('right', 'auto', 'important');
     }
   });
   renderNotificationDropdown(id);
 }
+window.addEventListener('resize',()=>{
+  const wrap=document.getElementById('desktopNotificationWrap');
+  if(!wrap?.classList.contains('open'))return;
+  const btn=wrap.querySelector('.notification-btn');
+  const dropdown=wrap.querySelector('.notification-dropdown');
+  if(!btn||!dropdown)return;
+  const r=btn.getBoundingClientRect();
+  const width=Math.min(370, window.innerWidth-24);
+  const maxLeft=Math.max(12, window.innerWidth-width-12);
+  const left=Math.max(12, Math.min(r.right-width, maxLeft));
+  dropdown.style.setProperty('width', width+'px', 'important');
+  dropdown.style.setProperty('top', Math.round(r.bottom+10)+'px', 'important');
+  dropdown.style.setProperty('left', Math.round(left)+'px', 'important');
+  dropdown.style.setProperty('right','auto','important');
+});
 document.addEventListener('click',(e)=>{
   if(!e.target.closest('.notification-wrap')){
     document.querySelectorAll('.notification-wrap.open').forEach(x=>x.classList.remove('open'));
