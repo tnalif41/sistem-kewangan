@@ -534,6 +534,33 @@ body{overflow-x:hidden}
 }
 </style>
 
+
+<style id="mobile-sidebar-v18-fix">
+@media (max-width:720px){
+  /* Mobile drawer must sit above the page/header so Dashboard text cannot bleed through. */
+  .side{
+    z-index:1200!important;
+  }
+  .overlay{
+    z-index:1100!important;
+  }
+  .mobile-topbar{
+    z-index:1000!important;
+  }
+  .main .top,
+  .main .page-heading,
+  .main .page-heading-row,
+  .main #title,
+  .main #subtitle{
+    position:relative;
+    z-index:1;
+  }
+  .side.open{
+    z-index:1200!important;
+  }
+}
+</style>
+
 </head>
 <body>
 <div id="authScreen" class="auth-screen">
@@ -686,7 +713,15 @@ function driveMessage(message,type='info'){
   const el=document.getElementById('driveStatusMessage'); if(!el)return;
   el.textContent=message; el.className='drive-status '+type;
 }
-function toggleMenu(open){const side=document.getElementById('side'),ov=document.getElementById('overlay');if(!side)return;side.classList.toggle('open',!!open);ov.classList.toggle('show',!!open)}
+function toggleMenu(open){
+  const side=document.getElementById('side'),ov=document.getElementById('overlay');
+  if(!side)return;
+  const isOpen=!!open;
+  side.classList.toggle('open',isOpen);
+  ov.classList.toggle('show',isOpen);
+  document.body.classList.toggle('menu-open',isOpen);
+  if(isOpen) closeAllNotificationDropdowns?.();
+}
 function closeMenuOnMobile(){if(window.innerWidth<=720)toggleMenu(false)}
 
 function setUserKey(uid){
@@ -1710,3 +1745,9 @@ document.addEventListener('click', function(e){
   if(!e.target.closest('.notification-wrap')) closeAllNotificationDropdowns();
 });
 </script>
+
+<style id="mobile-sidebar-scroll-lock">
+@media (max-width:720px){
+  body.menu-open{overflow:hidden!important;}
+}
+</style>
