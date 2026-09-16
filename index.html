@@ -564,6 +564,21 @@ body{overflow-x:hidden}
 }
 </style>
 
+
+<style id="final-ui-polish-v19">
+/* Sidebar hierarchy */
+.brand{display:flex;align-items:center;gap:11px}.brand-logo{width:34px;height:34px;flex:0 0 34px;border-radius:9px;background:var(--primary-soft);color:var(--primary);display:inline-flex;align-items:center;justify-content:center}.brand-logo svg{width:21px;height:21px}.brand-copy{min-width:0;line-height:1.15}.brand-copy small{margin-top:4px}.nav-submenu{padding-left:12px;padding-right:2px}.nav-submenu .nav-item{padding-left:15px!important;border-left:2px solid #edf2f7;border-radius:0 7px 7px 0}.nav-submenu .nav-item.active{border-left-color:var(--primary);background:var(--primary-soft)}
+@media(max-width:1050px) and (min-width:721px){.brand{justify-content:center}.brand-copy{display:none}.brand-logo{width:36px;height:36px}.nav-submenu{padding-left:0}.nav-submenu .nav-item{border-left:0}}
+/* Notification bubble sits directly beneath desktop bell */
+@media(min-width:721px){.desktop-notification .notification-dropdown{left:50%!important;right:auto!important;transform:translateX(-50%)!important;top:calc(100% + 12px)!important}.desktop-notification .notification-dropdown:before{left:50%!important;transform:translateX(-50%) rotate(45deg)!important}}
+/* Mobile bottom navigation */
+@media(max-width:720px){.mobile-bottom-nav{height:72px;padding:6px 8px calc(6px + env(safe-area-inset-bottom));gap:3px}.mobile-bottom-nav button{position:relative;gap:2px;padding:3px 2px;color:#7c8798;border-radius:10px}.mobile-bottom-nav button>span{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center}.mobile-bottom-nav button svg{width:19px;height:19px;stroke-width:1.9}.mobile-bottom-nav button small{font-size:9px;font-weight:600;line-height:11px}.mobile-bottom-nav button.active{background:transparent;color:var(--primary)}.mobile-bottom-nav button.active>span{background:var(--primary-soft);box-shadow:0 3px 10px rgba(22,119,255,.10)}.mobile-bottom-nav button:active>span{transform:scale(.94)}.main{padding-bottom:calc(72px + 18px)}
+/* Dashboard chart: wider, with dedicated headroom for value labels */
+.dashboard-chart-grid{grid-template-columns:1fr!important}.dashboard-monthly-panel{width:100%}.dashboard-monthly-panel .chart-wrap{height:290px;margin-top:8px}.dashboard-monthly-panel .chart-wrap svg{min-height:290px}
+}
+@media(min-width:721px){.dashboard-chart-grid{grid-template-columns:1fr!important}.dashboard-monthly-panel .chart-wrap{height:310px}.dashboard-monthly-panel .chart-wrap svg{min-height:310px}}
+.action-icon{width:34px!important;height:34px!important;padding:0!important;display:inline-flex!important;align-items:center;justify-content:center;border-radius:8px!important}.action-icon svg{width:16px!important;height:16px!important}
+</style>
 </head>
 <body>
 <div id="authScreen" class="auth-screen">
@@ -627,7 +642,7 @@ body{overflow-x:hidden}
 
 <div id="appShell" class="app" style="display:none">
 <aside class="side" id="side">
-  <div class="brand">SISTEM KEWANGAN<small>Personal Finance Manager</small></div>
+  <div class="brand"><span class="brand-logo" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="M3 9h18"/><path d="M16 13h2"/><path d="M7 3v2M17 3v2"/></svg></span><span class="brand-copy">SISTEM KEWANGAN<small>Personal Finance Manager</small></span></div>
   <div class="nav" id="nav"></div>
 </aside>
 <div class="overlay" id="overlay" onclick="toggleMenu(false)"></div>
@@ -1353,7 +1368,7 @@ function dashboard(){
    let d=new Date(now.getFullYear(),now.getMonth()-i,1);
    months.push(d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0'));
  }
- let vals=months.map(x=>totals(x).exp), max=Math.max(...vals,1), W=760,H=250,L=56,R=20,T=30,B=42;
+ let vals=months.map(x=>totals(x).exp), max=Math.max(...vals,1), W=980,H=290,L=64,R=24,T=56,B=46;
  let grid=[0,1,2,3,4].map(i=>{let y=T+(H-T-B)*i/4;let val=max*(1-i/4);return `<line class="chart-grid" x1="${L}" y1="${y}" x2="${W-R}" y2="${y}"/><text class="chart-label" x="2" y="${y+4}">${db.settings.currency} ${money(val)}</text>`}).join('');
  let slot=(W-L-R)/months.length, barW=Math.min(18,slot*.16);
  let bars=vals.map((v,i)=>{
@@ -1361,7 +1376,7 @@ function dashboard(){
    let bh=v>0?Math.max((H-T-B)*(v/max),2):0;
    let y=H-B-bh;
    let label=monthNames[Number(months[i].slice(5))-1]+' '+months[i].slice(2,4);
-   let valueY=Math.max(T+12,y-9);
+   let valueY=Math.max(T-10,y-9);
    return `<rect class="chart-bar" x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${barW.toFixed(1)}" height="${bh.toFixed(1)}" rx="3"><title>${label}: ${db.settings.currency} ${money(v)}</title></rect><text class="chart-value" text-anchor="middle" x="${(x+barW/2).toFixed(1)}" y="${valueY.toFixed(1)}">${db.settings.currency} ${money(v)}</text><text class="chart-label" text-anchor="middle" x="${(x+barW/2).toFixed(1)}" y="${H-10}">${monthNames[Number(months[i].slice(5))-1]}</text>`;
  }).join('');
  content.innerHTML=`<div class="cards">
@@ -1383,8 +1398,8 @@ function dashboard(){
    ${monthlyBudget&&t.exp>monthlyBudget?`<div class="warning">Budget telah melebihi had sebanyak ${db.settings.currency} ${money(t.exp-monthlyBudget)}.</div>`:monthlyBudget?`<div class="budget-ok">Masih dalam budget. Baki budget: ${db.settings.currency} ${money(monthlyBudget-t.exp)}.</div>`:'<div style="margin-top:12px;font-size:12px;color:#94a3b8">Belum ditetapkan. Masukkan budget bulanan di atas.</div>'}
  </div>
 
- <div class="grid">
-   <div class="panel"><div class="toolbar" style="justify-content:space-between;align-items:center"><h3 style="margin:0">Monthly Spending</h3><span style="font-size:12px;color:#94a3b8">6 bulan terakhir</span></div>
+ <div class="grid dashboard-chart-grid">
+   <div class="panel dashboard-monthly-panel"><div class="toolbar" style="justify-content:space-between;align-items:center"><h3 style="margin:0">Monthly Spending</h3><span style="font-size:12px;color:#94a3b8">6 bulan terakhir</span></div>
      <div class="chart-wrap"><svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">${grid}${bars}</svg></div>
    </div>
    <div class="panel"><h3>Belanja Mengikut Kategori</h3>${cats.length?cats.slice(0,8).map(c=>{let pct=t.exp?c[1]/t.exp*100:0;return `<div class="bar"><div class="barhead"><span>${esc(c[0])}</span><b>${db.settings.currency} ${money(c[1])}</b></div><div class="track"><div class="fill" style="width:${pct}%"></div></div></div>`}).join(''):'<div class="empty">Belum ada belanja bulan ini.</div>'}</div>
@@ -1430,7 +1445,7 @@ function addSaving(){
 function saveSaving(e){e.preventDefault();if(transactionLocked(svDate.value)){alert('Bulan ini telah dikunci. Tidak boleh tambah simpanan.');return}db.savings.push({id:Date.now(),date:svDate.value,goal:svGoal.value,amount:+svAmt.value,note:svNote.value});save();saving()}
 function delSaving(id){const x=db.savings.find(r=>r.id===id);if(x&&transactionLocked(x.date)){alert('Bulan ini telah dikunci. Simpanan tidak boleh dipadam.');return}if(confirm('Padam rekod simpanan ini?')){db.savings=db.savings.filter(x=>x.id!==id);save();saving()}}
 function income(){
- content.innerHTML=`<div class="panel"><form onsubmit="addIncome(event)"><div class="formgrid"><div class="field"><label>Tarikh</label><input id="iDate" type="date" value="${new Date().toISOString().slice(0,10)}" required></div><div class="field"><label>Sumber</label><input id="iSource" placeholder="Gaji / Freelance / Bisnes" required></div><div class="field"><label>Jumlah (${db.settings.currency})</label><input id="iAmt" type="number" step=".01" min="0" required></div></div><div class="actions"><button class="btn primary">Simpan Pendapatan</button></div></form></div><div class="panel" style="margin-top:18px"><h3>Rekod Pendapatan</h3><div class="table-scroll"><table><thead><tr><th>Tarikh</th><th>Sumber</th><th class="amount">Jumlah</th><th></th></tr></thead><tbody>${db.incomes.slice().sort((a,b)=>b.date.localeCompare(a.date)).map(x=>`<tr><td>${x.date}</td><td>${esc(x.source)}</td><td class="amount">${db.settings.currency} ${money(x.amount)}</td><td><button class="btn danger" onclick="delIncome(${x.id})">Padam</button></td></tr>`).join('')||'<tr><td colspan="4" class="empty">Belum ada rekod.</td></tr>'}</tbody></table></div></div>`
+ content.innerHTML=`<div class="panel"><form onsubmit="addIncome(event)"><div class="formgrid"><div class="field"><label>Tarikh</label><input id="iDate" type="date" value="${new Date().toISOString().slice(0,10)}" required></div><div class="field"><label>Sumber</label><input id="iSource" placeholder="Gaji / Freelance / Bisnes" required></div><div class="field"><label>Jumlah (${db.settings.currency})</label><input id="iAmt" type="number" step=".01" min="0" required></div></div><div class="actions"><button class="btn primary">Simpan Pendapatan</button></div></form></div><div class="panel" style="margin-top:18px"><h3>Rekod Pendapatan</h3><div class="table-scroll"><table><thead><tr><th>Tarikh</th><th>Sumber</th><th class="amount">Jumlah</th><th></th></tr></thead><tbody>${db.incomes.slice().sort((a,b)=>b.date.localeCompare(a.date)).map(x=>`<tr><td>${x.date}</td><td>${esc(x.source)}</td><td class="amount">${db.settings.currency} ${money(x.amount)}</td><td><button class="btn danger action-icon" onclick="delIncome(${x.id})" title="Padam" aria-label="Padam"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13M10 11v5M14 11v5"/></svg></button></td></tr>`).join('')||'<tr><td colspan="4" class="empty">Belum ada rekod.</td></tr>'}</tbody></table></div></div>`
 }
 function addIncome(e){e.preventDefault();if(transactionLocked(iDate.value)){alert('Bulan ini telah dikunci. Tidak boleh tambah pendapatan.');return}db.incomes.push({id:Date.now(),date:iDate.value,source:iSource.value,amount:+iAmt.value});save();income()}
 function delIncome(id){const x=db.incomes.find(r=>r.id===id);if(x&&transactionLocked(x.date)){alert('Bulan ini telah dikunci. Pendapatan tidak boleh dipadam.');return}db.incomes=db.incomes.filter(x=>x.id!==id);save();income()}
@@ -1466,7 +1481,7 @@ function downloadCSV(){
  let a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));a.download='sistem-kewangan.csv';a.click()
 }
 function categories(){
- content.innerHTML=`<div class="panel"><form onsubmit="newCat(event)" class="toolbar"><input id="newCategory" placeholder="Nama kategori baru" required><button class="btn primary">＋ Tambah</button></form><div class="table-scroll"><table><thead><tr><th>Kategori</th><th class="amount">Tindakan</th></tr></thead><tbody>${db.categories.map(c=>`<tr><td>${esc(c)}</td><td class="amount"><button class="btn danger" onclick="delCat('${encodeURIComponent(c)}')">Padam</button></td></tr>`).join('')}</tbody></table></div></div>`
+ content.innerHTML=`<div class="panel"><form onsubmit="newCat(event)" class="toolbar"><input id="newCategory" placeholder="Nama kategori baru" required><button class="btn primary">＋ Tambah</button></form><div class="table-scroll"><table><thead><tr><th>Kategori</th><th class="amount">Tindakan</th></tr></thead><tbody>${db.categories.map(c=>`<tr><td>${esc(c)}</td><td class="amount"><button class="btn danger action-icon" onclick="delCat('${encodeURIComponent(c)}')" title="Padam" aria-label="Padam"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13M10 11v5M14 11v5"/></svg></button></td></tr>`).join('')}</tbody></table></div></div>`
 }
 function newCat(e){e.preventDefault();let c=newCategory.value.trim();if(c&&!db.categories.includes(c)){db.categories.push(c);save()}categories()}
 function delCat(c){c=decodeURIComponent(c);if(db.categories.length<=1)return alert('Mesti ada sekurang-kurangnya satu kategori.');if(confirm('Padam kategori '+c+'?')){db.categories=db.categories.filter(x=>x!==c);delete db.budgets[c];save();categories()}}
