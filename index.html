@@ -305,13 +305,11 @@ body{overflow-x:hidden}
 /* v25 chart polish */
 .dashboard-spending-module{border-radius:16px!important;overflow:hidden!important}
 .spending-module-chart{border-radius:12px!important;padding:0!important}
-.spending-module-chart svg{height:210px!important;border-radius:12px!important}
+.spending-module-chart svg{height:190px!important;border-radius:12px!important}
 .spending-module-chart .chart-grid{display:none!important;stroke:none!important}
-.spending-module-chart .chart-label{font-size:8px!important}
-.spending-module-chart .chart-value{font-size:8px!important;font-weight:650!important}
-.spending-module-chart .chart-bar{rx:3px!important}
-.income-star-toggle{border:0!important;background:transparent!important;color:#64748b!important;width:20px!important;height:20px!important;padding:0!important;margin:0!important;display:inline-flex!important;align-items:center!important;justify-content:center!important;font-size:15px!important;font-weight:700!important;line-height:1!important;cursor:pointer!important;box-shadow:none!important}
-.income-star-toggle:hover{color:#2563eb!important}
+.spending-module-chart .chart-label{font-size:7px!important}
+.spending-module-chart .chart-value{font-size:7px!important;font-weight:650!important}
+.spending-module-chart .chart-bar{rx:2px!important}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
@@ -1483,7 +1481,7 @@ function toggleDashboardIncome(){
   dashboard();
 }
 function dashboardMoney(value){
-  return dashboardIncomeHidden?'••••••':`${db.settings.currency} ${money(value)}`;
+  return dashboardIncomeHidden?'*':`${db.settings.currency} ${money(value)}`;
 }
 
 function setDashboardChartMode(mode){dashboardChartMode=mode==='daily'?'daily':'monthly';dashboard();}
@@ -1508,15 +1506,15 @@ function dashboard(){
    chartVals=months.map(x=>totals(x).exp);
    chartSub=year+' · 12 bulan';
  }
- let max=Math.max(...chartVals,1), W=dashboardChartMode==='daily'?Math.max(690,chartVals.length*22):1100,H=208,L=8,R=8,T=44,B=32;
+ let max=Math.max(...chartVals,1), W=dashboardChartMode==='daily'?Math.max(434,chartVals.length*14):Math.max(360,chartVals.length*30),H=190,L=8,R=8,T=38,B=28;
  let grid='';
- let slot=(W-L-R)/chartVals.length, barW=Math.min(8,Math.max(4,slot*.20));
+ let slot=(W-L-R)/chartVals.length, barW=dashboardChartMode==='daily'?Math.min(3.5,slot*.24):Math.min(5,slot*.17);
  let bars=chartVals.map((v,i)=>{
    let x=L+i*slot+(slot-barW)/2;
    let bh=v>0?Math.max((H-T-B)*(v/max),3):3;
    let y=H-B-bh;
    let label=chartLabels[i]+' '+(dashboardChartMode==='daily'?m:year);
-   let valueY=Math.max(T+7,y-8);
+   let valueY=Math.max(T+6,y-6);
    let valText=v>0?money(v):'';
    return `<rect class="chart-bar" x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${barW.toFixed(1)}" height="${bh.toFixed(1)}" rx="4"><title>${label}: ${db.settings.currency} ${money(v)}</title></rect><text class="chart-value" text-anchor="middle" x="${(x+barW/2).toFixed(1)}" y="${valueY.toFixed(1)}">${valText}</text><text class="chart-label" text-anchor="middle" x="${(x+barW/2).toFixed(1)}" y="${H-9}">${chartLabels[i]}</text>`;
  }).join('');
@@ -1530,7 +1528,7 @@ function dashboard(){
    <button class="btn primary dashboard-add-btn" onclick="go('add')" aria-label="Tambah Belanja"><span class="btn-icon">${icon('add')}</span><span>Tambah Belanja</span></button>
  </div>
  <div class="cards">
- <div class="card dashboard-sensitive-card"><div class="label sensitive-label"><span>Pendapatan Bulan Ini</span><button class="sensitive-toggle income-star-toggle" type="button" onclick="toggleDashboardIncome()" aria-label="${dashboardIncomeHidden?'Tunjuk pendapatan':'Sembunyikan pendapatan'}" title="${dashboardIncomeHidden?'Tunjuk pendapatan':'Sembunyikan pendapatan'}">*</button></div><div class="value green">${dashboardMoney(t.inc)}</div></div>
+ <div class="card dashboard-sensitive-card"><div class="label sensitive-label"><span>Pendapatan Bulan Ini</span><button class="sensitive-toggle" type="button" onclick="toggleDashboardIncome()" aria-label="${dashboardIncomeHidden?'Tunjuk pendapatan':'Sembunyikan pendapatan'}" title="${dashboardIncomeHidden?'Tunjuk pendapatan':'Sembunyikan pendapatan'}"><svg viewBox="0 0 24 24" aria-hidden="true">${icon(dashboardIncomeHidden?'eye-off':'eye')}</svg></button></div><div class="value green">${dashboardMoney(t.inc)}</div></div>
  <div class="card"><div class="label">Total Belanja</div><div class="value red">${db.settings.currency} ${money(t.exp)}</div></div>
  <div class="card"><div class="label">Baki</div><div class="value blue">${db.settings.currency} ${money(t.balance)}</div></div>
  <div class="card"><div class="label">Saving Rate</div><div class="value">${rate.toFixed(1)}%</div></div></div>
