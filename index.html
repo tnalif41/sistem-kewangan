@@ -497,6 +497,43 @@ body{overflow-x:hidden}
 }
 </style>
 
+
+<style id="notification-v17-mobile-overlay">
+@media (max-width:720px){
+  /* Keep the mobile header above the page content so the notification is a true overlay. */
+  .mobile-topbar{
+    z-index:1000!important;
+    isolation:isolate;
+  }
+  .mobile-topbar .notification-wrap{
+    z-index:1002!important;
+  }
+  .mobile-topbar .notification-dropdown{
+    position:fixed!important;
+    top:64px!important;
+    right:10px!important;
+    left:auto!important;
+    width:min(360px,calc(100vw - 20px))!important;
+    max-width:calc(100vw - 20px)!important;
+    max-height:calc(100dvh - 78px)!important;
+    z-index:1005!important;
+    margin:0!important;
+  }
+  .mobile-topbar .notification-wrap:not(.open) .notification-dropdown{
+    display:none!important;
+    visibility:hidden!important;
+    opacity:0!important;
+    pointer-events:none!important;
+  }
+  .mobile-topbar .notification-wrap.open .notification-dropdown{
+    display:block!important;
+    visibility:visible!important;
+    opacity:1!important;
+    pointer-events:auto!important;
+  }
+}
+</style>
+
 </head>
 <body>
 <div id="authScreen" class="auth-screen">
@@ -920,9 +957,10 @@ function toggleNotificationDropdown(e,id){
     const r=btn.getBoundingClientRect();
     const isMobile=window.matchMedia('(max-width:760px)').matches;
     if(isMobile){
-      dropdown.style.top='58px';
-      dropdown.style.right='10px';
-      dropdown.style.left='auto';
+      dropdown.style.setProperty('top','64px','important');
+      dropdown.style.setProperty('right','10px','important');
+      dropdown.style.setProperty('left','auto','important');
+      dropdown.style.setProperty('position','fixed','important');
     }else{
       // Fixed viewport overlay: align the bubble's RIGHT edge to the bell's RIGHT edge,
       // while clamping it inside the viewport.
