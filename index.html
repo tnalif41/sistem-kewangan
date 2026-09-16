@@ -215,6 +215,45 @@ body{overflow-x:hidden}
 
 <style>
 </style>
+
+<style id="notification-final-fix">
+/* FINAL notification layout: desktop button is at the far right of the header. */
+@media (min-width: 769px){
+  .top-actions{display:flex;align-items:center;justify-content:flex-end;gap:10px;position:relative;flex:0 0 auto}
+  .desktop-notification{order:99;position:relative;display:inline-flex;z-index:300}
+  .desktop-notification .notification-dropdown{
+    left:auto!important;
+    right:0!important;
+    top:calc(100% + 10px)!important;
+    transform:none!important;
+    display:none!important;
+    visibility:hidden!important;
+    opacity:0!important;
+    pointer-events:none!important;
+  }
+  .desktop-notification.open .notification-dropdown{
+    display:block!important;
+    visibility:visible!important;
+    opacity:1!important;
+    pointer-events:auto!important;
+  }
+}
+/* Never render a notification bubble unless JS explicitly opens it. */
+.notification-dropdown[hidden],
+.notification-wrap:not(.open) > .notification-dropdown{
+  display:none!important;
+  visibility:hidden!important;
+  opacity:0!important;
+  pointer-events:none!important;
+}
+.notification-wrap.open > .notification-dropdown{
+  display:block!important;
+  visibility:visible!important;
+  opacity:1!important;
+  pointer-events:auto!important;
+}
+</style>
+
 </head>
 <body>
 <div id="authScreen" class="auth-screen">
@@ -291,7 +330,7 @@ body{overflow-x:hidden}
       <div class="notification-wrap" id="mobileNotificationWrap" aria-label="Notifikasi">
         <button class="notification-btn" onclick="toggleNotificationDropdown(event,'mobileNotificationWrap')" title="Notifications" aria-label="Notifications" aria-haspopup="true" aria-expanded="false">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/></svg><span id="mobileNotificationCount" class="notification-count"></span>
-        </button><div class="notification-dropdown" id="mobileNotificationDropdown"></div>
+        </button><div class="notification-dropdown" id="mobileNotificationDropdown" hidden></div>
       </div>
       <div class="mobile-user" id="mobileUser"></div>
     </div>
@@ -300,20 +339,19 @@ body{overflow-x:hidden}
   <div class="top">
     <div class="page-heading">
       <div class="page-heading-row">
-        <h1 id="title">Dashboard</h1>
-        <div class="notification-wrap desktop-notification" id="desktopNotificationWrap" aria-label="Notifikasi">
-          <button class="notification-btn" id="notificationBtn" onclick="toggleNotificationDropdown(event,'desktopNotificationWrap')" title="Notifikasi" aria-label="Notifikasi" aria-haspopup="true" aria-expanded="false">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/></svg><span id="notificationCount" class="notification-count"></span>
-          </button>
-          <div class="notification-dropdown" id="notificationDropdown"></div>
-        </div>
-      </div>
+        <h1 id="title">Dashboard</h1></div>
       <p id="subtitle">Pantau kewangan anda dengan mudah.</p>
     </div>
     <div class="top-actions">
       <span class="sync-badge" id="syncBadge"><span class="sync-dot"></span> Google Drive</span>
       <div id="desktopUser"></div>
       <button class="btn primary" onclick="go('add')">＋ Tambah Belanja</button>
+      <div class="notification-wrap desktop-notification" id="desktopNotificationWrap" aria-label="Notifikasi">
+          <button class="notification-btn" id="notificationBtn" onclick="toggleNotificationDropdown(event,'desktopNotificationWrap')" title="Notifikasi" aria-label="Notifikasi" aria-haspopup="true" aria-expanded="false">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/></svg><span id="notificationCount" class="notification-count"></span>
+          </button>
+          <div class="notification-dropdown" id="notificationDropdown" hidden></div>
+        </div>
     </div>
   </div>
   <section id="content"></section>
@@ -625,7 +663,10 @@ function toggleNotificationDropdown(e,id){
   closeAllNotificationDropdowns();
   document.getElementById('mobileUser')?.classList.remove('open');
   if(was)return;
+  const dropdown=el.querySelector('.notification-dropdown');
+  if(!dropdown)return;
   el.classList.add('open');
+  dropdown.hidden=false;
   el.querySelector('.notification-btn')?.setAttribute('aria-expanded','true');
   renderNotificationDropdown(id);
 }
@@ -1253,15 +1294,11 @@ document.addEventListener('click',(e)=>{
 function closeAllNotificationDropdowns(){
   document.querySelectorAll('.notification-wrap.open').forEach(x=>x.classList.remove('open'));
   document.querySelectorAll('.notification-btn[aria-expanded="true"]').forEach(x=>x.setAttribute('aria-expanded','false'));
+  document.querySelectorAll('.notification-dropdown').forEach(x=>x.hidden=true);
 }
 function initNotificationUi(){
   closeAllNotificationDropdowns();
-  document.querySelectorAll('.notification-dropdown').forEach(x=>{
-    x.style.removeProperty('display');
-    x.style.removeProperty('visibility');
-    x.style.removeProperty('opacity');
-    x.style.removeProperty('pointer-events');
-  });
+  document.querySelectorAll('.notification-dropdown').forEach(x=>x.hidden=true);
   closeAllNotificationDropdowns();
 }
 document.addEventListener('DOMContentLoaded', initNotificationUi);
@@ -1341,3 +1378,8 @@ initSupabase();
 </script>
 </body>
 </html>
+<script id="notification-final-click-close">
+document.addEventListener('click', function(e){
+  if(!e.target.closest('.notification-wrap')) closeAllNotificationDropdowns();
+});
+</script>
