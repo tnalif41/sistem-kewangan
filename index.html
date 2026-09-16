@@ -476,6 +476,27 @@ body{overflow-x:hidden}
 }
 </style>
 
+
+<style id="notification-v16-layout">
+@media (min-width:761px){
+  .top-actions{display:flex!important;align-items:center!important;justify-content:flex-end!important;gap:10px!important;}
+  .top-actions .sync-badge{order:1!important;}
+  .top-actions .desktop-notification{order:2!important;position:relative!important;display:inline-flex!important;flex:0 0 34px!important;}
+  .top-actions #desktopUser{order:3!important;}
+  .top-actions > .btn.primary{order:4!important;}
+  .desktop-notification .notification-dropdown{
+    position:fixed!important;
+    width:min(370px,calc(100vw - 24px))!important;
+    max-width:calc(100vw - 24px)!important;
+    right:auto!important;
+    left:auto!important;
+    top:auto!important;
+    margin:0!important;
+    z-index:2147483000!important;
+  }
+}
+</style>
+
 </head>
 <body>
 <div id="authScreen" class="auth-screen">
@@ -566,14 +587,15 @@ body{overflow-x:hidden}
     </div>
     <div class="top-actions">
       <span class="sync-badge" id="syncBadge"><span class="sync-dot"></span> Google Drive</span>
-      <div id="desktopUser"></div>
-      <button class="btn primary" onclick="go('add')">＋ Tambah Belanja</button>
       <div class="notification-wrap desktop-notification" id="desktopNotificationWrap" aria-label="Notifikasi">
           <button class="notification-btn" id="notificationBtn" onclick="toggleNotificationDropdown(event,'desktopNotificationWrap')" title="Notifikasi" aria-label="Notifikasi" aria-haspopup="true" aria-expanded="false">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/></svg><span id="notificationCount" class="notification-count"></span>
           </button>
           <div class="notification-dropdown" id="notificationDropdown" hidden></div>
         </div>
+      <div id="desktopUser"></div>
+      <button class="btn primary" onclick="go('add')">＋ Tambah Belanja</button>
+      
     </div>
   </div>
   <section id="content"></section>
