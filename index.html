@@ -272,6 +272,27 @@ body{overflow-x:hidden}
 .sync-info-panel{padding-bottom:13px}.sync-info-row{display:flex;align-items:center;justify-content:space-between;gap:18px;font-size:12px;color:#64748b}.sync-info-row b{color:#334155;font-weight:600;text-align:right}
 .app-footer{text-align:center;color:#94a3b8;font-size:10px;padding:20px 0 8px;letter-spacing:.15px}
 @media(max-width:720px){.app-footer{padding:16px 0 6px}.sync-info-row{align-items:flex-start;flex-direction:column;gap:5px}.sync-info-row b{text-align:left}}
+
+/* Final UI cleanup v23 */
+.dashboard-actions{display:flex;justify-content:flex-end;align-items:center;margin:0 0 10px}
+.dashboard-add-btn{min-height:32px!important;padding:6px 10px!important;border-radius:7px!important;font-size:11px!important}
+.dashboard-add-btn .btn-icon{width:14px;height:14px;display:inline-flex;align-items:center;justify-content:center}
+.dashboard-add-btn .btn-icon svg{width:14px!important;height:14px!important;display:block}
+.nav-item>span:first-child{width:22px!important;height:22px!important;min-width:22px!important;display:inline-flex!important;align-items:center!important;justify-content:center!important}
+.nav-item>span:first-child svg{width:16px!important;height:16px!important;display:block}
+.bottom-nav button>span:first-child{width:22px!important;height:22px!important;display:inline-flex!important;align-items:center!important;justify-content:center!important}
+.bottom-nav button>span:first-child svg{width:17px!important;height:17px!important;display:block}
+.action-icon{width:32px!important;height:32px!important;min-width:32px!important;min-height:32px!important;padding:0!important;display:inline-flex!important;align-items:center!important;justify-content:center!important;border-radius:7px!important;box-sizing:border-box!important}
+.action-icon svg{width:15px!important;height:15px!important;display:block!important;margin:0!important}
+.notification-btn{display:inline-flex!important;align-items:center!important;justify-content:center!important;padding:0!important;box-sizing:border-box!important}
+.notification-btn svg{width:18px!important;height:18px!important;display:block!important;margin:0!important}
+.app-footer{display:block;width:100%;margin-top:22px!important;text-align:center;color:#94a3b8;font-size:10px;padding:22px 0 4px;letter-spacing:.15px}
+@media(max-width:720px){
+  .dashboard-actions{margin-bottom:8px}
+  .dashboard-add-btn{min-height:31px!important;padding:6px 9px!important}
+  .app-footer{padding:20px 0 4px}
+}
+
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
@@ -747,7 +768,6 @@ body{overflow-x:hidden}
           <div class="notification-dropdown" id="notificationDropdown" hidden></div>
         </div>
       <div id="desktopUser"></div>
-      <button class="btn primary" onclick="go('add')">＋ Tambah Belanja</button>
       
     </div>
   </div>
@@ -1459,9 +1479,9 @@ function dashboard(){
    chartVals=months.map(x=>totals(x).exp);
    chartSub=year+' · 12 bulan';
  }
- let max=Math.max(...chartVals,1), W=dashboardChartMode==='daily'?Math.max(900,chartVals.length*28):1100,H=218,L=8,R=8,T=48,B=34;
+ let max=Math.max(...chartVals,1), W=dashboardChartMode==='daily'?Math.max(760,chartVals.length*24):1100,H=218,L=8,R=8,T=48,B=34;
  let grid='';
- let slot=(W-L-R)/chartVals.length, barW=Math.min(17,Math.max(6,slot*.34));
+ let slot=(W-L-R)/chartVals.length, barW=Math.min(11,Math.max(5,slot*.24));
  let bars=chartVals.map((v,i)=>{
    let x=L+i*slot+(slot-barW)/2;
    let bh=v>0?Math.max((H-T-B)*(v/max),3):3;
@@ -1477,7 +1497,10 @@ function dashboard(){
    : monthlyBudget
      ? `Baki ${db.settings.currency} ${money(Math.max(0,monthlyBudget-t.exp))} untuk ${m}.`
      : `Belum ditetapkan untuk ${m}.`;
- content.innerHTML=`<div class="cards">
+ content.innerHTML=`<div class="dashboard-actions">
+   <button class="btn primary dashboard-add-btn" onclick="go('add')" aria-label="Tambah Belanja"><span class="btn-icon">${icon('add')}</span><span>Tambah Belanja</span></button>
+ </div>
+ <div class="cards">
  <div class="card"><div class="label">Pendapatan Bulan Ini</div><div class="value green">${db.settings.currency} ${money(t.inc)}</div></div>
  <div class="card"><div class="label">Total Belanja</div><div class="value red">${db.settings.currency} ${money(t.exp)}</div></div>
  <div class="card"><div class="label">Baki</div><div class="value blue">${db.settings.currency} ${money(t.balance)}</div></div>
@@ -1535,7 +1558,7 @@ function add(id=null){
 function addExpense(e){e.preventDefault();const data={date:eDate.value,category:eCat.value,item:eItem.value,amount:+eAmt.value,pay:ePay.value,note:eNote.value};if(editingExpenseId){const i=db.expenses.findIndex(x=>x.id==editingExpenseId);if(i>=0)db.expenses[i]=Object.assign(db.expenses[i],data)}else{db.expenses.push(Object.assign({id:Date.now()},data))}save();alert(editingExpenseId?'Belanja berjaya dikemaskini.':'Belanja berjaya disimpan.');editingExpenseId=null;go('expenses')}
 function expenses(){
  let rows=db.expenses.slice().sort((a,b)=>b.date.localeCompare(a.date));
- content.innerHTML=`<div class="panel"><div class="toolbar"><input id="search" placeholder="Cari transaksi..." oninput="filterExpenses()"><select id="fcat" onchange="filterExpenses()"><option value="">Semua kategori</option>${db.categories.map(c=>`<option>${esc(c)}</option>`).join('')}</select><button class="btn primary" onclick="go('add')">＋ Tambah</button></div><div id="expenseTable"></div></div>`;renderExpenses(rows)
+ content.innerHTML=`<div class="panel"><div class="toolbar"><input id="search" placeholder="Cari transaksi..." oninput="filterExpenses()"><select id="fcat" onchange="filterExpenses()"><option value="">Semua kategori</option>${db.categories.map(c=>`<option>${esc(c)}</option>`).join('')}</select></div><div id="expenseTable"></div></div>`;renderExpenses(rows)
 }
 function filterExpenses(){let q=search.value.toLowerCase(),c=fcat.value;renderExpenses(db.expenses.filter(x=>(!q||(x.item+' '+x.category+' '+x.note).toLowerCase().includes(q))&&(!c||x.category===c)).sort((a,b)=>b.date.localeCompare(a.date)))}
 function renderExpenses(rows){let total=rows.reduce((a,x)=>a+ +x.amount,0);expenseTable.innerHTML=rows.length?`<div class="table-scroll"><table><thead><tr><th>Tarikh</th><th>Kategori</th><th>Perkara</th><th>Bayaran</th><th class="amount">Jumlah</th><th>Tindakan</th></tr></thead><tbody>${rows.map(x=>`<tr><td>${x.date}${transactionLocked(x.date)?' 🔒':''}</td><td>${esc(x.category)}</td><td>${esc(x.item)}</td><td>${esc(x.pay)}</td><td class="amount">${db.settings.currency} ${money(x.amount)}</td><td><button class="btn secondary action-icon" onclick="editExpenseGuard(${x.id})" title="Edit" aria-label="Edit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m4 16-.7 4.7L8 20l11.2-11.2a2.2 2.2 0 0 0-3.1-3.1L4.9 16.9Z"/><path d="m14.7 7.3 2 2"/></svg></button> <button class="btn danger action-icon" onclick="delExpense(${x.id})" title="Padam" aria-label="Padam"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13M10 11v5M14 11v5"/></svg></button></td></tr>`).join('')}</tbody><tfoot><tr><th colspan="4">Jumlah</th><th class="amount">${db.settings.currency} ${money(total)}</th><th></th></tr></tfoot></table>`:'<div class="empty">Tiada transaksi dijumpai.</div>'}
@@ -1889,8 +1912,9 @@ function settings(){
  <div class="panel sync-info-panel" style="margin-top:18px"><h3>${en?'Sync Status':'Status Sync'}</h3>
  <div class="sync-info-row"><span>${en?'Last successful sync':'Sync terakhir berjaya'}</span><b id="settingsLastSync">${formatLastSync(getLastSync())}</b></div>
  </div>
- <footer class="app-footer">Created by AIMA · 2026</footer>
- <div class="panel" style="margin-top:18px"><h3>${en?'Data & Google Drive':'Data & Google Drive'}</h3><p>${db.expenses.length} ${en?'expense records':'transaksi belanja'} · ${db.incomes.length} ${en?'income records':'rekod pendapatan'} · ${db.savings.length} ${en?'saving records':'rekod simpanan'} · ${db.categories.length} ${en?'categories':'kategori'}</p><p style="color:#64748b;font-size:12px">${en?'Active account':'Akaun aktif'}: <b>${esc(currentAuthUser?.email||googleUser?.email||'Belum log masuk')}</b></p><p style="color:#64748b;font-size:12px">${en?'Main data is stored securely in Supabase Database. Google Drive is optional backup/export.':'Data utama disimpan dengan selamat dalam Supabase Database. Google Drive ialah backup/export pilihan.'}</p><div id="driveStatusMessage" class="drive-status">Belum diuji.</div><div class="setting-help">${en?'Google Sign-In and Google Drive use two separate Google permissions. You only need to approve Drive access once; after that your data syncs automatically.':'Log masuk Google dan akses Google Drive menggunakan dua kebenaran Google yang berbeza. Kebenaran Drive hanya perlu diluluskan sekali; selepas itu data akan sync secara automatik.'}</div><div class="actions"><button class="btn primary" onclick="connectGoogleDrive()">${en?'Enable Google Drive Sync':'Aktifkan Sync Google Drive'}</button><button class="btn secondary" onclick="saveToDrive(true)">${en?'Sync Now':'Sync Sekarang'}</button><button class="btn danger" onclick="resetData()">${en?'Reset Cache':'Reset Cache'}</button></div></div>`;
+
+ <div class="panel" style="margin-top:18px"><h3>${en?'Data & Google Drive':'Data & Google Drive'}</h3><p>${db.expenses.length} ${en?'expense records':'transaksi belanja'} · ${db.incomes.length} ${en?'income records':'rekod pendapatan'} · ${db.savings.length} ${en?'saving records':'rekod simpanan'} · ${db.categories.length} ${en?'categories':'kategori'}</p><p style="color:#64748b;font-size:12px">${en?'Active account':'Akaun aktif'}: <b>${esc(currentAuthUser?.email||googleUser?.email||'Belum log masuk')}</b></p><p style="color:#64748b;font-size:12px">${en?'Main data is stored securely in Supabase Database. Google Drive is optional backup/export.':'Data utama disimpan dengan selamat dalam Supabase Database. Google Drive ialah backup/export pilihan.'}</p><div id="driveStatusMessage" class="drive-status">Belum diuji.</div><div class="setting-help">${en?'Google Sign-In and Google Drive use two separate Google permissions. You only need to approve Drive access once; after that your data syncs automatically.':'Log masuk Google dan akses Google Drive menggunakan dua kebenaran Google yang berbeza. Kebenaran Drive hanya perlu diluluskan sekali; selepas itu data akan sync secara automatik.'}</div><div class="actions"><button class="btn primary" onclick="connectGoogleDrive()">${en?'Enable Google Drive Sync':'Aktifkan Sync Google Drive'}</button><button class="btn secondary" onclick="saveToDrive(true)">${en?'Sync Now':'Sync Sekarang'}</button><button class="btn danger" onclick="resetData()">${en?'Reset Cache':'Reset Cache'}</button></div></div>
+ <footer class="app-footer">Created by AIMA · 2026</footer>`;
  renderWorkspacePanel(); renderLockPanel().then(html=>{const x=document.getElementById("lockingPanel");if(x)x.innerHTML=html;});
 }
 async function changePassword(e){
