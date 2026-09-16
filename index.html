@@ -301,6 +301,17 @@ body{overflow-x:hidden}
 .sensitive-toggle svg{width:14px!important;height:14px!important;display:block!important;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .dashboard-sensitive-card .value{letter-spacing:.2px}
 .nav-submenu .nav-item{border-left:0!important;border-right:0!important}
+
+/* v25 chart polish */
+.dashboard-spending-module{border-radius:16px!important;overflow:hidden!important}
+.spending-module-chart{border-radius:12px!important;padding:0!important}
+.spending-module-chart svg{height:210px!important;border-radius:12px!important}
+.spending-module-chart .chart-grid{display:none!important;stroke:none!important}
+.spending-module-chart .chart-label{font-size:8px!important}
+.spending-module-chart .chart-value{font-size:8px!important;font-weight:650!important}
+.spending-module-chart .chart-bar{rx:3px!important}
+.income-star-toggle{border:0!important;background:transparent!important;color:#64748b!important;width:20px!important;height:20px!important;padding:0!important;margin:0!important;display:inline-flex!important;align-items:center!important;justify-content:center!important;font-size:15px!important;font-weight:700!important;line-height:1!important;cursor:pointer!important;box-shadow:none!important}
+.income-star-toggle:hover{color:#2563eb!important}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
@@ -1519,7 +1530,7 @@ function dashboard(){
    <button class="btn primary dashboard-add-btn" onclick="go('add')" aria-label="Tambah Belanja"><span class="btn-icon">${icon('add')}</span><span>Tambah Belanja</span></button>
  </div>
  <div class="cards">
- <div class="card dashboard-sensitive-card"><div class="label sensitive-label"><span>Pendapatan Bulan Ini</span><button class="sensitive-toggle" type="button" onclick="toggleDashboardIncome()" aria-label="${dashboardIncomeHidden?'Tunjuk pendapatan':'Sembunyikan pendapatan'}" title="${dashboardIncomeHidden?'Tunjuk pendapatan':'Sembunyikan pendapatan'}">${icon(dashboardIncomeHidden?'eye-off':'eye')}</button></div><div class="value green">${dashboardMoney(t.inc)}</div></div>
+ <div class="card dashboard-sensitive-card"><div class="label sensitive-label"><span>Pendapatan Bulan Ini</span><button class="sensitive-toggle income-star-toggle" type="button" onclick="toggleDashboardIncome()" aria-label="${dashboardIncomeHidden?'Tunjuk pendapatan':'Sembunyikan pendapatan'}" title="${dashboardIncomeHidden?'Tunjuk pendapatan':'Sembunyikan pendapatan'}">*</button></div><div class="value green">${dashboardMoney(t.inc)}</div></div>
  <div class="card"><div class="label">Total Belanja</div><div class="value red">${db.settings.currency} ${money(t.exp)}</div></div>
  <div class="card"><div class="label">Baki</div><div class="value blue">${db.settings.currency} ${money(t.balance)}</div></div>
  <div class="card"><div class="label">Saving Rate</div><div class="value">${rate.toFixed(1)}%</div></div></div>
