@@ -254,6 +254,93 @@ body{overflow-x:hidden}
 }
 </style>
 
+
+<style id="notification-final-v13">
+/* Notification final: icon only, no button box; popover is a viewport overlay. */
+@media (min-width: 761px){
+  .top-actions{position:relative!important;display:flex!important;align-items:center!important;justify-content:flex-end!important;gap:10px!important}
+  .desktop-notification{position:static!important;display:inline-flex!important;order:99!important;z-index:1000!important}
+  .desktop-notification .notification-btn{
+    width:34px!important;height:34px!important;min-width:34px!important;
+    padding:0!important;border:0!important;background:transparent!important;
+    border-radius:0!important;box-shadow:none!important;color:#172033!important;
+    display:inline-flex!important;align-items:center!important;justify-content:center!important;
+    transition:transform .16s ease,color .16s ease!important;
+  }
+  .desktop-notification .notification-btn:hover,
+  .desktop-notification.open .notification-btn{
+    border:0!important;background:transparent!important;box-shadow:none!important;
+    color:#1677ff!important;transform:translateY(-1px)!important;
+  }
+  .desktop-notification .notification-btn svg{
+    width:23px!important;height:23px!important;
+    filter:drop-shadow(0 2px 2px rgba(15,23,42,.18))!important;
+  }
+  .desktop-notification .notification-count{
+    top:-3px!important;right:-5px!important;
+    min-width:18px!important;height:18px!important;
+    padding:0 4px!important;border:2px solid #fff!important;
+    border-radius:999px!important;background:#e11d48!important;
+    box-shadow:0 3px 8px rgba(225,29,72,.28)!important;
+    font-size:9px!important;line-height:14px!important;
+  }
+  .desktop-notification .notification-dropdown{
+    position:fixed!important;
+    left:auto!important;right:20px!important;top:78px!important;
+    width:390px!important;max-width:calc(100vw - 32px)!important;
+    margin:0!important;
+    transform:none!important;
+    z-index:2147483000!important;
+  }
+  .desktop-notification .notification-dropdown:before{
+    display:block!important;left:auto!important;right:24px!important;
+  }
+}
+
+/* Mobile: keep the existing topbar behavior, but remove the bell's box too. */
+@media (max-width: 760px){
+  .notification-btn{
+    width:38px!important;height:38px!important;min-width:38px!important;
+    border:0!important;background:transparent!important;border-radius:0!important;
+    box-shadow:none!important;padding:0!important;
+  }
+  .notification-btn:hover,.notification-wrap.open .notification-btn{
+    border:0!important;background:transparent!important;box-shadow:none!important;
+  }
+  .notification-btn svg{width:21px!important;height:21px!important;filter:drop-shadow(0 2px 2px rgba(15,23,42,.16))!important}
+}
+
+/* The notification center is an overlay: it never occupies document layout space. */
+.notification-dropdown{
+  position:fixed!important;
+  z-index:2147483000!important;
+  margin:0!important;
+  max-height:calc(100vh - 90px)!important;
+}
+.notification-dropdown[hidden],
+.notification-wrap:not(.open) > .notification-dropdown{
+  display:none!important;
+  visibility:hidden!important;
+  opacity:0!important;
+  pointer-events:none!important;
+}
+.notification-wrap.open > .notification-dropdown{
+  display:block!important;
+  visibility:visible!important;
+  opacity:1!important;
+  pointer-events:auto!important;
+}
+
+/* Small professional action icons inside each notification. */
+.notification-item .notification-icon{
+  width:32px!important;height:32px!important;min-width:32px!important;
+  flex:0 0 32px!important;border-radius:10px!important;
+  display:flex!important;align-items:center!important;justify-content:center!important;
+  box-shadow:none!important;
+}
+.notification-item .notification-icon svg{width:15px!important;height:15px!important}
+</style>
+
 </head>
 <body>
 <div id="authScreen" class="auth-screen">
@@ -663,11 +750,29 @@ function toggleNotificationDropdown(e,id){
   closeAllNotificationDropdowns();
   document.getElementById('mobileUser')?.classList.remove('open');
   if(was)return;
+
   const dropdown=el.querySelector('.notification-dropdown');
+  const btn=el.querySelector('.notification-btn');
   if(!dropdown)return;
+
   el.classList.add('open');
   dropdown.hidden=false;
-  el.querySelector('.notification-btn')?.setAttribute('aria-expanded','true');
+  btn?.setAttribute('aria-expanded','true');
+
+  // Fixed viewport overlay: calculate its position from the bell without affecting layout.
+  const r=btn?.getBoundingClientRect();
+  if(r){
+    const isMobile=window.matchMedia('(max-width: 760px)').matches;
+    if(isMobile){
+      dropdown.style.top='58px';
+      dropdown.style.right='10px';
+      dropdown.style.left='auto';
+    }else{
+      dropdown.style.top=Math.round(r.bottom+10)+'px';
+      dropdown.style.right=Math.max(12,Math.round(window.innerWidth-r.right))+'px';
+      dropdown.style.left='auto';
+    }
+  }
   renderNotificationDropdown(id);
 }
 document.addEventListener('click',(e)=>{
@@ -1294,7 +1399,12 @@ document.addEventListener('click',(e)=>{
 function closeAllNotificationDropdowns(){
   document.querySelectorAll('.notification-wrap.open').forEach(x=>x.classList.remove('open'));
   document.querySelectorAll('.notification-btn[aria-expanded="true"]').forEach(x=>x.setAttribute('aria-expanded','false'));
-  document.querySelectorAll('.notification-dropdown').forEach(x=>x.hidden=true);
+  document.querySelectorAll('.notification-dropdown').forEach(x=>{
+    x.hidden=true;
+    x.style.removeProperty('top');
+    x.style.removeProperty('right');
+    x.style.removeProperty('left');
+  });
 }
 function initNotificationUi(){
   closeAllNotificationDropdowns();
