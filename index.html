@@ -567,16 +567,23 @@ body{overflow-x:hidden}
 
 <style id="final-ui-polish-v19">
 /* Sidebar hierarchy */
-.brand{display:flex;align-items:center;gap:11px}.brand-logo{width:34px;height:34px;flex:0 0 34px;border-radius:9px;background:var(--primary-soft);color:var(--primary);display:inline-flex;align-items:center;justify-content:center}.brand-logo svg{width:21px;height:21px}.brand-copy{min-width:0;line-height:1.15}.brand-copy small{margin-top:4px}.nav-submenu{padding-left:12px;padding-right:2px}.nav-submenu .nav-item{padding-left:15px!important;border-left:2px solid #edf2f7;border-radius:0 7px 7px 0}.nav-submenu .nav-item.active{border-left-color:var(--primary);background:var(--primary-soft)}
+.brand{display:flex;align-items:center;gap:11px}.brand-logo{width:34px;height:34px;flex:0 0 34px;border-radius:9px;background:var(--primary-soft);color:var(--primary);display:inline-flex;align-items:center;justify-content:center}.brand-logo svg{width:21px;height:21px}.brand-copy{min-width:0;line-height:1.15;font-size:13px;font-weight:700;letter-spacing:.01em}.brand-copy small{display:block;margin-top:4px;font-size:9px;font-weight:500;color:var(--muted)}.nav-submenu{padding-left:12px;padding-right:2px}.nav-submenu .nav-item{padding-left:15px!important;border-left:2px solid #edf2f7;border-radius:0 7px 7px 0}.nav-submenu .nav-item.active{border-left-color:var(--primary);background:var(--primary-soft)}
 @media(max-width:1050px) and (min-width:721px){.brand{justify-content:center}.brand-copy{display:none}.brand-logo{width:36px;height:36px}.nav-submenu{padding-left:0}.nav-submenu .nav-item{border-left:0}}
 /* Notification bubble sits directly beneath desktop bell */
 @media(min-width:721px){.desktop-notification .notification-dropdown{left:50%!important;right:auto!important;transform:translateX(-50%)!important;top:calc(100% + 12px)!important}.desktop-notification .notification-dropdown:before{left:50%!important;transform:translateX(-50%) rotate(45deg)!important}}
 /* Mobile bottom navigation */
-@media(max-width:720px){.mobile-bottom-nav{height:72px;padding:6px 8px calc(6px + env(safe-area-inset-bottom));gap:3px}.mobile-bottom-nav button{position:relative;gap:2px;padding:3px 2px;color:#7c8798;border-radius:10px}.mobile-bottom-nav button>span{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center}.mobile-bottom-nav button svg{width:19px;height:19px;stroke-width:1.9}.mobile-bottom-nav button small{font-size:9px;font-weight:600;line-height:11px}.mobile-bottom-nav button.active{background:transparent;color:var(--primary)}.mobile-bottom-nav button.active>span{background:var(--primary-soft);box-shadow:0 3px 10px rgba(22,119,255,.10)}.mobile-bottom-nav button:active>span{transform:scale(.94)}.main{padding-bottom:calc(72px + 18px)}
+@media(max-width:720px){
+.dashboard-monthly-panel .chart-wrap{height:300px!important;overflow-x:auto!important;overflow-y:hidden!important;-webkit-overflow-scrolling:touch;padding-bottom:5px}
+.dashboard-monthly-panel .chart-wrap svg{width:1100px!important;height:320px!important;min-width:1100px!important;display:block}
+.mobile-bottom-nav{height:72px;padding:6px 8px calc(6px + env(safe-area-inset-bottom));gap:3px}.mobile-bottom-nav button{position:relative;gap:2px;padding:3px 2px;color:#7c8798;border-radius:10px}.mobile-bottom-nav button>span{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center}.mobile-bottom-nav button svg{width:19px;height:19px;stroke-width:1.9}.mobile-bottom-nav button small{font-size:9px;font-weight:600;line-height:11px}.mobile-bottom-nav button.active{background:transparent;color:var(--primary)}.mobile-bottom-nav button.active>span{background:var(--primary-soft);box-shadow:0 3px 10px rgba(22,119,255,.10)}.mobile-bottom-nav button:active>span{transform:scale(.94)}.main{padding-bottom:calc(72px + 18px)}
 /* Dashboard chart: wider, with dedicated headroom for value labels */
 .dashboard-chart-grid{grid-template-columns:1fr!important}.dashboard-monthly-panel{width:100%}.dashboard-monthly-panel .chart-wrap{height:290px;margin-top:8px}.dashboard-monthly-panel .chart-wrap svg{min-height:290px}
 }
-@media(min-width:721px){.dashboard-chart-grid{grid-template-columns:1fr!important}.dashboard-monthly-panel .chart-wrap{height:310px}.dashboard-monthly-panel .chart-wrap svg{min-height:310px}}
+@media(min-width:721px){
+.dashboard-chart-grid{grid-template-columns:1fr!important}
+.dashboard-monthly-panel .chart-wrap{height:320px!important;overflow-x:auto!important;overflow-y:hidden!important}
+.dashboard-monthly-panel .chart-wrap svg{width:1100px!important;height:320px!important;min-width:1100px!important;display:block}
+}
 .action-icon{width:34px!important;height:34px!important;padding:0!important;display:inline-flex!important;align-items:center;justify-content:center;border-radius:8px!important}.action-icon svg{width:16px!important;height:16px!important}
 </style>
 </head>
@@ -1360,23 +1367,19 @@ function dashboard(){
  let cats=db.categories.map(c=>[c,db.expenses.filter(x=>x.date.startsWith(m)&&x.category===c).reduce((a,x)=>a+ +x.amount,0)]).filter(x=>x[1]>0).sort((a,b)=>b[1]-a[1]);
  let recent=db.expenses.slice().sort((a,b)=>b.date.localeCompare(a.date)).slice(0,6);
 
- // Last 6 calendar months spending bar chart
+ // Full year: 12 months, horizontally scrollable for a clean compact layout
  let monthNames=['Jan','Feb','Mac','Apr','Mei','Jun','Jul','Ogos','Sep','Okt','Nov','Dis'];
- let months=[];
- let now=new Date();
- for(let i=5;i>=0;i--){
-   let d=new Date(now.getFullYear(),now.getMonth()-i,1);
-   months.push(d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0'));
- }
- let vals=months.map(x=>totals(x).exp), max=Math.max(...vals,1), W=980,H=290,L=64,R=24,T=56,B=46;
+ let year=(new Date()).getFullYear();
+ let months=Array.from({length:12},(_,i)=>year+'-'+String(i+1).padStart(2,'0'));
+ let vals=months.map(x=>totals(x).exp), max=Math.max(...vals,1), W=1100,H=320,L=72,R=28,T=72,B=54;
  let grid=[0,1,2,3,4].map(i=>{let y=T+(H-T-B)*i/4;let val=max*(1-i/4);return `<line class="chart-grid" x1="${L}" y1="${y}" x2="${W-R}" y2="${y}"/><text class="chart-label" x="2" y="${y+4}">${db.settings.currency} ${money(val)}</text>`}).join('');
- let slot=(W-L-R)/months.length, barW=Math.min(18,slot*.16);
+ let slot=(W-L-R)/months.length, barW=Math.min(38,slot*.42);
  let bars=vals.map((v,i)=>{
    let x=L+i*slot+(slot-barW)/2;
    let bh=v>0?Math.max((H-T-B)*(v/max),2):0;
    let y=H-B-bh;
    let label=monthNames[Number(months[i].slice(5))-1]+' '+months[i].slice(2,4);
-   let valueY=Math.max(T-10,y-9);
+   let valueY=Math.max(T-14,y-10);
    return `<rect class="chart-bar" x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${barW.toFixed(1)}" height="${bh.toFixed(1)}" rx="3"><title>${label}: ${db.settings.currency} ${money(v)}</title></rect><text class="chart-value" text-anchor="middle" x="${(x+barW/2).toFixed(1)}" y="${valueY.toFixed(1)}">${db.settings.currency} ${money(v)}</text><text class="chart-label" text-anchor="middle" x="${(x+barW/2).toFixed(1)}" y="${H-10}">${monthNames[Number(months[i].slice(5))-1]}</text>`;
  }).join('');
  content.innerHTML=`<div class="cards">
@@ -1399,7 +1402,7 @@ function dashboard(){
  </div>
 
  <div class="grid dashboard-chart-grid">
-   <div class="panel dashboard-monthly-panel"><div class="toolbar" style="justify-content:space-between;align-items:center"><h3 style="margin:0">Monthly Spending</h3><span style="font-size:12px;color:#94a3b8">6 bulan terakhir</span></div>
+   <div class="panel dashboard-monthly-panel"><div class="toolbar" style="justify-content:space-between;align-items:center"><h3 style="margin:0">Monthly Spending</h3><span style="font-size:12px;color:#94a3b8">${year}</span></div>
      <div class="chart-wrap"><svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">${grid}${bars}</svg></div>
    </div>
    <div class="panel"><h3>Belanja Mengikut Kategori</h3>${cats.length?cats.slice(0,8).map(c=>{let pct=t.exp?c[1]/t.exp*100:0;return `<div class="bar"><div class="barhead"><span>${esc(c[0])}</span><b>${db.settings.currency} ${money(c[1])}</b></div><div class="track"><div class="fill" style="width:${pct}%"></div></div></div>`}).join(''):'<div class="empty">Belum ada belanja bulan ini.</div>'}</div>
@@ -1681,8 +1684,27 @@ function toggleNotificationDropdown(e,id){
   closeAllNotificationDropdowns();
   document.getElementById('mobileUser')?.classList.remove('open');
   if(was)return;
-  el.classList.add('open');
-  el.querySelector('.notification-btn')?.setAttribute('aria-expanded','true');
+  const btn=el.querySelector('.notification-btn'), dropdown=el.querySelector('.notification-dropdown');
+  if(!btn||!dropdown)return;
+  el.classList.add('open'); dropdown.hidden=false; btn.setAttribute('aria-expanded','true');
+  requestAnimationFrame(()=>{
+    const r=btn.getBoundingClientRect();
+    if(window.matchMedia('(max-width:720px)').matches){
+      dropdown.style.setProperty('position','fixed','important');
+      dropdown.style.setProperty('top','64px','important');
+      dropdown.style.setProperty('right','10px','important');
+      dropdown.style.setProperty('left','auto','important');
+    }else{
+      const width=Math.min(370,window.innerWidth-24);
+      const left=Math.max(12,Math.min(r.left+r.width/2-width/2,window.innerWidth-width-12));
+      dropdown.style.setProperty('position','fixed','important');
+      dropdown.style.setProperty('width',width+'px','important');
+      dropdown.style.setProperty('top',Math.round(r.bottom+10)+'px','important');
+      dropdown.style.setProperty('left',Math.round(left)+'px','important');
+      dropdown.style.setProperty('right','auto','important');
+      dropdown.style.setProperty('transform','none','important');
+    }
+  });
   renderNotificationDropdown(id);
 }
 document.addEventListener('click',(e)=>{
