@@ -205,17 +205,25 @@ body{overflow-x:hidden}
 .notification-action-pill{font-size:8.5px!important;letter-spacing:.35px!important}
 .notification-detail{font-size:11.5px!important}
 
-/* Dashboard spending + monthly budget module */
+/* Dashboard spending + monthly budget module — redesigned compact chart */
 .dashboard-spending-module{margin-top:14px;border-radius:16px;overflow:hidden;background:transparent;border:0;box-shadow:none}
-.spending-module-top{position:relative;padding:14px 14px 8px;border-radius:16px;background:linear-gradient(145deg,#4f46e5 0%,#3b82f6 55%,#38bdf8 100%);color:#fff}
-.spending-module-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:8px}
-.spending-module-title{font-size:15px;font-weight:700;letter-spacing:-.1px}.spending-module-year{font-size:11px;opacity:.86}
-.spending-module-chart{overflow-x:auto;overflow-y:hidden;scroll-behavior:smooth;scroll-snap-type:x proximity;padding:0;border-radius:12px;scrollbar-width:thin}
-.spending-module-chart::-webkit-scrollbar{height:5px}.spending-module-chart::-webkit-scrollbar-thumb{background:rgba(255,255,255,.35);border-radius:99px}
-.spending-module-chart svg{display:block;width:1100px;min-width:1100px;height:208px;border-radius:12px}
-.spending-module-chart .chart-grid{display:none;stroke:none}.spending-module-chart .chart-label{fill:rgba(255,255,255,.78);font-size:8.5px}
-.spending-module-chart .chart-value{fill:#fff;font-size:8.5px;font-weight:600}.spending-module-chart .chart-bar{fill:rgba(255,255,255,.48)}
-.spending-module-chart .chart-bar:hover{fill:rgba(255,255,255,.72)}
+.spending-module-top{position:relative;padding:15px 16px 10px;border-radius:16px;background:linear-gradient(145deg,#2f86f5 0%,#3b9bf4 55%,#55b8ef 100%);color:#fff}
+.spending-module-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;margin-bottom:4px}
+.spending-module-title{font-size:15px;font-weight:700;letter-spacing:-.15px}.spending-module-year{font-size:10.5px;opacity:.82;margin-top:2px}
+.spending-chart-legend{display:flex;justify-content:flex-end;align-items:center;gap:14px;margin:2px 4px 0;font-size:9.5px;color:rgba(255,255,255,.82)}
+.spending-chart-legend span{display:inline-flex;align-items:center;gap:5px}.legend-dot{width:7px;height:7px;border-radius:50%;display:inline-block}
+.legend-expense{background:#ffffff}.legend-income{background:rgba(255,255,255,.48)}
+.spending-module-chart{overflow-x:auto;overflow-y:hidden;scroll-behavior:smooth;scroll-snap-type:x proximity;padding:0;border-radius:12px;scrollbar-width:thin;margin-top:1px}
+.spending-module-chart::-webkit-scrollbar{height:4px}.spending-module-chart::-webkit-scrollbar-thumb{background:rgba(255,255,255,.25);border-radius:99px}
+.spending-module-chart svg{display:block;width:100%;min-width:760px;height:190px;border-radius:12px}
+.spending-module-chart .chart-group{isolation:isolate}
+.spending-module-chart .chart-label{fill:rgba(255,255,255,.78);font-size:8.5px;font-weight:500}
+.spending-module-chart .chart-value{font-size:7.5px;font-weight:650;letter-spacing:-.05px}
+.spending-module-chart .chart-value-expense{fill:#fff}.spending-module-chart .chart-value-income{fill:rgba(255,255,255,.78)}
+.spending-module-chart .chart-bar{transition:opacity .15s ease,filter .15s ease}
+.spending-module-chart .chart-bar-expense{fill:rgba(255,255,255,.88)}
+.spending-module-chart .chart-bar-income{fill:rgba(196,230,255,.72)}
+.spending-module-chart .chart-bar:hover{filter:brightness(1.08)}
 .spending-module-budget{margin:16px 12px 14px;padding:14px 15px;border:1px solid #e6edf7;border-radius:11px;background:#fff;box-shadow:0 5px 18px rgba(15,23,42,.07);position:relative;margin-top:0}
 .spending-budget-row{display:flex;align-items:center;justify-content:space-between;gap:12px}.spending-budget-label{font-size:11px;color:#64748b;font-weight:600}
 .spending-budget-value{font-size:20px;color:#172033;font-weight:750;margin-top:3px}.spending-budget-meta{font-size:11px;color:#94a3b8;margin-top:3px}
@@ -226,7 +234,7 @@ body{overflow-x:hidden}
 .spending-budget-edit input{width:105px;height:32px;padding:6px 8px;border:1px solid #d7e0eb;border-radius:7px;font-size:12px;outline:none}
 .spending-budget-edit button{height:32px!important;padding:0 11px!important;border-radius:7px!important;font-size:11px!important;min-width:62px}
 @media(max-width:720px){
-  .spending-module-top{padding:16px 12px 9px}.spending-module-title{font-size:13px}.spending-module-chart svg{height:220px}
+  .spending-module-top{padding:15px 12px 9px}.spending-module-title{font-size:13px}.spending-chart-legend{font-size:8.5px;gap:10px;margin-top:1px}.spending-module-chart svg{height:180px;min-width:680px}
   .spending-module-budget{margin:14px 9px 10px;padding:12px}.spending-budget-value{font-size:19px}.spending-budget-edit input{width:90px}
 }
 
@@ -1504,34 +1512,59 @@ function dashboard(){
  let cats=db.categories.map(c=>[c,db.expenses.filter(x=>x.date.startsWith(m)&&x.category===c).reduce((a,x)=>a+ +x.amount,0)]).filter(x=>x[1]>0).sort((a,b)=>b[1]-a[1]);
  let recent=db.expenses.slice().sort((a,b)=>b.date.localeCompare(a.date)).slice(0,6);
 
- // Spending chart can switch between daily (current month) and monthly (full year).
+ // Spending & income chart — compact grouped columns with a clean baseline.
  let monthNames=['Jan','Feb','Mac','Apr','Mei','Jun','Jul','Ogos','Sep','Okt','Nov','Dis'];
  let year=(new Date()).getFullYear();
- let chartLabels=[], chartVals=[], chartSub='';
+ let chartLabels=[], expenseVals=[], incomeVals=[], chartSub='';
  if(dashboardChartMode==='daily'){
    let yy=Number(m.slice(0,4)), mm=Number(m.slice(5,7)), days=new Date(yy,mm,0).getDate();
    chartLabels=Array.from({length:days},(_,i)=>String(i+1));
-   chartVals=chartLabels.map(d=>db.expenses.filter(x=>x.date===m+'-'+String(d).padStart(2,'0')).reduce((a,x)=>a+Number(x.amount||0),0));
+   expenseVals=chartLabels.map(d=>db.expenses.filter(x=>x.date===m+'-'+String(d).padStart(2,'0')).reduce((a,x)=>a+Number(x.amount||0),0));
+   incomeVals=chartLabels.map(d=>db.incomes.filter(x=>x.date===m+'-'+String(d).padStart(2,'0')).reduce((a,x)=>a+Number(x.amount||0),0));
    chartSub=m+' · harian';
  }else{
    let months=Array.from({length:12},(_,i)=>year+'-'+String(i+1).padStart(2,'0'));
    chartLabels=months.map((x,i)=>monthNames[i]);
-   chartVals=months.map(x=>totals(x).exp);
+   expenseVals=months.map(x=>totals(x).exp);
+   incomeVals=months.map(x=>totals(x).inc);
    chartSub=year+' · 12 bulan';
  }
- let max=Math.max(...chartVals,1), W=dashboardChartMode==='daily'?Math.max(620,chartVals.length*9.2):660,H=172,L=6,R=6,T=30,B=25;
- let grid='';
- let slot=(W-L-R)/chartVals.length, barW=dashboardChartMode==='daily'?Math.min(4.2,slot*.34):Math.min(6.5,slot*.30);
- let bars=chartVals.map((v,i)=>{
-   let x=L+i*slot+(slot-barW)/2;
-   let bh=v>0?Math.max((H-T-B)*(v/max),3):3;
-   let y=H-B-bh;
-   let label=chartLabels[i]+' '+(dashboardChartMode==='daily'?m:year);
-   let valueY=Math.max(T+7,y-4);
-   let valText=v>0?money(v):'';
-   return `<rect class="chart-bar" x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${barW.toFixed(1)}" height="${bh.toFixed(1)}" rx="2"><title>${label}: ${db.settings.currency} ${money(v)}</title></rect><text class="chart-value" text-anchor="middle" x="${(x+barW/2).toFixed(1)}" y="${valueY.toFixed(1)}">${valText}</text><text class="chart-label" text-anchor="middle" x="${(x+barW/2).toFixed(1)}" y="${H-9}">${chartLabels[i]}</text>`;
+ let max=Math.max(...expenseVals,...incomeVals,1);
+ let isDaily=dashboardChartMode==='daily';
+ let W=isDaily?Math.max(760,chartLabels.length*24):760,H=190,L=10,R=10,T=28,B=28;
+ let plotH=H-T-B, slot=(W-L-R)/chartLabels.length;
+ let groupGap=Math.min(5,Math.max(2,slot*.10));
+ let showIncome=!dashboardIncomeHidden;
+ let seriesGap=showIncome?Math.min(3,Math.max(1.5,slot*.045)):0;
+ let seriesW=showIncome
+   ?Math.min(7.5,Math.max(5.5,(slot-groupGap-seriesGap)/2))
+   :Math.min(8,Math.max(5.5,slot*.28));
+ let bars=chartLabels.map((label,i)=>{
+   let center=L+i*slot+slot/2;
+   let vals=showIncome?[expenseVals[i],incomeVals[i]]:[expenseVals[i]];
+   let widths=showIncome?[seriesW,seriesW]:[seriesW];
+   let total=showIncome?(seriesW*2+seriesGap):seriesW;
+   let startX=center-total/2;
+   let expenseX=startX;
+   let incomeX=startX+seriesW+seriesGap;
+   let exp=expenseVals[i], inc=incomeVals[i];
+   let expH=exp>0?Math.max(plotH*(exp/max),3):0;
+   let incH=showIncome&&inc>0?Math.max(plotH*(inc/max),3):0;
+   let expY=H-B-expH, incY=H-B-incH;
+   let expLabel=exp>0?money(exp):'';
+   let incLabel=showIncome&&inc>0?money(inc):'';
+   let expValueY=exp>0?Math.max(T+8,expY-5):H-B+1;
+   let incValueY=inc>0?Math.max(T+8,incY-5):H-B+1;
+   let dayTitle=label+(isDaily?' '+m:' '+year);
+   return `
+     <g class="chart-group">
+       ${exp>0?`<rect class="chart-bar chart-bar-expense" x="${expenseX.toFixed(1)}" y="${expY.toFixed(1)}" width="${seriesW.toFixed(1)}" height="${expH.toFixed(1)}" rx="3"><title>${dayTitle} · Belanja: ${db.settings.currency} ${money(exp)}</title></rect><text class="chart-value chart-value-expense" text-anchor="middle" x="${(expenseX+seriesW/2).toFixed(1)}" y="${expValueY.toFixed(1)}">${expLabel}</text>`:''}
+       ${showIncome&&inc>0?`<rect class="chart-bar chart-bar-income" x="${incomeX.toFixed(1)}" y="${incY.toFixed(1)}" width="${seriesW.toFixed(1)}" height="${incH.toFixed(1)}" rx="3"><title>${dayTitle} · Pendapatan: ${db.settings.currency} ${money(inc)}</title></rect><text class="chart-value chart-value-income" text-anchor="middle" x="${(incomeX+seriesW/2).toFixed(1)}" y="${incValueY.toFixed(1)}">${incLabel}</text>`:''}
+       <text class="chart-label" text-anchor="middle" x="${center.toFixed(1)}" y="${H-9}">${label}</text>
+     </g>`;
  }).join('');
  let budgetLabel=monthlyBudget?'Budget bulan ini':'Budget bulanan';
+
  let budgetStatus=monthlyBudget&&t.exp>monthlyBudget
    ? `Melebihi budget ${db.settings.currency} ${money(t.exp-monthlyBudget)}.`
    : monthlyBudget
@@ -1549,10 +1582,10 @@ function dashboard(){
  <div class="dashboard-spending-module">
    <div class="spending-module-top">
      <div class="spending-module-head">
-       <div><div class="spending-module-title">Monthly Spending</div><div class="spending-module-year">${chartSub}</div></div>
+       <div><div class="spending-module-title">Perbelanjaan & Pendapatan</div><div class="spending-module-year">Perbandingan ${chartSub}</div></div>
        <div class="spending-chart-switch"><button class="${dashboardChartMode==='daily'?'active':''}" onclick="setDashboardChartMode('daily')">Harian</button><button class="${dashboardChartMode==='monthly'?'active':''}" onclick="setDashboardChartMode('monthly')">Bulanan</button></div>
      </div>
-     <div class="spending-module-chart" aria-label="Monthly spending chart"><svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">${grid}${bars}</svg></div>
+     <div class="spending-chart-legend"><span><i class="legend-dot legend-expense"></i>Perbelanjaan</span>${showIncome?'<span><i class="legend-dot legend-income"></i>Pendapatan</span>':''}</div><div class="spending-module-chart" aria-label="Perbandingan perbelanjaan dan pendapatan"><svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">${bars}</svg></div>
    </div>
    <div class="spending-module-budget">
      <div class="spending-budget-row">
