@@ -302,14 +302,16 @@ body{overflow-x:hidden}
 .dashboard-sensitive-card .value{letter-spacing:.2px}
 .nav-submenu .nav-item{border-left:0!important;border-right:0!important}
 
-/* v25 chart polish */
+/* v27 chart polish — blended, slim & professional */
 .dashboard-spending-module{border-radius:16px!important;overflow:hidden!important}
-.spending-module-chart{border-radius:12px!important;padding:0!important}
-.spending-module-chart svg{height:190px!important;border-radius:12px!important}
+.spending-module-top{background:linear-gradient(145deg,#4f46e5 0%,#3b82f6 55%,#38bdf8 100%)!important}
+.spending-module-chart{border-radius:10px!important;padding:2px 0 0!important;background:transparent!important}
+.spending-module-chart svg{height:194px!important;border-radius:10px!important}
 .spending-module-chart .chart-grid{display:none!important;stroke:none!important}
-.spending-module-chart .chart-label{font-size:7px!important}
-.spending-module-chart .chart-value{font-size:7px!important;font-weight:650!important}
-.spending-module-chart .chart-bar{rx:2px!important}
+.spending-module-chart .chart-label{font-size:7.5px!important;fill:rgba(255,255,255,.68)!important;font-weight:500!important}
+.spending-module-chart .chart-value{font-size:7px!important;fill:rgba(255,255,255,.88)!important;font-weight:600!important}
+.spending-module-chart .chart-bar{fill:rgba(191,219,254,.72)!important;rx:2px!important}
+.spending-module-chart .chart-bar:hover{fill:rgba(219,234,254,.9)!important}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
@@ -1506,17 +1508,17 @@ function dashboard(){
    chartVals=months.map(x=>totals(x).exp);
    chartSub=year+' · 12 bulan';
  }
- let max=Math.max(...chartVals,1), W=dashboardChartMode==='daily'?Math.max(434,chartVals.length*14):Math.max(360,chartVals.length*30),H=190,L=8,R=8,T=38,B=28;
+ let max=Math.max(...chartVals,1), W=dashboardChartMode==='daily'?Math.max(434,chartVals.length*12.5):Math.max(360,chartVals.length*24),H=194,L=8,R=8,T=34,B=27;
  let grid='';
- let slot=(W-L-R)/chartVals.length, barW=dashboardChartMode==='daily'?Math.min(3.5,slot*.24):Math.min(5,slot*.17);
+ let slot=(W-L-R)/chartVals.length, barW=dashboardChartMode==='daily'?Math.min(3.2,slot*.28):Math.min(5.5,slot*.22);
  let bars=chartVals.map((v,i)=>{
    let x=L+i*slot+(slot-barW)/2;
    let bh=v>0?Math.max((H-T-B)*(v/max),3):3;
    let y=H-B-bh;
    let label=chartLabels[i]+' '+(dashboardChartMode==='daily'?m:year);
-   let valueY=Math.max(T+6,y-6);
+   let valueY=Math.max(T+7,y-5);
    let valText=v>0?money(v):'';
-   return `<rect class="chart-bar" x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${barW.toFixed(1)}" height="${bh.toFixed(1)}" rx="4"><title>${label}: ${db.settings.currency} ${money(v)}</title></rect><text class="chart-value" text-anchor="middle" x="${(x+barW/2).toFixed(1)}" y="${valueY.toFixed(1)}">${valText}</text><text class="chart-label" text-anchor="middle" x="${(x+barW/2).toFixed(1)}" y="${H-9}">${chartLabels[i]}</text>`;
+   return `<rect class="chart-bar" x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${barW.toFixed(1)}" height="${bh.toFixed(1)}" rx="2"><title>${label}: ${db.settings.currency} ${money(v)}</title></rect><text class="chart-value" text-anchor="middle" x="${(x+barW/2).toFixed(1)}" y="${valueY.toFixed(1)}">${valText}</text><text class="chart-label" text-anchor="middle" x="${(x+barW/2).toFixed(1)}" y="${H-9}">${chartLabels[i]}</text>`;
  }).join('');
  let budgetLabel=monthlyBudget?'Budget bulan ini':'Budget bulanan';
  let budgetStatus=monthlyBudget&&t.exp>monthlyBudget
