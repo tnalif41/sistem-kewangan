@@ -363,6 +363,11 @@ body{overflow-x:hidden}
   .spending-module-chart .chart-value{font-size:8px!important}
   .spending-module-chart .chart-label{font-size:8.5px!important}
 }
+
+.category-icon-inline{width:24px;height:24px;display:inline-flex;align-items:center;justify-content:center;vertical-align:middle;margin-right:8px;color:#123b67}
+.category-icon-inline svg{width:19px;height:19px;display:block}
+.nav svg,.bottom-nav svg,.btn-icon svg,.action-icon svg{stroke-width:1.8}
+.nav-item>span:first-child svg{width:17px!important;height:17px!important}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
@@ -1481,7 +1486,37 @@ db.settings.language ||= 'ms';
 function money(n){return new Intl.NumberFormat('ms-MY',{minimumFractionDigits:2,maximumFractionDigits:2}).format(Number(n)||0)}
 function esc(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
 function month(){return new Date().toISOString().slice(0,7)}
-function icon(name){const p={eye:'<path d="M2.5 12s3.2-5 9.5-5 9.5 5 9.5 5-3.2 5-9.5 5-9.5-5-9.5-5Z"/><circle cx="12" cy="12" r="2.5"/>', 'eye-off':'<path d="m3 3 18 18"/><path d="M10.6 6.2A10.8 10.8 0 0 1 12 6c6.3 0 9.5 6 9.5 6a16 16 0 0 1-3.1 3.5M6.3 6.7C3.7 8.3 2.5 12 2.5 12s3.2 6 9.5 6c1.4 0 2.6-.3 3.7-.8"/><path d="M9.9 9.9a2.5 2.5 0 0 0 3.5 3.5"/>',dashboard:'<path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/><path d="M9 21v-6h6v6"/>',add:'<circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/>',expenses:'<path d="M4 6h16M4 12h16M4 18h10"/><path d="M18 16v5M15.5 18.5H20.5"/>',income:'<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M7 12h10M12 9v6"/>',budget:'<path d="M4 5h16v14H4z"/><path d="M8 9h8M8 13h5M8 17h3"/>',monthly:'<rect x="3" y="4" width="18" height="17" rx="2"/><path d="M7 2v4M17 2v4M3 9h18"/>',category:'<path d="M4 19V9M10 19V5M16 19v-7M22 19H2"/>',trend:'<path d="M3 18 9 12l4 4 8-9"/><path d="M17 7h4v4"/>',report:'<path d="M5 3h10l4 4v14H5z"/><path d="M15 3v5h5M8 12h8M8 16h6"/>',export:'<path d="M12 3v12M8 11l4 4 4-4"/><path d="M5 19h14"/>',categories:'<path d="M4 5h16v4H4zM4 11h16v4H4zM4 17h10v4H4z"/>',saving:'<path d="M12 3v18M17 7.5c0-1.7-2.2-3-5-3S7 5.8 7 7.5s2.2 3 5 3 5 1.3 5 3-2.2 3-5 3-5-1.3-5-3"/>',more:'<circle cx="5" cy="12" r="1.2"/><circle cx="12" cy="12" r="1.2"/><circle cx="19" cy="12" r="1.2"/>',main:'<path d="M4 11 12 4l8 7"/><path d="M6 10v10h12V10M10 20v-6h4v6"/>',transactions:'<path d="M4 6h16M4 12h16M4 18h10"/><circle cx="18" cy="18" r="3"/><path d="M18 16.5v3M16.5 18h3"/>',planning:'<path d="M12 3v18"/><path d="M17 7c0-1.7-2.2-3-5-3S7 5.3 7 7s2.2 3 5 3 5 1.3 5 3-2.2 3-5 3-5 1.3-5 3 2.2 3 5 3 5-1.3 5-3"/>',analysis:'<path d="M4 19V9M10 19V5M16 19v-8M22 19H2"/>',system:'<path d="M4 5h16M4 12h16M4 19h16"/><circle cx="8" cy="5" r="2"/><circle cx="15" cy="12" r="2"/><circle cx="11" cy="19" r="2"/>',settings:'<circle cx="12" cy="12" r="3"/><path d="M19 15l2 1-2 3-2-1a8 8 0 0 1-2 1v2h-4v-2a8 8 0 0 1-2-1l-2 1-2-3 2-1a8 8 0 0 1 0-3l-2-1 2-3 2 1a8 8 0 0 1 2-1V5h4v2a8 8 0 0 1 2 1l2-1 2 3-2 1a8 8 0 0 1 0 4z"/>'};return '<svg viewBox="0 0 24 24" aria-hidden="true">'+(p[name]||'')+'</svg>'}
+function icon(name){
+ const p={
+  eye:'<path d="M2.5 12s3.2-5 9.5-5 9.5 5 9.5 5-3.2 5-9.5 5-9.5-5-9.5-5Z"/><circle cx="12" cy="12" r="2.4"/>',
+  'eye-off':'<path d="m3 3 18 18"/><path d="M10.5 6.2A11 11 0 0 1 12 6c6.2 0 9.5 6 9.5 6a15 15 0 0 1-3.2 3.6M6.2 6.7C3.6 8.4 2.5 12 2.5 12s3.2 6 9.5 6c1.3 0 2.5-.3 3.6-.8"/><path d="M9.8 9.8a2.5 2.5 0 0 0 3.6 3.6"/>',
+  dashboard:'<path d="M3.5 10.5 12 3l8.5 7.5"/><path d="M5.5 9.5V21h13V9.5"/><path d="M9 21v-5.5h6V21"/><path d="M8.2 12.5h7.6"/>',
+  add:'<circle cx="12" cy="12" r="8.8"/><path d="M12 8v8M8 12h8"/>',
+  expenses:'<path d="M6 3.5h9l3 3V20.5H6z"/><path d="M15 3.5v4h3"/><path d="M9 11h6M9 14.5h6M9 18h4"/>',
+  income:'<rect x="3.2" y="5" width="17.6" height="14" rx="1.8"/><circle cx="12" cy="12" r="2.7"/><path d="M5.8 8.2h2M16.2 15.8h2"/>',
+  budget:'<path d="M4 5.2h16v13.6H4z"/><path d="M7.5 9h9M7.5 12.5h6M7.5 16h3"/><path d="M17.2 9.2v6.8"/>',
+  monthly:'<rect x="3.5" y="4.5" width="17" height="16" rx="1.7"/><path d="M7.5 2.8v3.4M16.5 2.8v3.4M3.5 9h17"/><path d="M7.5 13h3M13.5 13h3M7.5 16.5h3"/>',
+  category:'<path d="M4 18.5V10M9.3 18.5V6.5M14.7 18.5V9M20 18.5V4.5"/><path d="M2.8 20.5h18.4"/>',
+  trend:'<path d="M3.5 18 8.2 13.3l3.3 3.1 8.9-9"/><path d="M16.8 7.4h3.8v3.8"/>',
+  report:'<path d="M6 3.5h8.8l3.2 3.2v14H6z"/><path d="M14.5 3.5v4h3.5M9 11h6M9 14.5h6M9 18h4"/>',
+  export:'<path d="M12 3.5v11"/><path d="m8 11 4 4 4-4"/><path d="M5 20h14"/>',
+  categories:'<path d="M4 5.2h16v4H4zM4 10.8h16v4H4zM4 16.4h11v4H4z"/><path d="M7 7.2h.1M7 12.8h.1M7 18.4h.1"/>',
+  saving:'<path d="M5 7.2 12 3l7 4.2v9.6L12 21l-7-4.2z"/><path d="M8.5 10.2h7M8.5 13.2h5M12 7.5v9"/><circle cx="12" cy="12" r="2.2"/>',
+  more:'<circle cx="5" cy="12" r="1.1"/><circle cx="12" cy="12" r="1.1"/><circle cx="19" cy="12" r="1.1"/>',
+  main:'<path d="M3.5 10.5 12 3.5l8.5 7"/><path d="M5.5 9.5V21h13V9.5"/><path d="M9 21v-6h6v6"/>',
+  transactions:'<path d="M4 6.2h11M4 12h9M4 17.8h7"/><path d="m16 15 3 3-3 3"/><path d="M19 18H12"/>',
+  planning:'<path d="M12 3.5v17"/><path d="M17 7.3c0-1.6-2.2-2.8-5-2.8S7 5.7 7 7.3s2.2 2.8 5 2.8 5 1.2 5 2.8-2.2 2.8-5 2.8-5 1.2-5 2.8 2.2 2.8 5 2.8 5-1.2 5-2.8"/>',
+  analysis:'<path d="M4 19V9M10 19V6M16 19v-9M22 19H2"/><path d="m18 6 2 2 2-2"/>',
+  system:'<circle cx="12" cy="12" r="3"/><path d="m19 15 2 1-2 3-2-1a8 8 0 0 1-2 1v2h-4v-2a8 8 0 0 1-2-1l-2 1-2-3 2-1a8 8 0 0 1 0-3l-2-1 2-3 2 1a8 8 0 0 1 2-1V5h4v2a8 8 0 0 1 2 1l2-1 2 3-2 1a8 8 0 0 1 0 4z"/>',
+  settings:'<circle cx="12" cy="12" r="3"/><path d="M12 2.8v2.1M12 19.1v2.1M2.8 12h2.1M19.1 12h2.1M5.5 5.5 7 7M17 17l1.5 1.5M18.5 5.5 17 7M7 17l-1.5 1.5"/>',
+  wallet:'<path d="M4 6.2h13.5a2 2 0 0 1 2 2V19H5.5A1.5 1.5 0 0 1 4 17.5z"/><path d="M4 8V5.5A1.5 1.5 0 0 1 5.5 4H18"/><path d="M16 12h4v4h-4a2 2 0 0 1 0-4Z"/>',
+  coin:'<circle cx="12" cy="12" r="8.7"/><path d="M12 7v10M9.5 9.2c.6-.7 1.4-1.1 2.5-1.1 1.5 0 2.6.8 2.6 2s-1 1.8-2.6 1.8-2.6.7-2.6 1.9 1.1 2.1 2.7 2.1c1 0 1.9-.4 2.5-1.1"/>',
+  receiptMoney:'<path d="M5 3.5h14v17l-2.4-1.5-2.4 1.5-2.2-1.5-2.3 1.5-2.3-1.5L5 20.5z"/><path d="M8.5 8h7M8.5 11.5h5M8.5 15h3.5"/>',
+  piggy:'<path d="M5.5 10.5c0-3 2.7-5 6.5-5s6.5 2 6.5 5v4.5c0 2.1-1.8 3.5-4 3.5H9.5c-2.2 0-4-1.4-4-3.5z"/><path d="M18.5 10.5 21 9v4l-2.5.2M7 9 5 7.5M11 5.5V3.8h3v1.7M16 12h.1"/><circle cx="16" cy="10" r=".8"/>'
+ };
+ return '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">'+(p[name]||'')+'</svg>';
+}
+
 const LANG={
 ms:{nav:{dashboard:'Dashboard',add:'Tambah Belanja',expenses:'Senarai Belanja',income:'Pendapatan',saving:'Simpanan',budget:'Budget',monthly:'Ringkasan Bulanan',category:'Analisis Kategori',trend:'Trend Belanja',report:'Laporan',export:'Export Data',categories:'Kategori',settings:'Tetapan'},meta:{dashboard:['Dashboard','Ringkasan kewangan semasa'],add:['Tambah Belanja','Masukkan transaksi baru'],expenses:['Senarai Belanja','Semak dan urus semua transaksi'],income:['Pendapatan','Rekod sumber pendapatan'],saving:['Simpanan','Rekod dan pantau simpanan'],budget:['Budget','Tetapkan had belanja mengikut kategori'],monthly:['Ringkasan Bulanan','Lihat prestasi kewangan setiap bulan'],category:['Analisis Kategori','Kenal pasti ke mana wang dibelanjakan'],trend:['Trend Belanja','Bandingkan perbelanjaan dari bulan ke bulan'],report:['Laporan','Ringkasan kewangan untuk rujukan'],export:['Export Data','Simpan data transaksi ke fail CSV'],categories:['Kategori','Urus kategori belanja'],settings:['Tetapan','Tetapan asas sistem']}},
 en:{nav:{dashboard:'Dashboard',add:'Add Expense',expenses:'Expense List',income:'Income',saving:'Savings',budget:'Budget',monthly:'Monthly Summary',category:'Category Analysis',trend:'Spending Trend',report:'Reports',export:'Export Data',categories:'Categories',settings:'Settings'},meta:{dashboard:['Dashboard','Monitor your finances at a glance'],add:['Add Expense','Enter a new transaction'],expenses:['Expense List','Review and manage all transactions'],income:['Income','Record your income sources'],saving:['Savings','Record and track your savings'],budget:['Budget','Set spending limits by category'],monthly:['Monthly Summary','Review your monthly financial performance'],category:['Category Analysis','See where your money is going'],trend:['Spending Trend','Compare spending month to month'],report:['Reports','Financial summaries for reference'],export:['Export Data','Save transaction data as CSV'],categories:['Categories','Manage spending categories'],settings:['Settings','System preferences']}}
@@ -1695,6 +1730,26 @@ function monthly(){
  let months=[...new Set([...db.expenses.map(x=>x.date.slice(0,7)),...db.incomes.map(x=>x.date.slice(0,7)),month()])].sort().reverse();
  content.innerHTML=`<div class="panel"><div class="table-scroll"><table><thead><tr><th>Bulan</th><th class="amount">Pendapatan</th><th class="amount">Belanja</th><th class="amount">Baki</th><th class="amount">Saving %</th></tr></thead><tbody>${months.map(m=>{let t=totals(m),r=t.inc?Math.max(0,t.balance/t.inc*100):0;return `<tr><td>${m}</td><td class="amount">${db.settings.currency} ${money(t.inc)}</td><td class="amount">${db.settings.currency} ${money(t.exp)}</td><td class="amount">${db.settings.currency} ${money(t.balance)}</td><td class="amount">${r.toFixed(1)}%</td></tr>`}).join('')}</tbody></table></div></div>`
 }
+function categoryIcon(name){
+ const n=(name||'').toLowerCase();
+ if(n.includes('makanan')||n.includes('minuman')) return icon('wallet');
+ if(n.includes('rumah')||n.includes('keperluan')) return icon('main');
+ if(n.includes('bil')||n.includes('utiliti')) return icon('receiptMoney');
+ if(n.includes('pengangkutan')) return icon('wallet');
+ if(n.includes('kesihatan')) return icon('coin');
+ if(n.includes('pendidikan')) return icon('receiptMoney');
+ if(n.includes('anak')||n.includes('keluarga')) return icon('piggy');
+ if(n.includes('hutang')||n.includes('komitmen')) return icon('coin');
+ if(n.includes('insurans')||n.includes('takaful')) return icon('receiptMoney');
+ if(n.includes('belian')||n.includes('shopping')) return icon('wallet');
+ if(n.includes('hiburan')||n.includes('gaya hidup')) return icon('coin');
+ if(n.includes('kerja')||n.includes('perniagaan')) return icon('wallet');
+ if(n.includes('cukai')||n.includes('yuran')) return icon('receiptMoney');
+ if(n.includes('hadiah')||n.includes('sumbangan')) return icon('coin');
+ if(n.includes('simpanan')||n.includes('pelaburan')) return icon('piggy');
+ return icon('coin');
+}
+
 function category(){
  let t=totals(), data=db.categories.map(c=>[c,db.expenses.filter(x=>x.date.startsWith(month())&&x.category===c).reduce((a,x)=>a+ +x.amount,0)]).filter(x=>x[1]>0).sort((a,b)=>b[1]-a[1]);
  content.innerHTML=`<div class="panel"><h3>Analisis Bulan ${month()}</h3>${data.length?data.map((x,i)=>`<div class="bar"><div class="barhead"><span>${i+1}. ${esc(x[0])}</span><b>${db.settings.currency} ${money(x[1])} (${t.exp?(x[1]/t.exp*100).toFixed(1):0}%)</b></div><div class="track"><div class="fill" style="width:${t.exp?x[1]/t.exp*100:0}%"></div></div></div>`).join(''):'<div class="empty">Belum ada data.</div>'}</div>`
@@ -1718,7 +1773,7 @@ function downloadCSV(){
  let a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));a.download='sistem-kewangan.csv';a.click()
 }
 function categories(){
- content.innerHTML=`<div class="panel"><form onsubmit="newCat(event)" class="toolbar"><input id="newCategory" placeholder="Nama kategori baru" required><button class="btn primary">＋ Tambah</button></form><div class="table-scroll"><table><thead><tr><th>Kategori</th><th class="amount">Tindakan</th></tr></thead><tbody>${db.categories.map(c=>`<tr><td>${esc(c)}</td><td class="amount"><button class="btn danger action-icon" onclick="delCat('${encodeURIComponent(c)}')" title="Padam" aria-label="Padam"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13M10 11v5M14 11v5"/></svg></button></td></tr>`).join('')}</tbody></table></div></div>`
+ content.innerHTML=`<div class="panel"><form onsubmit="newCat(event)" class="toolbar"><input id="newCategory" placeholder="Nama kategori baru" required><button class="btn primary">＋ Tambah</button></form><div class="table-scroll"><table><thead><tr><th>Kategori</th><th class="amount">Tindakan</th></tr></thead><tbody>${db.categories.map(c=>`<tr><td><span class="category-icon-inline">${categoryIcon(c)}</span>${esc(c)}</td><td class="amount"><button class="btn danger action-icon" onclick="delCat('${encodeURIComponent(c)}')" title="Padam" aria-label="Padam"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13M10 11v5M14 11v5"/></svg></button></td></tr>`).join('')}</tbody></table></div></div>`
 }
 function newCat(e){e.preventDefault();let c=newCategory.value.trim();if(c&&!db.categories.includes(c)){db.categories.push(c);save()}categories()}
 function delCat(c){c=decodeURIComponent(c);if(db.categories.length<=1)return alert('Mesti ada sekurang-kurangnya satu kategori.');if(confirm('Padam kategori '+c+'?')){db.categories=db.categories.filter(x=>x!==c);delete db.budgets[c];save();categories()}}
