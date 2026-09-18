@@ -455,6 +455,12 @@ body{overflow-x:hidden}
   .dashboard-spending-module .spending-module-chart .chart-value{font-size:8px!important}
   .dashboard-spending-module .spending-module-chart .chart-label{font-size:8.5px!important}
 }
+/* v34 — collision-safe chart labels */
+.dashboard-spending-module .spending-module-chart svg{overflow:visible!important}
+.dashboard-spending-module .spending-module-chart .chart-value{dominant-baseline:auto!important;white-space:nowrap!important}
+@media(max-width:720px){
+  .dashboard-spending-module .spending-module-chart{overflow-x:auto!important;-webkit-overflow-scrolling:touch!important}
+}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
@@ -1687,14 +1693,14 @@ function dashboard(){
  let isDaily=dashboardChartMode==='daily';
  // Use a natural viewBox so SVG text keeps its normal proportions instead of stretching.
  // Desktop gets a wide 1000-unit canvas; daily mode expands only when there are many days.
- let W=isDaily?Math.max(900,chartLabels.length*32):1000,H=250,L=18,R=18,T=42,B=32;
+ let W=isDaily?Math.max(980,chartLabels.length*52):1000,H=250,L=18,R=18,T=42,B=32;
  let plotH=H-T-B, slot=(W-L-R)/chartLabels.length;
  let showIncome=!dashboardIncomeHidden;
  // Regular bar widths: not ultra-slim, with a small readable gap inside each month/day group.
- let groupGap=isDaily?Math.max(6,slot*.10):Math.max(8,slot*.10);
- let seriesGap=showIncome?Math.max(4,slot*.045):0;
+ let groupGap=isDaily?Math.max(8,slot*.12):Math.max(8,slot*.10);
+ let seriesGap=showIncome?Math.max(5,slot*.055):0;
  let seriesW=showIncome
-   ?Math.min(isDaily?14:22,Math.max(isDaily?10:16,(slot-groupGap-seriesGap)/2))
+   ?Math.min(isDaily?15:24,Math.max(isDaily?11:16,(slot-groupGap-seriesGap)/2))
    :Math.min(isDaily?16:24,Math.max(isDaily?12:18,slot*.30));
  let bars=chartLabels.map((label,i)=>{
    let center=L+i*slot+slot/2;
@@ -1716,8 +1722,9 @@ function dashboard(){
    };
    let expLabel=exp>0?compactMoney(exp):'';
    let incLabel=showIncome&&inc>0?compactMoney(inc):'';
-   let expValueY=exp>0?Math.max(T+10,expY-8):H-B+1;
-   let incValueY=inc>0?Math.max(T+10,incY-8):H-B+1;
+   let stagger=isDaily && i%2===1 ? 13 : 0;
+   let expValueY=exp>0?Math.max(T+10,expY-8-stagger):H-B+1;
+   let incValueY=inc>0?Math.max(T+10,incY-8-(isDaily && i%2===0?13:0)):H-B+1;
    let dayTitle=label+(isDaily?' '+m:' '+year);
    return `
      <g class="chart-group">
