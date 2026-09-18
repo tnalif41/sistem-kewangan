@@ -321,15 +321,47 @@ body{overflow-x:hidden}
 .spending-module-chart .chart-bar{fill:rgba(191,219,254,.72)!important;rx:2px!important}
 .spending-module-chart .chart-bar:hover{fill:rgba(219,234,254,.9)!important}
 
-/* v28 — regular, compact chart proportions */
-.spending-module-chart{width:100%!important;overflow:hidden!important;padding:3px 0 0!important}
-.spending-module-chart svg{width:100%!important;min-width:100%!important;height:172px!important;display:block!important}
-.spending-module-chart .chart-bar{fill:rgba(191,219,254,.72)!important}
-.spending-module-chart .chart-value{font-size:7px!important;line-height:1!important}
-.spending-module-chart .chart-label{font-size:7.5px!important}
+/* v30 — regular responsive chart: natural proportions, full width, no SVG text stretching */
+.spending-module-chart{
+  width:100%!important;
+  overflow-x:auto!important;
+  overflow-y:hidden!important;
+  padding:4px 0 2px!important;
+  background:transparent!important;
+  border-radius:10px!important;
+}
+.spending-module-chart svg{
+  display:block!important;
+  width:100%!important;
+  min-width:760px!important;
+  height:230px!important;
+  border-radius:10px!important;
+  preserveAspectRatio:xMidYMid meet;
+}
+.spending-module-chart .chart-bar{
+  fill:rgba(191,219,254,.82)!important;
+  stroke:none!important;
+}
+.spending-module-chart .chart-bar-income{fill:rgba(224,242,254,.66)!important}
+.spending-module-chart .chart-bar:hover{filter:brightness(1.05)!important}
+.spending-module-chart .chart-value{
+  font-size:9px!important;
+  line-height:1!important;
+  font-weight:650!important;
+  letter-spacing:-.1px!important;
+}
+.spending-module-chart .chart-label{
+  font-size:9px!important;
+  font-weight:550!important;
+}
+@media(min-width:721px){
+  .spending-module-chart svg{min-width:0!important;height:230px!important}
+}
 @media(max-width:720px){
-  .spending-module-chart{overflow-x:auto!important;overflow-y:hidden!important}
-  .spending-module-chart svg{min-width:100%!important;width:100%!important;height:174px!important}
+  .spending-module-chart{margin-left:0!important;margin-right:0!important}
+  .spending-module-chart svg{min-width:720px!important;width:720px!important;height:210px!important}
+  .spending-module-chart .chart-value{font-size:8px!important}
+  .spending-module-chart .chart-label{font-size:8.5px!important}
 }
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -1531,36 +1563,38 @@ function dashboard(){
  }
  let max=Math.max(...expenseVals,...incomeVals,1);
  let isDaily=dashboardChartMode==='daily';
- let W=isDaily?Math.max(760,chartLabels.length*24):760,H=190,L=10,R=10,T=28,B=28;
+ // Use a natural viewBox so SVG text keeps its normal proportions instead of stretching.
+ // Desktop gets a wide 1000-unit canvas; daily mode expands only when there are many days.
+ let W=isDaily?Math.max(868,chartLabels.length*28):1000,H=230,L=18,R=18,T=34,B=31;
  let plotH=H-T-B, slot=(W-L-R)/chartLabels.length;
- let groupGap=Math.min(5,Math.max(2,slot*.10));
  let showIncome=!dashboardIncomeHidden;
- let seriesGap=showIncome?Math.min(3,Math.max(1.5,slot*.045)):0;
+ // Regular bar widths: not ultra-slim, with a small readable gap inside each month/day group.
+ let groupGap=isDaily?Math.max(5,slot*.12):Math.max(7,slot*.12);
+ let seriesGap=showIncome?Math.max(3,slot*.055):0;
  let seriesW=showIncome
-   ?Math.min(7.5,Math.max(5.5,(slot-groupGap-seriesGap)/2))
-   :Math.min(8,Math.max(5.5,slot*.28));
+   ?Math.min(isDaily?10.5:18,Math.max(isDaily?8.5:13,(slot-groupGap-seriesGap)/2))
+   :Math.min(isDaily?12:20,Math.max(isDaily?10:16,slot*.30));
  let bars=chartLabels.map((label,i)=>{
    let center=L+i*slot+slot/2;
-   let vals=showIncome?[expenseVals[i],incomeVals[i]]:[expenseVals[i]];
-   let widths=showIncome?[seriesW,seriesW]:[seriesW];
    let total=showIncome?(seriesW*2+seriesGap):seriesW;
    let startX=center-total/2;
    let expenseX=startX;
    let incomeX=startX+seriesW+seriesGap;
    let exp=expenseVals[i], inc=incomeVals[i];
-   let expH=exp>0?Math.max(plotH*(exp/max),3):0;
-   let incH=showIncome&&inc>0?Math.max(plotH*(inc/max),3):0;
+   let expH=exp>0?Math.max(plotH*(exp/max),4):0;
+   let incH=showIncome&&inc>0?Math.max(plotH*(inc/max),4):0;
    let expY=H-B-expH, incY=H-B-incH;
-   let expLabel=exp>0?money(exp):'';
-   let incLabel=showIncome&&inc>0?money(inc):'';
-   let expValueY=exp>0?Math.max(T+8,expY-5):H-B+1;
-   let incValueY=inc>0?Math.max(T+8,incY-5):H-B+1;
+   // Keep currency + value directly above each bar with a consistent small gap.
+   let expLabel=exp>0?`${db.settings.currency} ${money(exp)}`:'';
+   let incLabel=showIncome&&inc>0?`${db.settings.currency} ${money(inc)}`:'';
+   let expValueY=exp>0?Math.max(T+9,expY-7):H-B+1;
+   let incValueY=inc>0?Math.max(T+9,incY-7):H-B+1;
    let dayTitle=label+(isDaily?' '+m:' '+year);
    return `
      <g class="chart-group">
-       ${exp>0?`<rect class="chart-bar chart-bar-expense" x="${expenseX.toFixed(1)}" y="${expY.toFixed(1)}" width="${seriesW.toFixed(1)}" height="${expH.toFixed(1)}" rx="3"><title>${dayTitle} · Belanja: ${db.settings.currency} ${money(exp)}</title></rect><text class="chart-value chart-value-expense" text-anchor="middle" x="${(expenseX+seriesW/2).toFixed(1)}" y="${expValueY.toFixed(1)}">${expLabel}</text>`:''}
-       ${showIncome&&inc>0?`<rect class="chart-bar chart-bar-income" x="${incomeX.toFixed(1)}" y="${incY.toFixed(1)}" width="${seriesW.toFixed(1)}" height="${incH.toFixed(1)}" rx="3"><title>${dayTitle} · Pendapatan: ${db.settings.currency} ${money(inc)}</title></rect><text class="chart-value chart-value-income" text-anchor="middle" x="${(incomeX+seriesW/2).toFixed(1)}" y="${incValueY.toFixed(1)}">${incLabel}</text>`:''}
-       <text class="chart-label" text-anchor="middle" x="${center.toFixed(1)}" y="${H-9}">${label}</text>
+       ${exp>0?`<rect class="chart-bar chart-bar-expense" x="${expenseX.toFixed(1)}" y="${expY.toFixed(1)}" width="${seriesW.toFixed(1)}" height="${expH.toFixed(1)}" rx="4"><title>${dayTitle} · Belanja: ${db.settings.currency} ${money(exp)}</title></rect><text class="chart-value chart-value-expense" text-anchor="middle" x="${(expenseX+seriesW/2).toFixed(1)}" y="${expValueY.toFixed(1)}">${expLabel}</text>`:''}
+       ${showIncome&&inc>0?`<rect class="chart-bar chart-bar-income" x="${incomeX.toFixed(1)}" y="${incY.toFixed(1)}" width="${seriesW.toFixed(1)}" height="${incH.toFixed(1)}" rx="4"><title>${dayTitle} · Pendapatan: ${db.settings.currency} ${money(inc)}</title></rect><text class="chart-value chart-value-income" text-anchor="middle" x="${(incomeX+seriesW/2).toFixed(1)}" y="${incValueY.toFixed(1)}">${incLabel}</text>`:''}
+       <text class="chart-label" text-anchor="middle" x="${center.toFixed(1)}" y="${H-10}">${label}</text>
      </g>`;
  }).join('');
  let budgetLabel=monthlyBudget?'Budget bulan ini':'Budget bulanan';
