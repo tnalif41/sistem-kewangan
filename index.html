@@ -321,44 +321,68 @@ body{overflow-x:hidden}
 .spending-module-chart .chart-bar{fill:rgba(191,219,254,.72)!important;rx:2px!important}
 .spending-module-chart .chart-bar:hover{fill:rgba(219,234,254,.9)!important}
 
-/* v30 — regular responsive chart: natural proportions, full width, no SVG text stretching */
+/* v32 — light chart surface + responsive natural proportions */
 .spending-module-chart{
   width:100%!important;
   overflow-x:auto!important;
   overflow-y:hidden!important;
-  padding:4px 0 2px!important;
-  background:transparent!important;
-  border-radius:10px!important;
+  padding:10px 12px 7px!important;
+  margin-top:8px!important;
+  background:linear-gradient(180deg,#ffffff 0%,#f8fbff 100%)!important;
+  border:1px solid #dbe7f5!important;
+  border-radius:12px!important;
+  box-sizing:border-box!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.9)!important;
 }
+.spending-module-chart::-webkit-scrollbar{height:4px!important}
+.spending-module-chart::-webkit-scrollbar-thumb{background:#cbdcf1!important;border-radius:99px!important}
 .spending-module-chart svg{
   display:block!important;
   width:100%!important;
   min-width:760px!important;
   height:230px!important;
-  border-radius:10px!important;
-  preserveAspectRatio:xMidYMid meet;
+  border-radius:8px!important;
 }
-.spending-module-chart .chart-bar{
-  fill:rgba(191,219,254,.82)!important;
-  stroke:none!important;
-}
-.spending-module-chart .chart-bar-income{fill:rgba(224,242,254,.66)!important}
-.spending-module-chart .chart-bar:hover{filter:brightness(1.05)!important}
-.spending-module-chart .chart-value{
-  font-size:9px!important;
-  line-height:1!important;
-  font-weight:650!important;
-  letter-spacing:-.1px!important;
-}
+.spending-module-chart .chart-grid{display:none!important;stroke:none!important}
 .spending-module-chart .chart-label{
+  fill:#64748b!important;
   font-size:9px!important;
   font-weight:550!important;
 }
-@media(min-width:721px){
-  .spending-module-chart svg{min-width:0!important;height:230px!important}
+.spending-module-chart .chart-value{
+  fill:#174a86!important;
+  font-size:8.5px!important;
+  line-height:1!important;
+  font-weight:700!important;
+  letter-spacing:-.1px!important;
+}
+.spending-module-chart .chart-value-expense{fill:#2563eb!important}
+.spending-module-chart .chart-value-income{fill:#60a5fa!important}
+.spending-module-chart .chart-bar{
+  fill:linear-gradient(180deg,#4f9cf7,#2563eb)!important;
+  stroke:none!important;
+  transition:opacity .15s ease,filter .15s ease!important;
+}
+/* SVG rects cannot use CSS linear-gradient reliably; use a clean solid theme tone. */
+.spending-module-chart .chart-bar-expense{fill:#3b82f6!important}
+.spending-module-chart .chart-bar-income{fill:#9dccf7!important}
+.spending-module-chart .chart-bar:hover{filter:brightness(1.04)!important}
+.spending-module-chart .chart-group text{paint-order:stroke;stroke:rgba(255,255,255,.92);stroke-width:1.5px;stroke-linejoin:round}
+
+/* Category analysis + latest transactions side-by-side on desktop */
+.dashboard-chart-grid{
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;
+  gap:14px!important;
+  align-items:stretch!important;
+}
+.dashboard-chart-grid>.panel{min-width:0!important;margin-top:0!important}
+.dashboard-chart-grid>.panel h3{margin-top:0!important}
+@media(max-width:900px){
+  .dashboard-chart-grid{grid-template-columns:1fr!important;gap:12px!important}
 }
 @media(max-width:720px){
-  .spending-module-chart{margin-left:0!important;margin-right:0!important}
+  .spending-module-chart{padding:8px 8px 6px!important;margin-top:7px!important;border-radius:11px!important}
   .spending-module-chart svg{min-width:720px!important;width:720px!important;height:210px!important}
   .spending-module-chart .chart-value{font-size:8px!important}
   .spending-module-chart .chart-label{font-size:8.5px!important}
@@ -1675,8 +1699,8 @@ function dashboard(){
 
  <div class="grid dashboard-chart-grid">
    <div class="panel"><h3>Belanja Mengikut Kategori</h3>${cats.length?cats.slice(0,8).map(c=>{let pct=t.exp?c[1]/t.exp*100:0;return `<div class="bar"><div class="barhead"><span>${esc(c[0])}</span><b>${db.settings.currency} ${money(c[1])}</b></div><div class="track"><div class="fill" style="width:${pct}%"></div></div></div>`}).join(''):'<div class="empty">Belum ada belanja bulan ini.</div>'}</div>
- </div>
- <div class="panel" style="margin-top:14px"><h3>Transaksi Terkini</h3>${recent.map(x=>`<div class="barhead" style="padding:9px 0;border-bottom:1px solid #eee"><span>${esc(x.item)}<small style="display:block;color:#94a3b8">${esc(x.category)} · ${x.date}</small></span><b>${db.settings.currency} ${money(x.amount)}</b></div>`).join('')||'<div class="empty">Tiada transaksi.</div>'}</div>`;
+   <div class="panel"><h3>Transaksi Terkini</h3>${recent.map(x=>`<div class="barhead" style="padding:9px 0;border-bottom:1px solid #eee"><span>${esc(x.item)}<small style="display:block;color:#94a3b8">${esc(x.category)} · ${x.date}</small></span><b>${db.settings.currency} ${money(x.amount)}</b></div>`).join('')||'<div class="empty">Tiada transaksi.</div>'}</div>
+ </div>`;
 }
 function saveDashboardBudget(){
  if(!db.monthlyBudgets)db.monthlyBudgets={};
