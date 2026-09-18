@@ -312,6 +312,17 @@ body{overflow-x:hidden}
 .spending-module-chart .chart-value{font-size:7px!important;fill:rgba(255,255,255,.88)!important;font-weight:600!important}
 .spending-module-chart .chart-bar{fill:rgba(191,219,254,.72)!important;rx:2px!important}
 .spending-module-chart .chart-bar:hover{fill:rgba(219,234,254,.9)!important}
+
+/* v28 — regular, compact chart proportions */
+.spending-module-chart{width:100%!important;overflow:hidden!important;padding:3px 0 0!important}
+.spending-module-chart svg{width:100%!important;min-width:100%!important;height:172px!important;display:block!important}
+.spending-module-chart .chart-bar{fill:rgba(191,219,254,.72)!important}
+.spending-module-chart .chart-value{font-size:7px!important;line-height:1!important}
+.spending-module-chart .chart-label{font-size:7.5px!important}
+@media(max-width:720px){
+  .spending-module-chart{overflow-x:auto!important;overflow-y:hidden!important}
+  .spending-module-chart svg{min-width:100%!important;width:100%!important;height:174px!important}
+}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
@@ -1508,15 +1519,15 @@ function dashboard(){
    chartVals=months.map(x=>totals(x).exp);
    chartSub=year+' · 12 bulan';
  }
- let max=Math.max(...chartVals,1), W=dashboardChartMode==='daily'?Math.max(434,chartVals.length*12.5):Math.max(360,chartVals.length*24),H=194,L=8,R=8,T=34,B=27;
+ let max=Math.max(...chartVals,1), W=dashboardChartMode==='daily'?Math.max(620,chartVals.length*9.2):660,H=172,L=6,R=6,T=30,B=25;
  let grid='';
- let slot=(W-L-R)/chartVals.length, barW=dashboardChartMode==='daily'?Math.min(3.2,slot*.28):Math.min(5.5,slot*.22);
+ let slot=(W-L-R)/chartVals.length, barW=dashboardChartMode==='daily'?Math.min(4.2,slot*.34):Math.min(6.5,slot*.30);
  let bars=chartVals.map((v,i)=>{
    let x=L+i*slot+(slot-barW)/2;
    let bh=v>0?Math.max((H-T-B)*(v/max),3):3;
    let y=H-B-bh;
    let label=chartLabels[i]+' '+(dashboardChartMode==='daily'?m:year);
-   let valueY=Math.max(T+7,y-5);
+   let valueY=Math.max(T+7,y-4);
    let valText=v>0?money(v):'';
    return `<rect class="chart-bar" x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${barW.toFixed(1)}" height="${bh.toFixed(1)}" rx="2"><title>${label}: ${db.settings.currency} ${money(v)}</title></rect><text class="chart-value" text-anchor="middle" x="${(x+barW/2).toFixed(1)}" y="${valueY.toFixed(1)}">${valText}</text><text class="chart-label" text-anchor="middle" x="${(x+barW/2).toFixed(1)}" y="${H-9}">${chartLabels[i]}</text>`;
  }).join('');
