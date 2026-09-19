@@ -7,7 +7,35 @@
 <meta name="description" content="Sistem Kewangan peribadi dengan Google Login dan Google Drive sync">
 <style>
 :root{--primary:#1677ff;--primary-dark:#0f5fd1;--primary-soft:#eaf3ff;--bg:#f5f5f5;--surface:#fff;--text:#1f2937;--muted:#6b7280;--line:#e5e7eb;--danger:#ef4444;--success:#16a34a;--shadow:0 1px 3px rgba(15,23,42,.06),0 6px 20px rgba(15,23,42,.04)}
-*{box-sizing:border-box}body{margin:0;font-family:Arial,"Helvetica Neue",sans-serif;background:var(--bg);color:var(--text);font-size:14px}button,input,select,textarea{font:inherit}.app{display:flex;min-height:100vh}
+*{box-sizing:border-box}body{margin:0;font-family:Arial,"Helvetica Neue",sans-serif;background:var(--bg);color:var(--text);font-size:14px;transition:background-color .18s ease,color .18s ease}
+/* v38 theme system: Light / Dark / System */
+body.theme-dark{--bg:#0f172a;--surface:#111827;--text:#e5e7eb;--muted:#94a3b8;--line:#263244;--primary-soft:#13294b;--shadow:0 1px 3px rgba(0,0,0,.25),0 8px 24px rgba(0,0,0,.18);background:var(--bg);color:var(--text)}
+@media (prefers-color-scheme:dark){body.theme-system{--bg:#0f172a;--surface:#111827;--text:#e5e7eb;--muted:#94a3b8;--line:#263244;--primary-soft:#13294b;--shadow:0 1px 3px rgba(0,0,0,.25),0 8px 24px rgba(0,0,0,.18);background:var(--bg);color:var(--text)}}
+body.theme-dark .side,body.theme-dark .panel,body.theme-dark .card,body.theme-dark .mobile-topbar,body.theme-dark .secondary,body.theme-dark .field input,body.theme-dark .field select,body.theme-dark .field textarea,body.theme-dark .toolbar input,body.theme-dark .toolbar select,body.theme-dark .month-select,body.theme-dark th,body.theme-dark .notification-dropdown,body.theme-dark .user-dropdown,body.theme-dark .modal-card{background:var(--surface)!important;color:var(--text)!important;border-color:var(--line)!important}
+body.theme-dark .nav button,body.theme-dark .nav-group-toggle{color:#cbd5e1!important}
+body.theme-dark .nav button:hover{background:#172554!important;color:#93c5fd!important}
+body.theme-dark .nav button.active{background:#13294b!important;color:#60a5fa!important}
+body.theme-dark .nav-submenu:before{background:#334155}
+body.theme-dark .brand{border-color:var(--line)}
+body.theme-dark table th{background:#172033!important;color:#94a3b8}
+body.theme-dark table td{border-color:#253044;color:#dbe3ee}
+body.theme-dark .label,body.theme-dark .top p,body.theme-dark .setting-help,body.theme-dark .budget-meta,body.theme-dark .budget-title{color:#94a3b8!important}
+body.theme-dark .field label{color:#cbd5e1}
+body.theme-dark .field input,body.theme-dark .field select,body.theme-dark .field textarea,body.theme-dark .toolbar input,body.theme-dark .toolbar select,body.theme-dark .month-select{background:#0f172a!important;color:#e5e7eb!important}
+body.theme-dark .chart-grid{stroke:#253044}
+body.theme-dark .chart-label{fill:#94a3b8}
+body.theme-dark .chart-value{fill:#cbd5e1}
+body.theme-dark .chart-wrap .chart-surface{fill:#111827!important;stroke:#334155!important}
+body.theme-dark .mini{background:#172033;border-color:#263244;color:#94a3b8}
+body.theme-dark .mini strong{color:#e5e7eb}
+body.theme-dark .notice{background:#13294b;color:#93c5fd;border-color:#23446f}
+body.theme-dark .empty{color:#64748b}
+body.theme-dark .sync-badge,body.theme-dark .account-btn,body.theme-dark .notification-btn{background:#111827!important;border-color:#263244!important;color:#e5e7eb!important}
+body.theme-dark .budget-hero{background:#111827;border-color:#263244}
+body.theme-dark .budget-progress{background:#263244}
+body.theme-dark .app-footer{color:#64748b}
+@media (prefers-color-scheme:dark){body.theme-system .side,body.theme-system .panel,body.theme-system .card,body.theme-system .mobile-topbar,body.theme-system .secondary,body.theme-system .field input,body.theme-system .field select,body.theme-system .field textarea,body.theme-system .toolbar input,body.theme-system .toolbar select,body.theme-system .month-select,body.theme-system th,body.theme-system .notification-dropdown,body.theme-system .user-dropdown,body.theme-system .modal-card{background:var(--surface)!important;color:var(--text)!important;border-color:var(--line)!important}body.theme-system .nav button,body.theme-system .nav-group-toggle{color:#cbd5e1!important}body.theme-system .nav button:hover{background:#172554!important;color:#93c5fd!important}body.theme-system .nav button.active{background:#13294b!important;color:#60a5fa!important}body.theme-system .nav-submenu:before{background:#334155}body.theme-system .brand{border-color:var(--line)}body.theme-system table th{background:#172033!important;color:#94a3b8}body.theme-system table td{border-color:#253044;color:#dbe3ee}body.theme-system .label,body.theme-system .top p,body.theme-system .setting-help,body.theme-system .budget-meta,body.theme-system .budget-title{color:#94a3b8!important}body.theme-system .field label{color:#cbd5e1}body.theme-system .field input,body.theme-system .field select,body.theme-system .field textarea,body.theme-system .toolbar input,body.theme-system .toolbar select,body.theme-system .month-select{background:#0f172a!important;color:#e5e7eb!important}body.theme-system .chart-grid{stroke:#253044}body.theme-system .chart-label{fill:#94a3b8}body.theme-system .chart-value{fill:#cbd5e1}body.theme-system .chart-wrap .chart-surface{fill:#111827!important;stroke:#334155!important}body.theme-system .mini{background:#172033;border-color:#263244;color:#94a3b8}body.theme-system .mini strong{color:#e5e7eb}body.theme-system .notice{background:#13294b;color:#93c5fd;border-color:#23446f}body.theme-system .empty{color:#64748b}body.theme-system .sync-badge,body.theme-system .account-btn,body.theme-system .notification-btn{background:#111827!important;border-color:#263244!important;color:#e5e7eb!important}body.theme-system .budget-hero{background:#111827;border-color:#263244}body.theme-system .budget-progress{background:#263244}body.theme-system .app-footer{color:#64748b}}
+button,input,select,textarea{font:inherit}.app{display:flex;min-height:100vh}
 .side{width:236px;background:#fff;border-right:1px solid var(--line);position:fixed;inset:0 auto 0 0;overflow:auto;z-index:10}.brand{height:72px;padding:19px 20px;color:var(--primary);font-size:17px;font-weight:700;border-bottom:1px solid var(--line)}.brand small{display:block;color:#9ca3af;font-size:11px;font-weight:400;margin-top:3px}
 .nav{padding:12px 10px}.nav button{display:flex;align-items:center;gap:12px;width:100%;border:0;background:transparent;color:#4b5563;text-align:left;padding:10px 12px;border-radius:6px;margin:2px 0;font-size:14px;line-height:20px;cursor:pointer}.nav button:hover{background:#f3f7ff;color:var(--primary)}.nav button.active{background:var(--primary-soft);color:var(--primary);font-weight:600}.nav .ico{width:18px;height:18px;display:inline-flex;align-items:center;justify-content:center;flex:0 0 18px}.nav svg{width:17px;height:17px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
 .nav-group{margin-top:9px}.nav-group:first-child{margin-top:0}.nav-group-toggle{display:flex!important;align-items:center!important;justify-content:space-between!important;width:100%!important;padding:8px 12px 7px!important;margin:0!important;border:0!important;background:transparent!important;color:#8b96a8!important;font-size:10px!important;font-weight:700!important;letter-spacing:.08em!important;line-height:16px!important;cursor:pointer!important}.nav-group-toggle:hover{color:#64748b!important;background:transparent!important}.nav-group-toggle .group-label{display:flex;align-items:center;gap:8px;min-width:0}.nav-group-toggle .group-icon{width:18px;height:18px;display:inline-flex;align-items:center;justify-content:center;flex:0 0 16px}.nav-group-toggle .group-icon svg{width:17px!important;height:17px!important;display:block}.nav-chevron{width:14px!important;height:14px!important;transition:transform .18s ease;flex:0 0 14px}.nav-group.expanded .nav-chevron{transform:rotate(180deg)}.nav-submenu{display:none;padding:2px 0 4px 18px;position:relative}.nav-group.expanded .nav-submenu{display:block}.nav-submenu:before{content:'';position:absolute;left:17px;top:2px;bottom:4px;width:1px;background:#e7edf5}.nav-submenu .nav-item{padding-left:14px!important;margin-left:1px!important;width:calc(100% - 1px)!important}.nav-item{margin:2px 0!important;padding:9px 12px!important}.nav-item .nav-text{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.nav-main{margin-bottom:3px}.nav-main .nav-item{margin-top:0!important}
@@ -833,33 +861,62 @@ body{overflow-x:hidden}
 .action-icon{width:34px!important;height:34px!important;padding:0!important;display:inline-flex!important;align-items:center;justify-content:center;border-radius:8px!important}.action-icon svg{width:16px!important;height:16px!important}
 </style>
 
-<style id="sidebar-tablet-polish-v36">
-/* Compact desktop / tablet sidebar: icon rail, no clipped labels or awkward submenu lines. */
+<style id="sidebar-tablet-polish-v37">
+/* Tablet / compact desktop: icon rail with click-to-expand dropdown navigation. */
 @media (max-width:1050px) and (min-width:721px){
-  .side{width:76px!important;overflow-x:hidden;overflow-y:auto;background:#fff;border-right:1px solid #e5edf7}
-  .brand{height:72px!important;padding:18px 0!important;justify-content:center!important;border-bottom:1px solid #edf2f7}
-  .brand-logo{width:38px!important;height:38px!important;border-radius:11px!important}
+  .side{width:76px!important;overflow-x:hidden;overflow-y:auto;background:#fff;border-right:1px solid #e5edf7;transition:width .2s ease}
+  .side.tablet-expanded{width:242px!important;box-shadow:8px 0 28px rgba(15,23,42,.08)}
+  .brand{height:72px!important;padding:18px 10px!important;display:flex!important;align-items:center!important;justify-content:center!important;border-bottom:1px solid #edf2f7;position:relative}
+  .brand-logo{width:38px!important;height:38px!important;border-radius:11px!important;flex:0 0 38px}
   .brand-copy{display:none!important}
+  .side.tablet-expanded .brand{justify-content:flex-start!important;padding:16px 14px!important}
+  .side.tablet-expanded .brand-copy{display:block!important;margin-left:10px!important;font-size:13px!important;line-height:16px!important;white-space:nowrap}
+  .side.tablet-expanded .brand-copy small{display:block!important;font-size:9px!important;margin-top:2px!important}
+  .tablet-sidebar-toggle{display:flex;position:absolute;right:9px;top:22px;width:28px;height:28px;border:1px solid #dce6f2;background:#fff;border-radius:8px;align-items:center;justify-content:center;color:#607089;cursor:pointer}
+  .tablet-sidebar-toggle svg{width:15px;height:15px;transition:transform .2s ease}
+  .side:not(.tablet-expanded) .tablet-sidebar-toggle{display:none}
   .nav{padding:12px 8px 16px!important}
   .nav-group{margin-top:12px!important}
   .nav-group:first-child{margin-top:0!important}
-  .nav-group-toggle{height:34px!important;padding:5px 0!important;justify-content:center!important;color:#9aa7b8!important;font-size:0!important;letter-spacing:0!important}
+  .nav-group-toggle{height:38px!important;padding:5px 0!important;justify-content:center!important;color:#8795a8!important;font-size:0!important;letter-spacing:0!important;border-radius:9px!important}
   .nav-group-toggle .group-label{justify-content:center!important;width:100%!important}
-  .nav-group-toggle .group-icon{width:30px!important;height:30px!important;flex:0 0 30px!important;border-radius:9px!important;color:#607089!important}
+  .nav-group-toggle .group-icon{width:38px!important;height:38px!important;flex:0 0 38px!important;border-radius:10px!important;color:#607089!important;display:inline-flex!important;align-items:center!important;justify-content:center!important}
   .nav-group-toggle .group-icon svg{width:18px!important;height:18px!important;stroke-width:1.8!important}
+  .nav-group-toggle:hover .group-icon{background:#f6f9fd;color:var(--primary)}
+  .nav-group.expanded .nav-group-toggle .group-icon{background:var(--primary-soft);color:var(--primary)}
   .nav-chevron{display:none!important}
-  .nav-submenu{display:block!important;padding:3px 0 4px!important}
+  .nav-submenu{display:none!important;padding:3px 0 4px!important;position:relative}
+  .nav-group.tablet-open .nav-submenu{display:block!important}
   .nav-submenu:before{display:none!important}
-  .nav-submenu .nav-item,.nav-main .nav-item{width:100%!important;height:42px!important;margin:2px 0!important;padding:0!important;border:0!important;border-radius:10px!important;justify-content:center!important;gap:0!important;background:transparent!important}
+  .nav-submenu .nav-item,.nav-main .nav-item{width:100%!important;height:42px!important;margin:2px 0!important;padding:0 4px!important;border:0!important;border-radius:10px!important;justify-content:center!important;gap:0!important;background:transparent!important}
   .nav-item .ico{width:38px!important;height:38px!important;flex:0 0 38px!important;border-radius:10px!important;color:#607089!important;display:inline-flex!important}
   .nav-item .ico svg{width:18px!important;height:18px!important;stroke-width:1.8!important}
   .nav-item .nav-text{display:none!important}
   .nav-submenu .nav-item.active,.nav-main .nav-item.active{background:var(--primary-soft)!important;color:var(--primary)!important;box-shadow:0 2px 8px rgba(22,119,255,.08)}
   .nav-item:hover{background:#f6f9fd!important;color:var(--primary)!important}
-  .nav-group-toggle:hover{background:transparent!important}
-  .main{margin-left:76px!important;width:calc(100% - 76px)!important}
+
+  /* Expanded tablet state */
+  .side.tablet-expanded .nav{padding:12px 10px 16px!important}
+  .side.tablet-expanded .nav-group-toggle{justify-content:space-between!important;padding:7px 10px!important;font-size:11px!important;letter-spacing:.06em!important;color:#7b8798!important}
+  .side.tablet-expanded .nav-group-toggle .group-label{justify-content:flex-start!important;width:auto!important;gap:9px!important}
+  .side.tablet-expanded .nav-group-toggle .group-icon{width:24px!important;height:24px!important;flex:0 0 24px!important;border-radius:7px!important}
+  .side.tablet-expanded .nav-group-toggle .group-icon svg{width:16px!important;height:16px!important}
+  .side.tablet-expanded .nav-chevron{display:block!important;width:14px!important;height:14px!important;flex:0 0 14px!important}
+  .side.tablet-expanded .nav-submenu{padding:2px 0 5px 14px!important}
+  .side.tablet-expanded .nav-group.tablet-open .nav-submenu{display:block!important}
+  .side.tablet-expanded .nav-submenu:before{display:block!important;left:11px!important;top:2px!important;bottom:5px!important;background:#e6edf6!important}
+  .side.tablet-expanded .nav-submenu .nav-item,.side.tablet-expanded .nav-main .nav-item{height:38px!important;justify-content:flex-start!important;gap:10px!important;padding:0 10px!important;width:100%!important}
+  .side.tablet-expanded .nav-item .ico{width:22px!important;height:22px!important;flex:0 0 22px!important;border-radius:6px!important}
+  .side.tablet-expanded .nav-item .ico svg{width:16px!important;height:16px!important}
+  .side.tablet-expanded .nav-item .nav-text{display:block!important;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:12px!important}
+  .side.tablet-expanded .nav-group-toggle:hover{background:#f7faff!important}
+  .side.tablet-expanded .nav-main .nav-item{justify-content:flex-start!important}
+
+  .main{margin-left:76px!important;width:calc(100% - 76px)!important;transition:margin-left .2s ease,width .2s ease}
+  body.tablet-sidebar-expanded .main{margin-left:242px!important;width:calc(100% - 242px)!important}
 }
-</style>
+@media (min-width:1051px){.tablet-sidebar-toggle{display:none!important}}
+
 </head>
 <body>
 <div id="authScreen" class="auth-screen">
@@ -923,7 +980,7 @@ body{overflow-x:hidden}
 
 <div id="appShell" class="app" style="display:none">
 <aside class="side" id="side">
-  <div class="brand"><span class="brand-logo" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="M3 9h18"/><path d="M16 13h2"/><path d="M7 3v2M17 3v2"/></svg></span><span class="brand-copy">SISTEM KEWANGAN<small>Personal Finance Manager</small></span></div>
+  <div class="brand"><span class="brand-logo" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="M3 9h18"/><path d="M16 13h2"/><path d="M7 3v2M17 3v2"/></svg></span><span class="brand-copy">SISTEM KEWANGAN<small>Personal Finance Manager</small></span><button class="tablet-sidebar-toggle" type="button" onclick="toggleTabletSidebar()" aria-label="Kembangkan menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg></button></div>
   <div class="nav" id="nav"></div>
 </aside>
 <div class="overlay" id="overlay" onclick="toggleMenu(false)"></div>
@@ -1045,7 +1102,7 @@ function resetDbForUser(){
   db=JSON.parse(localStorage.getItem(KEY)||'null')||{
     expenses:[],incomes:[],savings:[],budgets:{},
     categories:['Makanan & Minuman','Rumah & Keperluan','Bil & Utiliti','Pengangkutan','Kesihatan','Pendidikan','Anak & Keluarga','Hutang & Komitmen','Insurans & Takaful','Belian & Shopping','Hiburan & Gaya Hidup','Kerja & Perniagaan','Cukai & Yuran','Hadiah & Sumbangan','Simpanan & Pelaburan','Lain-lain'],
-    settings:{currency:'RM',name:'Sistem Kewangan',description:'Personal Finance Manager',language:'ms'},monthlyBudgets:{}
+    settings:{currency:'RM',name:'Sistem Kewangan',description:'Personal Finance Manager',language:'ms',theme:'system'},monthlyBudgets:{}
   };
   db.expenses ||= []; db.incomes ||= []; db.savings ||= []; db.budgets ||= {};
   db.categories ||= ['Makanan & Minuman','Rumah & Keperluan','Bil & Utiliti','Pengangkutan','Kesihatan','Pendidikan','Anak & Keluarga','Hutang & Komitmen','Insurans & Takaful','Belian & Shopping','Hiburan & Gaya Hidup','Kerja & Perniagaan','Cukai & Yuran','Hadiah & Sumbangan','Simpanan & Pelaburan','Lain-lain'];
@@ -1059,8 +1116,8 @@ function save(){
   queueSupabaseSave();
 }
 
-function defaultDb(){return {expenses:[],incomes:[],savings:[],budgets:{},categories:['Makanan & Minuman','Rumah & Keperluan','Bil & Utiliti','Pengangkutan','Kesihatan','Pendidikan','Anak & Keluarga','Hutang & Komitmen','Insurans & Takaful','Belian & Shopping','Hiburan & Gaya Hidup','Kerja & Perniagaan','Cukai & Yuran','Hadiah & Sumbangan','Simpanan & Pelaburan','Lain-lain'],settings:{currency:'RM',name:'Sistem Kewangan',description:'Personal Finance Manager',language:'ms'},monthlyBudgets:{}}}
-function normalizeDb(data){const d=data&&typeof data==='object'?data:{}; const base=defaultDb(); d.expenses ||= [];d.incomes ||= [];d.savings ||= [];d.budgets ||= {};d.categories ||= base.categories; if(Array.isArray(d.categories) && d.categories.length===8 && ['Makanan','Pengangkutan','Bil & Utiliti','Rumah','Kesihatan','Hiburan','Belian','Lain-lain'].every((v,i)=>d.categories[i]===v)) d.categories=[...base.categories];d.settings ||= base.settings;d.settings.currency ||= 'RM';d.settings.name ||= 'Sistem Kewangan';d.settings.description ||= 'Personal Finance Manager';d.settings.language ||= 'ms';d.monthlyBudgets ||= {};return d}
+function defaultDb(){return {expenses:[],incomes:[],savings:[],budgets:{},categories:['Makanan & Minuman','Rumah & Keperluan','Bil & Utiliti','Pengangkutan','Kesihatan','Pendidikan','Anak & Keluarga','Hutang & Komitmen','Insurans & Takaful','Belian & Shopping','Hiburan & Gaya Hidup','Kerja & Perniagaan','Cukai & Yuran','Hadiah & Sumbangan','Simpanan & Pelaburan','Lain-lain'],settings:{currency:'RM',name:'Sistem Kewangan',description:'Personal Finance Manager',language:'ms',theme:'system'},monthlyBudgets:{}}}
+function normalizeDb(data){const d=data&&typeof data==='object'?data:{}; const base=defaultDb(); d.expenses ||= [];d.incomes ||= [];d.savings ||= [];d.budgets ||= {};d.categories ||= base.categories; if(Array.isArray(d.categories) && d.categories.length===8 && ['Makanan','Pengangkutan','Bil & Utiliti','Rumah','Kesihatan','Hiburan','Belian','Lain-lain'].every((v,i)=>d.categories[i]===v)) d.categories=[...base.categories];d.settings ||= base.settings;d.settings.currency ||= 'RM';d.settings.name ||= 'Sistem Kewangan';d.settings.description ||= 'Personal Finance Manager';d.settings.language ||= 'ms';d.settings.theme ||= 'system';d.monthlyBudgets ||= {};return d}
 
 async function ensurePersonalWorkspace(){
   const {data,error}=await supabaseClient.rpc('create_personal_workspace');
@@ -1457,7 +1514,7 @@ async function loadFromDrive(){
       db.expenses ||= [];db.incomes ||= [];db.savings ||= [];db.budgets ||= {};
       db.categories ||= ['Makanan & Minuman','Rumah & Keperluan','Bil & Utiliti','Pengangkutan','Kesihatan','Pendidikan','Anak & Keluarga','Hutang & Komitmen','Insurans & Takaful','Belian & Shopping','Hiburan & Gaya Hidup','Kerja & Perniagaan','Cukai & Yuran','Hadiah & Sumbangan','Simpanan & Pelaburan','Lain-lain'];
       db.settings ||= {currency:'RM',name:'Sistem Kewangan',description:'Personal Finance Manager',language:'ms'};
-      db.settings.description ||= 'Personal Finance Manager';db.settings.language ||= 'ms';db.monthlyBudgets ||= {};
+      db.settings.description ||= 'Personal Finance Manager';db.settings.language ||= 'ms';db.settings.theme ||= 'system';db.monthlyBudgets ||= {};
       localStorage.setItem(KEY,JSON.stringify(db));
       localDataDirty=false;
     }
@@ -1492,7 +1549,7 @@ async function checkDriveForChanges(force=false){
       db.expenses ||= [];db.incomes ||= [];db.savings ||= [];db.budgets ||= {};
       db.categories ||= ['Makanan & Minuman','Rumah & Keperluan','Bil & Utiliti','Pengangkutan','Kesihatan','Pendidikan','Anak & Keluarga','Hutang & Komitmen','Insurans & Takaful','Belian & Shopping','Hiburan & Gaya Hidup','Kerja & Perniagaan','Cukai & Yuran','Hadiah & Sumbangan','Simpanan & Pelaburan','Lain-lain'];
       db.settings ||= {currency:'RM',name:'Sistem Kewangan',description:'Personal Finance Manager',language:'ms'};
-      db.settings.description ||= 'Personal Finance Manager';db.settings.language ||= 'ms';db.monthlyBudgets ||= {};
+      db.settings.description ||= 'Personal Finance Manager';db.settings.language ||= 'ms';db.settings.theme ||= 'system';db.monthlyBudgets ||= {};
       localStorage.setItem(KEY,JSON.stringify(db));
       localDataDirty=false;
       setSync('','Disimpan di Google Drive');
@@ -1590,13 +1647,16 @@ let KEY='sistemKewanganFreshV1';
 let db=JSON.parse(localStorage.getItem(KEY)||'null')||{
  expenses:[], incomes:[], savings:[], budgets:{},
  categories:['Makanan & Minuman','Rumah & Keperluan','Bil & Utiliti','Pengangkutan','Kesihatan','Pendidikan','Anak & Keluarga','Hutang & Komitmen','Insurans & Takaful','Belian & Shopping','Hiburan & Gaya Hidup','Kerja & Perniagaan','Cukai & Yuran','Hadiah & Sumbangan','Simpanan & Pelaburan','Lain-lain'],
- settings:{currency:'RM',name:'Sistem Kewangan',description:'Personal Finance Manager',language:'ms'},monthlyBudgets:{}
+ settings:{currency:'RM',name:'Sistem Kewangan',description:'Personal Finance Manager',language:'ms',theme:'system'},monthlyBudgets:{}
 };
 db.expenses ||= []; db.incomes ||= []; db.savings ||= []; db.budgets ||= {};
 db.categories ||= ['Makanan & Minuman','Rumah & Keperluan','Bil & Utiliti','Pengangkutan','Kesihatan','Pendidikan','Anak & Keluarga','Hutang & Komitmen','Insurans & Takaful','Belian & Shopping','Hiburan & Gaya Hidup','Kerja & Perniagaan','Cukai & Yuran','Hadiah & Sumbangan','Simpanan & Pelaburan','Lain-lain'];
 db.settings ||= {currency:'RM',name:'Sistem Kewangan',description:'Personal Finance Manager',language:'ms'};
 db.settings.description ||= 'Personal Finance Manager';
 db.settings.language ||= 'ms';
+db.settings.theme ||= 'system';
+
+initTheme();
 
 function money(n){return new Intl.NumberFormat('ms-MY',{minimumFractionDigits:2,maximumFractionDigits:2}).format(Number(n)||0)}
 function esc(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
@@ -1658,7 +1718,7 @@ function nav(){
    const isMain=g.key==='main';
    const items=g.items.map(x=>`<button id="n-${x[0]}" class="nav-item ${x[0]===current?'active':''}" onclick="go('${x[0]}')" title="${L[x[0]]}"><span class="ico">${icon(x[1])}</span><span class="nav-text">${L[x[0]]}</span></button>`).join('');
    if(isMain) return `<div class="nav-group nav-main">${items}</div>`;
-   return `<div class="nav-group expanded" data-group="${g.key}"><button class="nav-group-toggle" type="button" onclick="toggleNavGroup(this.parentElement)"><span class="group-label"><span class="group-icon">${icon(g.key)}</span><span>${g.label}</span></span><svg class="nav-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button><div class="nav-submenu">${items}</div></div>`;
+   return `<div class="nav-group expanded" data-group="${g.key}"><button class="nav-group-toggle" type="button" onclick="toggleNavGroup(this.parentElement)" title="${g.label}"><span class="group-label"><span class="group-icon">${icon(g.key)}</span><span>${g.label}</span></span><svg class="nav-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button><div class="nav-submenu">${items}</div></div>`;
  }).join('');
  document.getElementById('nav').innerHTML=html;
  const moreLabel=lang()==='en'?'More':'Lagi';
@@ -1669,8 +1729,34 @@ function nav(){
    `<button data-page="saving" onclick="go('saving')"><span>${icon('saving')}</span><small>${L.saving}</small></button>`+
    `<button data-page="more" onclick="toggleMenu(true)"><span>${icon('more')}</span><small>${moreLabel}</small></button>`;
 }
+function toggleTabletSidebar(){
+ const side=document.getElementById('side');
+ if(!side)return;
+ const expanded=!side.classList.contains('tablet-expanded');
+ side.classList.toggle('tablet-expanded',expanded);
+ document.body.classList.toggle('tablet-sidebar-expanded',expanded);
+ const btn=side.querySelector('.tablet-sidebar-toggle');
+ if(btn){
+   btn.setAttribute('aria-label',expanded?'Kecilkan menu':'Kembangkan menu');
+   btn.querySelector('svg').style.transform=expanded?'rotate(180deg)':'rotate(0deg)';
+ }
+ if(!expanded) side.querySelectorAll('.nav-group.tablet-open').forEach(g=>g.classList.remove('tablet-open'));
+}
 function toggleNavGroup(group){
  if(!group)return;
+ const side=document.getElementById('side');
+ if(window.innerWidth>=721 && window.innerWidth<=1050){
+   if(side && !side.classList.contains('tablet-expanded')){
+     side.classList.add('tablet-expanded');
+     document.body.classList.add('tablet-sidebar-expanded');
+     const btn=side.querySelector('.tablet-sidebar-toggle');
+     if(btn){btn.setAttribute('aria-label','Kecilkan menu');btn.querySelector('svg').style.transform='rotate(180deg)';}
+   }
+   const wasOpen=group.classList.contains('tablet-open');
+   side?.querySelectorAll('.nav-group.tablet-open').forEach(g=>g.classList.remove('tablet-open'));
+   group.classList.toggle('tablet-open',!wasOpen);
+   return;
+ }
  group.classList.toggle('expanded');
 }
 
@@ -1885,7 +1971,7 @@ function report(){
  content.innerHTML=`<div class="panel"><h3>Laporan Bulan ${month()}</h3><div class="statrow"><div class="mini">Pendapatan<strong>${db.settings.currency} ${money(t.inc)}</strong></div><div class="mini">Belanja<strong>${db.settings.currency} ${money(t.exp)}</strong></div><div class="mini">Baki<strong>${db.settings.currency} ${money(t.balance)}</strong></div></div><p style="margin-top:20px">Kategori tertinggi: <b>${top&&top[1]?esc(top[0]):'Tiada data'}</b>${top&&top[1]?' — '+db.settings.currency+' '+money(top[1]):''}</p><button class="btn primary" onclick="window.print()">Cetak Laporan</button></div>`
 }
 function exportPage(){
- content.innerHTML=`<div class="panel"><h3>Export Data</h3><p>Export semua transaksi belanja dan pendapatan sebagai CSV.</p><button class="btn primary" onclick="downloadCSV()">Download CSV</button></div>`
+ content.innerHTML=`<div class="panel"><h3>${lang()==='en'?'Export CSV':'Export CSV'}</h3><p>${lang()==='en'?'Export expenses and income for spreadsheets or reporting. Full JSON backup and Google Drive upload/download are available in Settings → Data & Google Drive.':'Export belanja dan pendapatan untuk Excel/spreadsheet atau laporan. Backup penuh JSON serta upload/download Google Drive ada di Tetapan → Data & Google Drive.'}</p><button class="btn primary" onclick="downloadCSV()">Download CSV</button></div>`
 }
 function downloadCSV(){
  let rows=[['Jenis','Tarikh','Kategori/Sumber','Perkara','Kaedah Bayaran','Jumlah','Nota']];
@@ -2183,6 +2269,51 @@ function subscribeNotifications(){
     }).subscribe();
 }
 
+function getThemePreference(){return db?.settings?.theme||'system'}
+function applyTheme(theme=getThemePreference()){
+  const t=['light','dark','system'].includes(theme)?theme:'system';
+  document.body.classList.remove('theme-light','theme-dark','theme-system');
+  document.body.classList.add('theme-'+t);
+  document.documentElement.dataset.theme=t;
+  try{localStorage.setItem('sistemKewanganTheme:'+((currentAuthUser&&currentAuthUser.id)||'guest'),t)}catch(_){}
+}
+function setTheme(theme){db.settings.theme=theme;applyTheme(theme);save();settings();}
+function initTheme(){
+  const saved=db?.settings?.theme || (()=>{try{return localStorage.getItem('sistemKewanganTheme:'+((currentAuthUser&&currentAuthUser.id)||'guest'))}catch(_){return null}})() || 'system';
+  db.settings.theme=saved;applyTheme(saved);
+  const mq=window.matchMedia?.('(prefers-color-scheme: dark)');
+  if(mq){const handler=()=>{if(getThemePreference()==='system')applyTheme('system')};try{mq.addEventListener('change',handler)}catch(_){mq.addListener(handler)}}
+}
+function downloadBackupJSON(){
+  const payload=JSON.stringify(normalizeDb(db),null,2);
+  const blob=new Blob([payload],{type:'application/json;charset=utf-8'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='sistem-kewangan-backup-'+new Date().toISOString().slice(0,10)+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+}
+function triggerBackupUpload(){document.getElementById('backupUploadInput')?.click()}
+async function importBackupJSON(input){
+  const file=input?.files?.[0];if(!file)return;
+  try{
+    const text=await file.text();const parsed=JSON.parse(text);const next=normalizeDb(parsed);
+    if(!Array.isArray(next.expenses)||!Array.isArray(next.incomes)||!Array.isArray(next.savings))throw new Error('Format data tidak sah.');
+    if(!confirm(lang()==='en'?'Import this backup and replace current local data?':'Import backup ini dan gantikan data semasa?')){input.value='';return}
+    db=next;localStorage.setItem(KEY,JSON.stringify(db));localDataDirty=true;queueSupabaseSave();
+    if(accessToken)await saveToDrive(true);
+    applyTheme(db.settings.theme||'system');nav();go('settings');alert(lang()==='en'?'Data imported successfully.':'Data berjaya diimport.');
+  }catch(e){alert((lang()==='en'?'Import failed: ':'Import gagal: ')+(e.message||'Format fail tidak sah.'))}
+  input.value='';
+}
+async function downloadFromDrive(){
+  try{
+    if(!accessToken){driveMessage(lang()==='en'?'Connect Google Drive first.':'Sambungkan Google Drive dahulu.','error');return}
+    const folderId=driveFolderId||await findOrCreateDriveFolder();const f=await findDriveFile(folderId);
+    if(!f){driveMessage(lang()==='en'?'No backup file found in Google Drive.':'Fail backup tidak dijumpai dalam Google Drive.','error');return}
+    const r=await driveFetch('https://www.googleapis.com/drive/v3/files/'+encodeURIComponent(f.id)+'?alt=media');const remote=await r.text();
+    const blob=new Blob([remote],{type:'application/json;charset=utf-8'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='Sistem Kewangan - Data.json';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+    driveMessage(lang()==='en'?'Backup downloaded from Google Drive.':'Backup berjaya dimuat turun dari Google Drive.','success');
+  }catch(e){driveMessage((lang()==='en'?'Download from Drive failed: ':'Muat turun dari Drive gagal: ')+(e.message||''),'error')}
+}
+function uploadToDrive(){saveToDrive(true)}
+
 function settings(){
  const en=lang()==='en';
  content.innerHTML=`<div class="panel"><h3>${en?'App Identity':'Identiti Aplikasi'}</h3><div class="formgrid">
@@ -2190,6 +2321,7 @@ function settings(){
  <div class="field"><label>${en?'App Description':'Deskripsi Aplikasi'}</label><input id="sDesc" value="${esc(db.settings.description)}"><div class="setting-help">${en?'Shown below the app title.':'Dipaparkan di bawah tajuk aplikasi.'}</div></div>
  <div class="field"><label>${en?'Currency':'Mata Wang'}</label><select id="sCurrency"><option ${db.settings.currency==='RM'?'selected':''}>RM</option><option ${db.settings.currency==='MYR'?'selected':''}>MYR</option></select></div>
  <div class="field"><label>${en?'Language / Bahasa':'Bahasa / Language'}</label><select id="sLanguage"><option value="ms" ${db.settings.language==='ms'?'selected':''}>Bahasa Melayu</option><option value="en" ${db.settings.language==='en'?'selected':''}>English</option></select></div>
+ <div class="field"><label>${en?'Theme':'Tema'}</label><select id="sTheme"><option value="light" ${getThemePreference()==='light'?'selected':''}>${en?'Light':'Cerah'}</option><option value="dark" ${getThemePreference()==='dark'?'selected':''}>${en?'Dark':'Gelap'}</option><option value="system" ${getThemePreference()==='system'?'selected':''}>${en?'System (follow device)':'Sistem (ikut peranti)'}</option></select><div class="setting-help">${en?'System follows your phone or PC appearance setting.':'Sistem akan ikut tetapan tema telefon atau PC.'}</div></div>
  </div><div class="actions"><button class="btn primary" onclick="saveSettings()">${en?'Save Settings':'Simpan Tetapan'}</button><button class="btn danger" onclick="resetData()">${en?'Reset All Data':'Reset Semua Data'}</button></div></div>
  <div class="panel" style="margin-top:18px"><h3>${en?'Password & Security':'Password & Keselamatan'}</h3><p style="color:#64748b;font-size:12px;line-height:1.6">${en?'Change your account password here. You will need to enter your current password first.':'Ubah password akaun anda di sini. Anda perlu masukkan password semasa terlebih dahulu.'}</p><form onsubmit="changePassword(event)" class="formgrid"><div class="field"><label>${en?'Current Password':'Password Semasa'}</label><input id="currentPassword" type="password" autocomplete="current-password" minlength="8" required></div><div class="field"><label>${en?'New Password':'Password Baru'}</label><input id="changeNewPassword" type="password" autocomplete="new-password" minlength="8" required></div><div class="field"><label>${en?'Confirm New Password':'Sahkan Password Baru'}</label><input id="changeConfirmPassword" type="password" autocomplete="new-password" minlength="8" required></div><div class="actions"><button class="btn primary" type="submit">${en?'Change Password':'Ubah Password'}</button></div></form><div id="changePasswordMessage" class="auth-message"></div></div>
  <div id="workspacePanel"></div><div id="lockingPanel"></div>
@@ -2197,7 +2329,7 @@ function settings(){
  <div class="sync-info-row"><span>${en?'Last successful sync':'Sync terakhir berjaya'}</span><b id="settingsLastSync">${formatLastSync(getLastSync())}</b></div>
  </div>
 
- <div class="panel" style="margin-top:18px"><h3>${en?'Data & Google Drive':'Data & Google Drive'}</h3><p>${db.expenses.length} ${en?'expense records':'transaksi belanja'} · ${db.incomes.length} ${en?'income records':'rekod pendapatan'} · ${db.savings.length} ${en?'saving records':'rekod simpanan'} · ${db.categories.length} ${en?'categories':'kategori'}</p><p style="color:#64748b;font-size:12px">${en?'Active account':'Akaun aktif'}: <b>${esc(currentAuthUser?.email||googleUser?.email||'Belum log masuk')}</b></p><p style="color:#64748b;font-size:12px">${en?'Main data is stored securely in Supabase Database. Google Drive is optional backup/export.':'Data utama disimpan dengan selamat dalam Supabase Database. Google Drive ialah backup/export pilihan.'}</p><div id="driveStatusMessage" class="drive-status">Belum diuji.</div><div class="setting-help">${en?'Google Sign-In and Google Drive use two separate Google permissions. You only need to approve Drive access once; after that your data syncs automatically.':'Log masuk Google dan akses Google Drive menggunakan dua kebenaran Google yang berbeza. Kebenaran Drive hanya perlu diluluskan sekali; selepas itu data akan sync secara automatik.'}</div><div class="actions"><button class="btn primary" onclick="connectGoogleDrive()">${en?'Enable Google Drive Sync':'Aktifkan Sync Google Drive'}</button><button class="btn secondary" onclick="saveToDrive(true)">${en?'Sync Now':'Sync Sekarang'}</button><button class="btn danger" onclick="resetData()">${en?'Reset Cache':'Reset Cache'}</button></div></div>
+ <div class="panel" style="margin-top:18px"><h3>${en?'Data & Google Drive':'Data & Google Drive'}</h3><p>${db.expenses.length} ${en?'expense records':'transaksi belanja'} · ${db.incomes.length} ${en?'income records':'rekod pendapatan'} · ${db.savings.length} ${en?'saving records':'rekod simpanan'} · ${db.categories.length} ${en?'categories':'kategori'}</p><p style="color:#64748b;font-size:12px">${en?'Active account':'Akaun aktif'}: <b>${esc(currentAuthUser?.email||googleUser?.email||'Belum log masuk')}</b></p><p style="color:#64748b;font-size:12px">${en?'Main data is stored securely in Supabase Database. Google Drive is optional backup/export.':'Data utama disimpan dengan selamat dalam Supabase Database. Google Drive ialah backup/export pilihan.'}</p><div id="driveStatusMessage" class="drive-status">Belum diuji.</div><div class="setting-help">${en?'Google Sign-In and Google Drive use two separate Google permissions. You only need to approve Drive access once; after that your data syncs automatically.':'Log masuk Google dan akses Google Drive menggunakan dua kebenaran Google yang berbeza. Kebenaran Drive hanya perlu diluluskan sekali; selepas itu data akan sync secara automatik.'}</div><div class="actions"><button class="btn primary" onclick="downloadBackupJSON()">${en?'Download Data':'Muat Turun Data'}</button><button class="btn secondary" onclick="triggerBackupUpload()">${en?'Upload Data':'Muat Naik Data'}</button><button class="btn primary" onclick="connectGoogleDrive()">${en?'Enable Google Drive Sync':'Aktifkan Sync Google Drive'}</button><button class="btn secondary" onclick="uploadToDrive()">${en?'Upload to Google Drive':'Muat Naik ke Google Drive'}</button><button class="btn secondary" onclick="downloadFromDrive()">${en?'Download from Google Drive':'Muat Turun dari Google Drive'}</button><button class="btn danger" onclick="resetData()">${en?'Reset Cache':'Reset Cache'}</button></div><input id="backupUploadInput" type="file" accept="application/json,.json" hidden onchange="importBackupJSON(this)"></div>
  <footer class="app-footer">Created by AIMA · 2026</footer>`;
  renderWorkspacePanel(); renderLockPanel().then(html=>{const x=document.getElementById("lockingPanel");if(x)x.innerHTML=html;});
 }
@@ -2220,7 +2352,7 @@ async function changePassword(e){
   msg(lang()==='en'?'Password changed successfully.':'Password berjaya diubah.','success');
 }
 
-function saveSettings(){db.settings.name=sName.value.trim()||'Sistem Kewangan';db.settings.description=sDesc.value.trim()||'Personal Finance Manager';db.settings.currency=sCurrency.value;db.settings.language=sLanguage.value;if(currentAuthUser){localStorage.setItem('sistemKewanganLanguage:'+currentAuthUser.id,db.settings.language);if(workspaceId)localStorage.setItem('sistemKewanganWorkspaceLanguage:'+currentAuthUser.id+':'+workspaceId,db.settings.language);}save();document.querySelector('.brand').innerHTML='<span class="brand-mark">SK</span>'+esc(db.settings.name)+'<small>'+esc(db.settings.description)+'</small>';nav();settings();go('settings');alert(db.settings.language==='en'?'Settings saved.':'Tetapan disimpan.')}
+function saveSettings(){db.settings.name=sName.value.trim()||'Sistem Kewangan';db.settings.description=sDesc.value.trim()||'Personal Finance Manager';db.settings.currency=sCurrency.value;db.settings.language=sLanguage.value;db.settings.theme=sTheme.value;applyTheme(db.settings.theme);if(currentAuthUser){localStorage.setItem('sistemKewanganLanguage:'+currentAuthUser.id,db.settings.language);if(workspaceId)localStorage.setItem('sistemKewanganWorkspaceLanguage:'+currentAuthUser.id+':'+workspaceId,db.settings.language);}save();document.querySelector('.brand').innerHTML='<span class="brand-mark">SK</span>'+esc(db.settings.name)+'<small>'+esc(db.settings.description)+'</small>';nav();settings();go('settings');alert(db.settings.language==='en'?'Settings saved.':'Tetapan disimpan.')}
 function resetData(){if(confirm('Semua data akan dipadam. Teruskan?')){localStorage.removeItem(KEY);location.reload()}}
 initSupabase();
 </script>
