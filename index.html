@@ -483,6 +483,10 @@ body{overflow-x:hidden}
   .dashboard-spending-module .spending-module-chart .chart-value{font-size:8px!important}
   .dashboard-spending-module .spending-module-chart .chart-label{font-size:8.5px!important}
 }
+
+.theme-choice-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:8px}.theme-choice{appearance:none;text-align:left;border:1px solid #dbe7f5;background:#fff;border-radius:12px;padding:10px;cursor:pointer;color:#12335f;transition:.18s ease}.theme-choice:hover{border-color:#93baf0;transform:translateY(-1px)}.theme-choice.active{border-color:#3b82f6;box-shadow:0 0 0 2px rgba(59,130,246,.12);background:#f5f9ff}.theme-choice strong{display:block;font-size:13px;margin-top:8px}.theme-choice small{display:block;font-size:10px;color:#71839b;margin-top:3px;line-height:1.35}.theme-preview{height:54px;border-radius:8px;display:block;position:relative;overflow:hidden;border:1px solid #d8e4f2;background:#f8fbff}.theme-preview:before{content:'';position:absolute;left:0;top:0;bottom:0;width:22%;background:#e8f1fc;border-right:1px solid #d7e5f5}.theme-preview:after{content:'';position:absolute;left:28%;right:8%;top:9px;height:10px;border-radius:4px;background:#dcecff;box-shadow:0 16px 0 #edf4fc,0 32px 0 #e8f2fc}.theme-preview-dark{background:#111a2b;border-color:#2b3b55}.theme-preview-dark:before{background:#162238;border-color:#2b3b55}.theme-preview-dark:after{background:#29486e;box-shadow:0 16px 0 #1b2a42,0 32px 0 #162238}.theme-preview-system{background:linear-gradient(90deg,#f8fbff 0 50%,#111a2b 50%);border-color:#9fb0c8}.theme-preview-system:before{background:linear-gradient(90deg,#e8f1fc 0 50%,#162238 50%);border-color:transparent}.theme-preview-system:after{background:linear-gradient(90deg,#dcecff 0 50%,#29486e 50%);box-shadow:0 16px 0 linear-gradient(90deg,#edf4fc 0 50%,#1b2a42 50%),0 32px 0 linear-gradient(90deg,#e8f2fc 0 50%,#162238 50%)}
+body.theme-dark .theme-choice,body.theme-system.dark-effective .theme-choice{background:#111a2b;border-color:#2b3b55;color:#eef4ff}.theme-choice.active{color:#12335f}.theme-choice.active strong{color:#12335f}body.theme-dark .theme-choice.active,body.theme-system.dark-effective .theme-choice.active{background:#142b4d;border-color:#60a5fa;color:#eef4ff}body.theme-dark .theme-choice small,body.theme-system.dark-effective .theme-choice small{color:#9fb0c8}
+@media(max-width:720px){.theme-choice-grid{grid-template-columns:1fr}.theme-choice{display:grid;grid-template-columns:78px 1fr;grid-template-rows:auto auto;column-gap:10px}.theme-preview{grid-row:1/3;height:48px}.theme-choice strong{margin-top:0;align-self:end}.theme-choice small{align-self:start}}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
@@ -922,6 +926,57 @@ body{overflow-x:hidden}
 .notification-item.unread{
   box-shadow:none!important;
   border-left:0!important;
+}
+</style>
+
+<style id="theme-proper-v41">
+/* v41: complete Light / Dark / System theme surfaces */
+body.theme-dark, body.theme-system.dark-effective{
+  --bg:#0b1220; --surface:#111a2b; --surface-2:#162238; --surface-3:#1b2a42;
+  --text:#eef4ff; --muted:#9fb0c8; --line:#2b3b55; --primary:#60a5fa; --primary-soft:#142b4d;
+  --input:#0e1727; --shadow:0 8px 28px rgba(0,0,0,.28);
+  background:var(--bg)!important; color:var(--text)!important;
+}
+body.theme-dark .main,body.theme-system.dark-effective .main{background:var(--bg)!important;color:var(--text)!important}
+body.theme-dark .side,body.theme-dark .panel,body.theme-dark .card,body.theme-dark .secondary,body.theme-dark .modal-card,body.theme-dark .notification-dropdown,body.theme-dark .user-dropdown,body.theme-dark .mobile-topbar,body.theme-system.dark-effective .side,body.theme-system.dark-effective .panel,body.theme-system.dark-effective .card,body.theme-system.dark-effective .secondary,body.theme-system.dark-effective .modal-card,body.theme-system.dark-effective .notification-dropdown,body.theme-system.dark-effective .user-dropdown,body.theme-system.dark-effective .mobile-topbar{background:var(--surface)!important;color:var(--text)!important;border-color:var(--line)!important;box-shadow:var(--shadow)}
+body.theme-dark .top,body.theme-system.dark-effective .top{background:transparent!important;color:var(--text)!important}
+body.theme-dark h1,body.theme-dark h2,body.theme-dark h3,body.theme-dark h4,body.theme-dark p,body.theme-dark strong,body.theme-dark b,body.theme-system.dark-effective h1,body.theme-system.dark-effective h2,body.theme-system.dark-effective h3,body.theme-system.dark-effective h4,body.theme-system.dark-effective p,body.theme-system.dark-effective strong,body.theme-system.dark-effective b{color:var(--text)}
+body.theme-dark .top p,body.theme-dark .setting-help,body.theme-dark .label,body.theme-dark .budget-meta,body.theme-dark .budget-title,body.theme-dark .empty,body.theme-system.dark-effective .top p,body.theme-system.dark-effective .setting-help,body.theme-system.dark-effective .label,body.theme-system.dark-effective .budget-meta,body.theme-system.dark-effective .budget-title,body.theme-system.dark-effective .empty{color:var(--muted)!important}
+body.theme-dark .nav button,body.theme-dark .nav-group-toggle,body.theme-system.dark-effective .nav button,body.theme-system.dark-effective .nav-group-toggle{color:#c9d6e8!important}
+body.theme-dark .nav button:hover,body.theme-system.dark-effective .nav button:hover{background:#172a46!important;color:#8ec5ff!important}
+body.theme-dark .nav button.active,body.theme-system.dark-effective .nav button.active{background:#17345b!important;color:#7db9ff!important}
+body.theme-dark .nav-submenu:before,body.theme-system.dark-effective .nav-submenu:before{background:#334967}
+body.theme-dark .brand,body.theme-system.dark-effective .brand{border-color:var(--line)!important}
+body.theme-dark .field input,body.theme-dark .field select,body.theme-dark .field textarea,body.theme-dark .toolbar input,body.theme-dark .toolbar select,body.theme-dark .month-select,body.theme-system.dark-effective .field input,body.theme-system.dark-effective .field select,body.theme-system.dark-effective .field textarea,body.theme-system.dark-effective .toolbar input,body.theme-system.dark-effective .toolbar select,body.theme-system.dark-effective .month-select{background:var(--input)!important;color:var(--text)!important;border-color:var(--line)!important}
+body.theme-dark .field label,body.theme-system.dark-effective .field label{color:#d4deed!important}
+body.theme-dark table,body.theme-system.dark-effective table{color:var(--text)!important}
+body.theme-dark table th,body.theme-system.dark-effective table th{background:#162238!important;color:#aebdd1!important;border-color:var(--line)!important}
+body.theme-dark table td,body.theme-system.dark-effective table td{border-color:#263750!important;color:#dce6f4!important}
+body.theme-dark .mini,body.theme-system.dark-effective .mini{background:#172238!important;border-color:var(--line)!important;color:var(--muted)!important}
+body.theme-dark .mini strong,body.theme-system.dark-effective .mini strong{color:var(--text)!important}
+body.theme-dark .notice,body.theme-system.dark-effective .notice{background:#122b4b!important;color:#9bcaff!important;border-color:#254a76!important}
+body.theme-dark .sync-badge,body.theme-dark .account-btn,body.theme-dark .notification-btn,body.theme-system.dark-effective .sync-badge,body.theme-system.dark-effective .account-btn,body.theme-system.dark-effective .notification-btn{background:#111a2b!important;border-color:var(--line)!important;color:var(--text)!important}
+body.theme-dark .chart-wrap .chart-surface,body.theme-system.dark-effective .chart-wrap .chart-surface{fill:#111a2b!important;stroke:#334968!important}
+body.theme-dark .chart-grid,body.theme-system.dark-effective .chart-grid{stroke:#293b56!important}
+body.theme-dark .chart-label,body.theme-system.dark-effective .chart-label{fill:#9fb0c8!important}
+body.theme-dark .chart-value,body.theme-system.dark-effective .chart-value{fill:#e4edfa!important}
+body.theme-dark .budget-hero,body.theme-system.dark-effective .budget-hero{background:#111a2b!important;border-color:var(--line)!important}
+body.theme-dark .budget-progress,body.theme-system.dark-effective .budget-progress{background:#263851!important}
+body.theme-dark .app-footer,body.theme-system.dark-effective .app-footer{color:#71839b!important}
+body.theme-dark .notification-item,body.theme-system.dark-effective .notification-item{background:#111a2b!important;border-color:#263750!important;color:var(--text)!important}
+body.theme-dark .notification-item:hover,body.theme-system.dark-effective .notification-item:hover{background:#162238!important}
+body.theme-dark .notification-item .notification-title,body.theme-system.dark-effective .notification-item .notification-title{color:var(--text)!important}
+body.theme-dark .notification-item .notification-meta,body.theme-system.dark-effective .notification-item .notification-meta{color:var(--muted)!important}
+body.theme-dark .notification-item.unread,body.theme-system.dark-effective .notification-item.unread{background:#12243b!important}
+body.theme-dark .search,body.theme-dark .search input,body.theme-system.dark-effective .search,body.theme-system.dark-effective .search input{background:#111a2b!important;color:var(--text)!important;border-color:var(--line)!important}
+body.theme-dark .search input::placeholder,body.theme-system.dark-effective .search input::placeholder{color:#71839b!important}
+body.theme-dark .page-heading,body.theme-system.dark-effective .page-heading{color:var(--text)!important}
+body.theme-dark .btn.secondary,body.theme-system.dark-effective .btn.secondary{background:#172238!important;color:#dbe7f5!important;border-color:#31445f!important}
+body.theme-dark .btn.secondary:hover,body.theme-system.dark-effective .btn.secondary:hover{background:#1d2d47!important}
+body.theme-dark .setting-theme-preview,body.theme-system.dark-effective .setting-theme-preview{border-color:var(--line)!important}
+/* System mode follows OS without changing the stored preference. */
+@media (prefers-color-scheme:dark){
+  body.theme-system{--bg:#0b1220;--surface:#111a2b;--surface-2:#162238;--surface-3:#1b2a42;--text:#eef4ff;--muted:#9fb0c8;--line:#2b3b55;--primary:#60a5fa;--primary-soft:#142b4d;--input:#0e1727;background:#0b1220!important;color:#eef4ff!important}
 }
 </style>
 </head>
@@ -2284,8 +2339,9 @@ function subscribeNotifications(){
 function getThemePreference(){return db?.settings?.theme||'light'}
 function applyTheme(theme=getThemePreference()){
   const t=['light','dark','system'].includes(theme)?theme:'light';
-  document.body.classList.remove('theme-light','theme-dark','theme-system');
+  document.body.classList.remove('theme-light','theme-dark','theme-system','dark-effective');
   document.body.classList.add('theme-'+t);
+  if(t==='dark' || (t==='system' && window.matchMedia?.('(prefers-color-scheme: dark)').matches)) document.body.classList.add('dark-effective');
   document.documentElement.dataset.theme=t;
   try{localStorage.setItem('sistemKewanganTheme:'+((currentAuthUser&&currentAuthUser.id)||'guest'),t)}catch(_){}
 }
@@ -2333,7 +2389,7 @@ function settings(){
  <div class="field"><label>${en?'App Description':'Deskripsi Aplikasi'}</label><input id="sDesc" value="${esc(db.settings.description)}"><div class="setting-help">${en?'Shown below the app title.':'Dipaparkan di bawah tajuk aplikasi.'}</div></div>
  <div class="field"><label>${en?'Currency':'Mata Wang'}</label><select id="sCurrency"><option ${db.settings.currency==='RM'?'selected':''}>RM</option><option ${db.settings.currency==='MYR'?'selected':''}>MYR</option></select></div>
  <div class="field"><label>${en?'Language':'Bahasa / Language'}</label><select id="sLanguage"><option value="ms" ${db.settings.language==='ms'?'selected':''}>Bahasa Melayu</option><option value="en" ${db.settings.language==='en'?'selected':''}>English</option></select></div>
- <div class="field"><label>${en?'Theme':'Tema'}</label><select id="sTheme"><option value="light" ${getThemePreference()==='light'?'selected':''}>${en?'Light':'Cerah'}</option><option value="dark" ${getThemePreference()==='dark'?'selected':''}>${en?'Dark':'Gelap'}</option><option value="system" ${getThemePreference()==='system'?'selected':''}>${en?'System (follow device)':'Sistem (ikut peranti)'}</option></select><div class="setting-help">${en?'System follows your phone or PC appearance setting.':'Sistem akan ikut tetapan tema telefon atau PC.'}</div></div>
+ <div class="field"><label>${en?'Theme':'Tema'}</label><select id="sTheme" style="display:none"><option value="light" ${getThemePreference()==='light'?'selected':''}>Light</option><option value="dark" ${getThemePreference()==='dark'?'selected':''}>Dark</option><option value="system" ${getThemePreference()==='system'?'selected':''}>System</option></select><div class="theme-choice-grid" id="themeChoiceGrid">${['light','dark','system'].map(t=>`<button type="button" class="theme-choice ${getThemePreference()===t?'active':''}" data-theme-choice="${t}" onclick="chooseTheme('${t}')"><span class="theme-preview theme-preview-${t}"><span></span><i></i><b></b></span><strong>${t==='light'?'Light':t==='dark'?'Dark':'System'}</strong><small>${t==='light'?(en?'Bright interface':'Antaramuka cerah'):t==='dark'?(en?'Dark interface':'Antaramuka gelap'):(en?'Follow device settings':'Ikut tetapan peranti')}</small></button>`).join('')}</div><div class="setting-help">${en?'Choose Light, Dark, or System. System follows your phone or PC appearance setting.':'Pilih Cerah, Gelap atau Sistem. Sistem akan ikut tetapan tema telefon atau PC.'}</div></div>
  </div><div class="actions"><button class="btn primary" onclick="saveSettings()">${en?'Save Settings':'Simpan Tetapan'}</button><button class="btn danger" onclick="resetData()">${en?'Reset All Data':'Reset Semua Data'}</button></div></div>
  <div class="panel" style="margin-top:18px"><h3>${en?'Password & Security':'Password & Keselamatan'}</h3><p style="color:#64748b;font-size:12px;line-height:1.6">${en?'Change your account password here. You will need to enter your current password first.':'Ubah password akaun anda di sini. Anda perlu masukkan password semasa terlebih dahulu.'}</p><form onsubmit="changePassword(event)" class="formgrid"><div class="field"><label>${en?'Current Password':'Password Semasa'}</label><input id="currentPassword" type="password" autocomplete="current-password" minlength="8" required></div><div class="field"><label>${en?'New Password':'Password Baru'}</label><input id="changeNewPassword" type="password" autocomplete="new-password" minlength="8" required></div><div class="field"><label>${en?'Confirm New Password':'Sahkan Password Baru'}</label><input id="changeConfirmPassword" type="password" autocomplete="new-password" minlength="8" required></div><div class="actions"><button class="btn primary" type="submit">${en?'Change Password':'Ubah Password'}</button></div></form><div id="changePasswordMessage" class="auth-message"></div></div>
  <div id="workspacePanel"></div><div id="lockingPanel"></div>
@@ -2364,6 +2420,7 @@ async function changePassword(e){
   msg(lang()==='en'?'Password changed successfully.':'Password berjaya diubah.','success');
 }
 
+function chooseTheme(theme){const s=document.getElementById('sTheme');if(!s)return;s.value=theme;document.querySelectorAll('[data-theme-choice]').forEach(b=>b.classList.toggle('active',b.dataset.themeChoice===theme));applyTheme(theme);db.settings.theme=theme;save();}
 function saveSettings(){db.settings.name=sName.value.trim()||'Sistem Kewangan';db.settings.description=sDesc.value.trim()||'Personal Finance Manager';db.settings.currency=sCurrency.value;db.settings.language=sLanguage.value;db.settings.theme=sTheme.value;applyTheme(db.settings.theme);db.settings.languagePreferenceVersion=40;db.settings.themePreferenceVersion=40;
 if(currentAuthUser){
   localStorage.setItem('sistemKewanganLanguageV40:'+currentAuthUser.id,db.settings.language);
