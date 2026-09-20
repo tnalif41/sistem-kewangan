@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ms">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -198,7 +198,7 @@ body{overflow-x:hidden}
 .notification-list{max-height:455px!important;padding:5px!important;background:#fafcff}
 .notification-item{margin:3px 0!important;border:0!important;border-radius:13px!important;padding:12px 11px!important;gap:11px!important;background:#fff!important}
 .notification-item:hover{background:#f5f9ff!important}
-.notification-item.unread{background:#edf5ff!important;box-shadow:inset 3px 0 0 #1677ff!important}
+.notification-item.unread{background:#edf5ff!important;box-shadow:none!important}
 .notification-icon{width:36px!important;height:36px!important;flex-basis:36px!important;border-radius:11px!important;box-shadow:0 1px 2px rgba(15,23,42,.04)}
 .notification-copy b{font-size:12.5px!important}
 .notification-item .nmsg{font-size:11.5px!important;line-height:1.5!important;color:#334155!important}
@@ -918,6 +918,12 @@ body{overflow-x:hidden}
 @media (min-width:1051px){.tablet-sidebar-toggle{display:none!important}}
 
 </style>
+<style id="v40-notification-clean">
+.notification-item.unread{
+  box-shadow:none!important;
+  border-left:0!important;
+}
+</style>
 </head>
 <body>
 <div id="authScreen" class="auth-screen">
@@ -1103,7 +1109,7 @@ function resetDbForUser(){
   db=JSON.parse(localStorage.getItem(KEY)||'null')||{
     expenses:[],incomes:[],savings:[],budgets:{},
     categories:['Makanan & Minuman','Rumah & Keperluan','Bil & Utiliti','Pengangkutan','Kesihatan','Pendidikan','Anak & Keluarga','Hutang & Komitmen','Insurans & Takaful','Belian & Shopping','Hiburan & Gaya Hidup','Kerja & Perniagaan','Cukai & Yuran','Hadiah & Sumbangan','Simpanan & Pelaburan','Lain-lain'],
-    settings:{currency:'RM',name:'Sistem Kewangan',description:'Personal Finance Manager',language:'ms',theme:'system'},monthlyBudgets:{}
+    settings:{currency:'RM',name:'Sistem Kewangan',description:'Personal Finance Manager',language:'en',theme:'light'},monthlyBudgets:{}
   };
   db.expenses ||= []; db.incomes ||= []; db.savings ||= []; db.budgets ||= {};
   db.categories ||= ['Makanan & Minuman','Rumah & Keperluan','Bil & Utiliti','Pengangkutan','Kesihatan','Pendidikan','Anak & Keluarga','Hutang & Komitmen','Insurans & Takaful','Belian & Shopping','Hiburan & Gaya Hidup','Kerja & Perniagaan','Cukai & Yuran','Hadiah & Sumbangan','Simpanan & Pelaburan','Lain-lain'];
@@ -1118,7 +1124,12 @@ function save(){
 }
 
 function defaultDb(){return {expenses:[],incomes:[],savings:[],budgets:{},categories:['Makanan & Minuman','Rumah & Keperluan','Bil & Utiliti','Pengangkutan','Kesihatan','Pendidikan','Anak & Keluarga','Hutang & Komitmen','Insurans & Takaful','Belian & Shopping','Hiburan & Gaya Hidup','Kerja & Perniagaan','Cukai & Yuran','Hadiah & Sumbangan','Simpanan & Pelaburan','Lain-lain'],settings:{currency:'RM',name:'Sistem Kewangan',description:'Personal Finance Manager',language:'ms',theme:'system'},monthlyBudgets:{}}}
-function normalizeDb(data){const d=data&&typeof data==='object'?data:{}; const base=defaultDb(); d.expenses ||= [];d.incomes ||= [];d.savings ||= [];d.budgets ||= {};d.categories ||= base.categories; if(Array.isArray(d.categories) && d.categories.length===8 && ['Makanan','Pengangkutan','Bil & Utiliti','Rumah','Kesihatan','Hiburan','Belian','Lain-lain'].every((v,i)=>d.categories[i]===v)) d.categories=[...base.categories];d.settings ||= base.settings;d.settings.currency ||= 'RM';d.settings.name ||= 'Sistem Kewangan';d.settings.description ||= 'Personal Finance Manager';d.settings.language ||= 'ms';d.settings.theme ||= 'system';d.monthlyBudgets ||= {};return d}
+function normalizeDb(data){const d=data&&typeof data==='object'?data:{}; const base=defaultDb(); d.expenses ||= [];d.incomes ||= [];d.savings ||= [];d.budgets ||= {};d.categories ||= base.categories; if(Array.isArray(d.categories) && d.categories.length===8 && ['Makanan','Pengangkutan','Bil & Utiliti','Rumah','Kesihatan','Hiburan','Belian','Lain-lain'].every((v,i)=>d.categories[i]===v)) d.categories=[...base.categories];d.settings ||= base.settings;d.settings.currency ||= 'RM';d.settings.name ||= 'Sistem Kewangan';d.settings.description ||= 'Personal Finance Manager';
+  if(!d.settings.languagePreferenceVersion){d.settings.language='en';d.settings.languagePreferenceVersion=40;}
+  else if(d.settings.language!=='en' && d.settings.language!=='ms')d.settings.language='en';
+  if(!d.settings.themePreferenceVersion){d.settings.theme='light';d.settings.themePreferenceVersion=40;}
+  else if(!['light','dark','system'].includes(d.settings.theme))d.settings.theme='light';
+  d.monthlyBudgets ||= {};return d}
 
 async function ensurePersonalWorkspace(){
   const {data,error}=await supabaseClient.rpc('create_personal_workspace');
@@ -1136,7 +1147,7 @@ async function loadWorkspaceData(wid){
   workspaceId=wid; workspaceMeta=data||null;
   rememberWorkspace(wid);
   db=normalizeDb(data?.data || null);
-  const langKey=currentAuthUser&&workspaceId?'sistemKewanganWorkspaceLanguage:'+currentAuthUser.id+':'+workspaceId:null;
+  const langKey=currentAuthUser&&workspaceId?'sistemKewanganLanguageV40:'+currentAuthUser.id+':'+workspaceId:null;
   const rememberedLang=langKey?localStorage.getItem(langKey):null;
   if(rememberedLang==='ms'||rememberedLang==='en')db.settings.language=rememberedLang;
   localStorage.setItem(KEY,JSON.stringify(db));
@@ -2270,9 +2281,9 @@ function subscribeNotifications(){
     }).subscribe();
 }
 
-function getThemePreference(){return db?.settings?.theme||'system'}
+function getThemePreference(){return db?.settings?.theme||'light'}
 function applyTheme(theme=getThemePreference()){
-  const t=['light','dark','system'].includes(theme)?theme:'system';
+  const t=['light','dark','system'].includes(theme)?theme:'light';
   document.body.classList.remove('theme-light','theme-dark','theme-system');
   document.body.classList.add('theme-'+t);
   document.documentElement.dataset.theme=t;
@@ -2280,7 +2291,7 @@ function applyTheme(theme=getThemePreference()){
 }
 function setTheme(theme){db.settings.theme=theme;applyTheme(theme);save();settings();}
 function initTheme(){
-  const saved=db?.settings?.theme || (()=>{try{return localStorage.getItem('sistemKewanganTheme:'+((currentAuthUser&&currentAuthUser.id)||'guest'))}catch(_){return null}})() || 'system';
+  const saved=db?.settings?.theme || (()=>{try{return localStorage.getItem('sistemKewanganTheme:'+((currentAuthUser&&currentAuthUser.id)||'guest'))}catch(_){return null}})() || 'light';
   db.settings.theme=saved;applyTheme(saved);
   const mq=window.matchMedia?.('(prefers-color-scheme: dark)');
   if(mq){const handler=()=>{if(getThemePreference()==='system')applyTheme('system')};try{mq.addEventListener('change',handler)}catch(_){mq.addListener(handler)}}
@@ -2321,7 +2332,7 @@ function settings(){
  <div class="field"><label>${en?'App Name / Title':'Nama / Tajuk Aplikasi'}</label><input id="sName" value="${esc(db.settings.name)}"><div class="setting-help">${en?'Shown at the top-left of the sidebar.':'Dipaparkan di bahagian atas kiri sidebar.'}</div></div>
  <div class="field"><label>${en?'App Description':'Deskripsi Aplikasi'}</label><input id="sDesc" value="${esc(db.settings.description)}"><div class="setting-help">${en?'Shown below the app title.':'Dipaparkan di bawah tajuk aplikasi.'}</div></div>
  <div class="field"><label>${en?'Currency':'Mata Wang'}</label><select id="sCurrency"><option ${db.settings.currency==='RM'?'selected':''}>RM</option><option ${db.settings.currency==='MYR'?'selected':''}>MYR</option></select></div>
- <div class="field"><label>${en?'Language / Bahasa':'Bahasa / Language'}</label><select id="sLanguage"><option value="ms" ${db.settings.language==='ms'?'selected':''}>Bahasa Melayu</option><option value="en" ${db.settings.language==='en'?'selected':''}>English</option></select></div>
+ <div class="field"><label>${en?'Language':'Bahasa / Language'}</label><select id="sLanguage"><option value="ms" ${db.settings.language==='ms'?'selected':''}>Bahasa Melayu</option><option value="en" ${db.settings.language==='en'?'selected':''}>English</option></select></div>
  <div class="field"><label>${en?'Theme':'Tema'}</label><select id="sTheme"><option value="light" ${getThemePreference()==='light'?'selected':''}>${en?'Light':'Cerah'}</option><option value="dark" ${getThemePreference()==='dark'?'selected':''}>${en?'Dark':'Gelap'}</option><option value="system" ${getThemePreference()==='system'?'selected':''}>${en?'System (follow device)':'Sistem (ikut peranti)'}</option></select><div class="setting-help">${en?'System follows your phone or PC appearance setting.':'Sistem akan ikut tetapan tema telefon atau PC.'}</div></div>
  </div><div class="actions"><button class="btn primary" onclick="saveSettings()">${en?'Save Settings':'Simpan Tetapan'}</button><button class="btn danger" onclick="resetData()">${en?'Reset All Data':'Reset Semua Data'}</button></div></div>
  <div class="panel" style="margin-top:18px"><h3>${en?'Password & Security':'Password & Keselamatan'}</h3><p style="color:#64748b;font-size:12px;line-height:1.6">${en?'Change your account password here. You will need to enter your current password first.':'Ubah password akaun anda di sini. Anda perlu masukkan password semasa terlebih dahulu.'}</p><form onsubmit="changePassword(event)" class="formgrid"><div class="field"><label>${en?'Current Password':'Password Semasa'}</label><input id="currentPassword" type="password" autocomplete="current-password" minlength="8" required></div><div class="field"><label>${en?'New Password':'Password Baru'}</label><input id="changeNewPassword" type="password" autocomplete="new-password" minlength="8" required></div><div class="field"><label>${en?'Confirm New Password':'Sahkan Password Baru'}</label><input id="changeConfirmPassword" type="password" autocomplete="new-password" minlength="8" required></div><div class="actions"><button class="btn primary" type="submit">${en?'Change Password':'Ubah Password'}</button></div></form><div id="changePasswordMessage" class="auth-message"></div></div>
@@ -2353,7 +2364,11 @@ async function changePassword(e){
   msg(lang()==='en'?'Password changed successfully.':'Password berjaya diubah.','success');
 }
 
-function saveSettings(){db.settings.name=sName.value.trim()||'Sistem Kewangan';db.settings.description=sDesc.value.trim()||'Personal Finance Manager';db.settings.currency=sCurrency.value;db.settings.language=sLanguage.value;db.settings.theme=sTheme.value;applyTheme(db.settings.theme);if(currentAuthUser){localStorage.setItem('sistemKewanganLanguage:'+currentAuthUser.id,db.settings.language);if(workspaceId)localStorage.setItem('sistemKewanganWorkspaceLanguage:'+currentAuthUser.id+':'+workspaceId,db.settings.language);}save();document.querySelector('.brand').innerHTML='<span class="brand-mark">SK</span>'+esc(db.settings.name)+'<small>'+esc(db.settings.description)+'</small>';nav();settings();go('settings');alert(db.settings.language==='en'?'Settings saved.':'Tetapan disimpan.')}
+function saveSettings(){db.settings.name=sName.value.trim()||'Sistem Kewangan';db.settings.description=sDesc.value.trim()||'Personal Finance Manager';db.settings.currency=sCurrency.value;db.settings.language=sLanguage.value;db.settings.theme=sTheme.value;applyTheme(db.settings.theme);db.settings.languagePreferenceVersion=40;db.settings.themePreferenceVersion=40;
+if(currentAuthUser){
+  localStorage.setItem('sistemKewanganLanguageV40:'+currentAuthUser.id,db.settings.language);
+  if(workspaceId)localStorage.setItem('sistemKewanganLanguageV40:'+currentAuthUser.id+':'+workspaceId,db.settings.language);
+}save();document.querySelector('.brand').innerHTML='<span class="brand-mark">SK</span>'+esc(db.settings.name)+'<small>'+esc(db.settings.description)+'</small>';nav();settings();go('settings');alert(db.settings.language==='en'?'Settings saved.':'Tetapan disimpan.')}
 function resetData(){if(confirm('Semua data akan dipadam. Teruskan?')){localStorage.removeItem(KEY);location.reload()}}
 initSupabase();
 </script>
