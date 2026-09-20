@@ -979,6 +979,11 @@ body.theme-dark .setting-theme-preview,body.theme-system.dark-effective .setting
   body.theme-system{--bg:#0b1220;--surface:#111a2b;--surface-2:#162238;--surface-3:#1b2a42;--text:#eef4ff;--muted:#9fb0c8;--line:#2b3b55;--primary:#60a5fa;--primary-soft:#142b4d;--input:#0e1727;background:#0b1220!important;color:#eef4ff!important}
 }
 </style>
+
+<style id="theme-light-primary-v42">
+/* v42: Light is the app default. Dark/System only apply when explicitly selected. */
+html,body{color-scheme:light;}
+</style>
 </head>
 <body>
 <div id="authScreen" class="auth-screen">
@@ -1182,7 +1187,8 @@ function defaultDb(){return {expenses:[],incomes:[],savings:[],budgets:{},catego
 function normalizeDb(data){const d=data&&typeof data==='object'?data:{}; const base=defaultDb(); d.expenses ||= [];d.incomes ||= [];d.savings ||= [];d.budgets ||= {};d.categories ||= base.categories; if(Array.isArray(d.categories) && d.categories.length===8 && ['Makanan','Pengangkutan','Bil & Utiliti','Rumah','Kesihatan','Hiburan','Belian','Lain-lain'].every((v,i)=>d.categories[i]===v)) d.categories=[...base.categories];d.settings ||= base.settings;d.settings.currency ||= 'RM';d.settings.name ||= 'Sistem Kewangan';d.settings.description ||= 'Personal Finance Manager';
   if(!d.settings.languagePreferenceVersion){d.settings.language='en';d.settings.languagePreferenceVersion=40;}
   else if(d.settings.language!=='en' && d.settings.language!=='ms')d.settings.language='en';
-  if(!d.settings.themePreferenceVersion){d.settings.theme='light';d.settings.themePreferenceVersion=40;}
+  if(!d.settings.themePreferenceVersion){d.settings.theme='light';d.settings.themePreferenceVersion=42;}
+  else if(!['light','dark','system'].includes(d.settings.theme)) d.settings.theme='light';
   else if(!['light','dark','system'].includes(d.settings.theme))d.settings.theme='light';
   d.monthlyBudgets ||= {};return d}
 
@@ -2347,7 +2353,8 @@ function applyTheme(theme=getThemePreference()){
 }
 function setTheme(theme){db.settings.theme=theme;applyTheme(theme);save();settings();}
 function initTheme(){
-  const saved=db?.settings?.theme || (()=>{try{return localStorage.getItem('sistemKewanganTheme:'+((currentAuthUser&&currentAuthUser.id)||'guest'))}catch(_){return null}})() || 'light';
+  let saved=db?.settings?.theme || (()=>{try{return localStorage.getItem('sistemKewanganTheme:'+((currentAuthUser&&currentAuthUser.id)||'guest'))}catch(_){return null}})() || 'light';
+  if(!['light','dark','system'].includes(saved)) saved='light';
   db.settings.theme=saved;applyTheme(saved);
   const mq=window.matchMedia?.('(prefers-color-scheme: dark)');
   if(mq){const handler=()=>{if(getThemePreference()==='system')applyTheme('system')};try{mq.addEventListener('change',handler)}catch(_){mq.addListener(handler)}}
@@ -2421,7 +2428,7 @@ async function changePassword(e){
 }
 
 function chooseTheme(theme){const s=document.getElementById('sTheme');if(!s)return;s.value=theme;document.querySelectorAll('[data-theme-choice]').forEach(b=>b.classList.toggle('active',b.dataset.themeChoice===theme));applyTheme(theme);db.settings.theme=theme;save();}
-function saveSettings(){db.settings.name=sName.value.trim()||'Sistem Kewangan';db.settings.description=sDesc.value.trim()||'Personal Finance Manager';db.settings.currency=sCurrency.value;db.settings.language=sLanguage.value;db.settings.theme=sTheme.value;applyTheme(db.settings.theme);db.settings.languagePreferenceVersion=40;db.settings.themePreferenceVersion=40;
+function saveSettings(){db.settings.name=sName.value.trim()||'Sistem Kewangan';db.settings.description=sDesc.value.trim()||'Personal Finance Manager';db.settings.currency=sCurrency.value;db.settings.language=sLanguage.value;db.settings.theme=sTheme.value;applyTheme(db.settings.theme);db.settings.languagePreferenceVersion=40;db.settings.themePreferenceVersion=42;
 if(currentAuthUser){
   localStorage.setItem('sistemKewanganLanguageV40:'+currentAuthUser.id,db.settings.language);
   if(workspaceId)localStorage.setItem('sistemKewanganLanguageV40:'+currentAuthUser.id+':'+workspaceId,db.settings.language);
