@@ -1039,7 +1039,8 @@ body.theme-dark .auth-logo{background:#142b4d!important;border-color:#2b4d79!imp
 
 /* Prevent browser auto-darkening from changing the Light login surface. */
 html[data-theme="light"]{color-scheme:light!important}
-html[data-theme="dark"],html[data-theme="system"]{color-scheme:dark}
+html[data-theme="dark"]{color-scheme:dark!important}
+html[data-theme="system"]{color-scheme:light}
 </style>
 
 </head>
@@ -1231,7 +1232,7 @@ function resetDbForUser(){
   };
   db.expenses ||= []; db.incomes ||= []; db.savings ||= []; db.budgets ||= {};
   db.categories ||= ['Makanan & Minuman','Rumah & Keperluan','Bil & Utiliti','Pengangkutan','Kesihatan','Pendidikan','Anak & Keluarga','Hutang & Komitmen','Insurans & Takaful','Belian & Shopping','Hiburan & Gaya Hidup','Kerja & Perniagaan','Cukai & Yuran','Hadiah & Sumbangan','Simpanan & Pelaburan','Lain-lain'];
-  db.settings ||= {currency:'RM',name:'Sistem Kewangan',description:'Personal Finance Manager',language:'ms'};
+  db.settings ||= {currency:'RM',name:'Sistem Kewangan',description:'Personal Finance Manager',language:'en',theme:'light',themeUserSelected:false};
   db.settings.description ||= 'Personal Finance Manager'; db.settings.language ||= 'ms'; db.monthlyBudgets ||= {};
 }
 
@@ -1241,13 +1242,14 @@ function save(){
   queueSupabaseSave();
 }
 
-function defaultDb(){return {expenses:[],incomes:[],savings:[],budgets:{},categories:['Makanan & Minuman','Rumah & Keperluan','Bil & Utiliti','Pengangkutan','Kesihatan','Pendidikan','Anak & Keluarga','Hutang & Komitmen','Insurans & Takaful','Belian & Shopping','Hiburan & Gaya Hidup','Kerja & Perniagaan','Cukai & Yuran','Hadiah & Sumbangan','Simpanan & Pelaburan','Lain-lain'],settings:{currency:'RM',name:'Sistem Kewangan',description:'Personal Finance Manager',language:'ms',theme:'system'},monthlyBudgets:{}}}
+function defaultDb(){return {expenses:[],incomes:[],savings:[],budgets:{},categories:['Makanan & Minuman','Rumah & Keperluan','Bil & Utiliti','Pengangkutan','Kesihatan','Pendidikan','Anak & Keluarga','Hutang & Komitmen','Insurans & Takaful','Belian & Shopping','Hiburan & Gaya Hidup','Kerja & Perniagaan','Cukai & Yuran','Hadiah & Sumbangan','Simpanan & Pelaburan','Lain-lain'],settings:{currency:'RM',name:'Sistem Kewangan',description:'Personal Finance Manager',language:'en',theme:'light',themeUserSelected:false},monthlyBudgets:{}}}
 function normalizeDb(data){const d=data&&typeof data==='object'?data:{}; const base=defaultDb(); d.expenses ||= [];d.incomes ||= [];d.savings ||= [];d.budgets ||= {};d.categories ||= base.categories; if(Array.isArray(d.categories) && d.categories.length===8 && ['Makanan','Pengangkutan','Bil & Utiliti','Rumah','Kesihatan','Hiburan','Belian','Lain-lain'].every((v,i)=>d.categories[i]===v)) d.categories=[...base.categories];d.settings ||= base.settings;d.settings.currency ||= 'RM';d.settings.name ||= 'Sistem Kewangan';d.settings.description ||= 'Personal Finance Manager';
   if(!d.settings.languagePreferenceVersion){d.settings.language='en';d.settings.languagePreferenceVersion=40;}
   else if(d.settings.language!=='en' && d.settings.language!=='ms')d.settings.language='en';
-  if(!d.settings.themePreferenceVersion){d.settings.theme='light';d.settings.themePreferenceVersion=42;}
+  if(!d.settings.themePreferenceVersion){d.settings.theme='light';d.settings.themePreferenceVersion=44;d.settings.themeUserSelected=false;}
   else if(!['light','dark','system'].includes(d.settings.theme)) d.settings.theme='light';
-  else if(!['light','dark','system'].includes(d.settings.theme))d.settings.theme='light';
+  /* System is opt-in. Older versions used System as a default, so migrate that state to Light. */
+  if(d.settings.theme==='system' && d.settings.themeUserSelected!==true) d.settings.theme='light';
   d.monthlyBudgets ||= {};return d}
 
 async function ensurePersonalWorkspace(){
@@ -1644,7 +1646,7 @@ async function loadFromDrive(){
       db=Object.assign(db,remote);
       db.expenses ||= [];db.incomes ||= [];db.savings ||= [];db.budgets ||= {};
       db.categories ||= ['Makanan & Minuman','Rumah & Keperluan','Bil & Utiliti','Pengangkutan','Kesihatan','Pendidikan','Anak & Keluarga','Hutang & Komitmen','Insurans & Takaful','Belian & Shopping','Hiburan & Gaya Hidup','Kerja & Perniagaan','Cukai & Yuran','Hadiah & Sumbangan','Simpanan & Pelaburan','Lain-lain'];
-      db.settings ||= {currency:'RM',name:'Sistem Kewangan',description:'Personal Finance Manager',language:'ms'};
+      db.settings ||= {currency:'RM',name:'Sistem Kewangan',description:'Personal Finance Manager',language:'en',theme:'light',themeUserSelected:false};
       db.settings.description ||= 'Personal Finance Manager';db.settings.language ||= 'ms';db.settings.theme ||= 'system';db.monthlyBudgets ||= {};
       localStorage.setItem(KEY,JSON.stringify(db));
       localDataDirty=false;
@@ -1679,7 +1681,7 @@ async function checkDriveForChanges(force=false){
       db=Object.assign(db,remote);
       db.expenses ||= [];db.incomes ||= [];db.savings ||= [];db.budgets ||= {};
       db.categories ||= ['Makanan & Minuman','Rumah & Keperluan','Bil & Utiliti','Pengangkutan','Kesihatan','Pendidikan','Anak & Keluarga','Hutang & Komitmen','Insurans & Takaful','Belian & Shopping','Hiburan & Gaya Hidup','Kerja & Perniagaan','Cukai & Yuran','Hadiah & Sumbangan','Simpanan & Pelaburan','Lain-lain'];
-      db.settings ||= {currency:'RM',name:'Sistem Kewangan',description:'Personal Finance Manager',language:'ms'};
+      db.settings ||= {currency:'RM',name:'Sistem Kewangan',description:'Personal Finance Manager',language:'en',theme:'light',themeUserSelected:false};
       db.settings.description ||= 'Personal Finance Manager';db.settings.language ||= 'ms';db.settings.theme ||= 'system';db.monthlyBudgets ||= {};
       localStorage.setItem(KEY,JSON.stringify(db));
       localDataDirty=false;
@@ -1778,14 +1780,15 @@ let KEY='sistemKewanganFreshV1';
 let db=JSON.parse(localStorage.getItem(KEY)||'null')||{
  expenses:[], incomes:[], savings:[], budgets:{},
  categories:['Makanan & Minuman','Rumah & Keperluan','Bil & Utiliti','Pengangkutan','Kesihatan','Pendidikan','Anak & Keluarga','Hutang & Komitmen','Insurans & Takaful','Belian & Shopping','Hiburan & Gaya Hidup','Kerja & Perniagaan','Cukai & Yuran','Hadiah & Sumbangan','Simpanan & Pelaburan','Lain-lain'],
- settings:{currency:'RM',name:'Sistem Kewangan',description:'Personal Finance Manager',language:'ms',theme:'system'},monthlyBudgets:{}
+ settings:{currency:'RM',name:'Sistem Kewangan',description:'Personal Finance Manager',language:'en',theme:'light',themeUserSelected:false},monthlyBudgets:{}
 };
 db.expenses ||= []; db.incomes ||= []; db.savings ||= []; db.budgets ||= {};
 db.categories ||= ['Makanan & Minuman','Rumah & Keperluan','Bil & Utiliti','Pengangkutan','Kesihatan','Pendidikan','Anak & Keluarga','Hutang & Komitmen','Insurans & Takaful','Belian & Shopping','Hiburan & Gaya Hidup','Kerja & Perniagaan','Cukai & Yuran','Hadiah & Sumbangan','Simpanan & Pelaburan','Lain-lain'];
-db.settings ||= {currency:'RM',name:'Sistem Kewangan',description:'Personal Finance Manager',language:'ms'};
+db.settings ||= {currency:'RM',name:'Sistem Kewangan',description:'Personal Finance Manager',language:'en',theme:'light',themeUserSelected:false};
 db.settings.description ||= 'Personal Finance Manager';
-db.settings.language ||= 'ms';
-db.settings.theme ||= 'system';
+db.settings.language ||= 'en';
+db.settings.theme ||= 'light';
+if(db.settings.theme==='system' && db.settings.themeUserSelected!==true) db.settings.theme='light';
 
 initTheme();
 
@@ -2402,20 +2405,34 @@ function subscribeNotifications(){
 
 function getThemePreference(){return db?.settings?.theme||'light'}
 function applyTheme(theme=getThemePreference()){
-  const t=['light','dark','system'].includes(theme)?theme:'light';
+  let t=['light','dark','system'].includes(theme)?theme:'light';
+  /* Light is the hard default. System becomes active only after an explicit user choice. */
+  if(t==='system' && db?.settings?.themeUserSelected!==true) t='light';
+  const isDark=t==='dark' || (t==='system' && window.matchMedia?.('(prefers-color-scheme: dark)').matches);
   document.body.classList.remove('theme-light','theme-dark','theme-system','dark-effective');
   document.body.classList.add('theme-'+t);
-  if(t==='dark' || (t==='system' && window.matchMedia?.('(prefers-color-scheme: dark)').matches)) document.body.classList.add('dark-effective');
+  if(isDark) document.body.classList.add('dark-effective');
   document.documentElement.dataset.theme=t;
+  document.documentElement.style.colorScheme=isDark?'dark':'light';
   try{localStorage.setItem('sistemKewanganTheme:'+((currentAuthUser&&currentAuthUser.id)||'guest'),t)}catch(_){}
 }
-function setTheme(theme){db.settings.theme=theme;applyTheme(theme);save();settings();}
+function setTheme(theme){
+  const t=['light','dark','system'].includes(theme)?theme:'light';
+  db.settings.theme=t;db.settings.themeUserSelected=true;db.settings.themePreferenceVersion=44;
+  applyTheme(t);save();settings();
+}
 function initTheme(){
-  let saved=db?.settings?.theme || (()=>{try{return localStorage.getItem('sistemKewanganTheme:'+((currentAuthUser&&currentAuthUser.id)||'guest'))}catch(_){return null}})() || 'light';
+  let saved=db?.settings?.theme;
+  if(saved==='system' && db?.settings?.themeUserSelected!==true) saved='light';
+  if(!['light','dark','system'].includes(saved)){
+    try{saved=localStorage.getItem('sistemKewanganTheme:'+((currentAuthUser&&currentAuthUser.id)||'guest'))}catch(_){}
+  }
   if(!['light','dark','system'].includes(saved)) saved='light';
-  db.settings.theme=saved;applyTheme(saved);
+  if(saved==='system' && db?.settings?.themeUserSelected!==true) saved='light';
+  db.settings.theme=saved;
+  applyTheme(saved);
   const mq=window.matchMedia?.('(prefers-color-scheme: dark)');
-  if(mq){const handler=()=>{if(getThemePreference()==='system')applyTheme('system')};try{mq.addEventListener('change',handler)}catch(_){mq.addListener(handler)}}
+  if(mq){const handler=()=>{if(getThemePreference()==='system' && db?.settings?.themeUserSelected===true)applyTheme('system')};try{mq.addEventListener('change',handler)}catch(_){mq.addListener(handler)}}
 }
 function downloadBackupJSON(){
   const payload=JSON.stringify(normalizeDb(db),null,2);
@@ -2485,8 +2502,8 @@ async function changePassword(e){
   msg(lang()==='en'?'Password changed successfully.':'Password berjaya diubah.','success');
 }
 
-function chooseTheme(theme){const s=document.getElementById('sTheme');if(!s)return;s.value=theme;document.querySelectorAll('[data-theme-choice]').forEach(b=>b.classList.toggle('active',b.dataset.themeChoice===theme));applyTheme(theme);db.settings.theme=theme;save();}
-function saveSettings(){db.settings.name=sName.value.trim()||'Sistem Kewangan';db.settings.description=sDesc.value.trim()||'Personal Finance Manager';db.settings.currency=sCurrency.value;db.settings.language=sLanguage.value;db.settings.theme=sTheme.value;applyTheme(db.settings.theme);db.settings.languagePreferenceVersion=40;db.settings.themePreferenceVersion=42;
+function chooseTheme(theme){const s=document.getElementById('sTheme');if(!s)return;const t=['light','dark','system'].includes(theme)?theme:'light';s.value=t;document.querySelectorAll('[data-theme-choice]').forEach(b=>b.classList.toggle('active',b.dataset.themeChoice===t));db.settings.theme=t;db.settings.themeUserSelected=true;db.settings.themePreferenceVersion=44;applyTheme(t);save();}
+function saveSettings(){db.settings.name=sName.value.trim()||'Sistem Kewangan';db.settings.description=sDesc.value.trim()||'Personal Finance Manager';db.settings.currency=sCurrency.value;db.settings.language=sLanguage.value;db.settings.theme=['light','dark','system'].includes(sTheme.value)?sTheme.value:'light';db.settings.themeUserSelected=true;applyTheme(db.settings.theme);db.settings.languagePreferenceVersion=40;db.settings.themePreferenceVersion=44;
 if(currentAuthUser){
   localStorage.setItem('sistemKewanganLanguageV40:'+currentAuthUser.id,db.settings.language);
   if(workspaceId)localStorage.setItem('sistemKewanganLanguageV40:'+currentAuthUser.id+':'+workspaceId,db.settings.language);
